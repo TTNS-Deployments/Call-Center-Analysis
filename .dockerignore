@@ -1,0 +1,7 @@
+.git
+.venv
+**/__pycache__
+.localdata
+build
+Code/webapp/staticfiles
+.env

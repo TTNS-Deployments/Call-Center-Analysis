@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% block title %}{{ agent.agent_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    {% if perms.view_agents %}<div class="small"><a href="{% url 'portal:agents' %}?range={{ range.key }}">← Agents</a></div>{% endif %}
+    <h1 style="margin-top:4px">{% if agent_id == "me" %}My scorecard{% else %}{{ agent.agent_name }}{% endif %}</h1>
+    <div class="sub">{% if agent.team %}{{ agent.team }} · {% endif %}{{ range.label }} · {{ agent.calls }} analysed call{{ agent.calls|pluralize }}</div>
+  </div>
+  <div class="toolbar">{% include "portal/partials/range.html" %}</div>
+</div>
+
+{% if not agent.calls %}
+  <div class="card empty">No analysed calls in this period.</div>
+{% else %}
+<div class="kpis">
+  <div class="card kpi {{ agent.avg_qa|score_class }}"><div class="label">Average QA</div><div class="value">{{ agent.avg_qa|pct }}</div><div class="hint">{{ agent.qa_pass_rate|pct }} passed</div></div>
+  <div class="card kpi {{ agent.compliance_rate|score_class }}"><div class="label">Compliance</div><div class="value">{{ agent.compliance_rate|pct }}</div><div class="hint">calls with all checks met</div></div>
+  <div class="card kpi"><div class="label">Resolved on call</div><div class="value">{{ agent.resolved_pct|pct }}</div></div>
+  <div class="card kpi"><div class="label">Customer sentiment</div><div class="value">{{ agent.avg_sentiment|signed }}</div><div class="hint">−1 to +1</div></div>
+  <div class="card kpi"><div class="label">Avg handle time</div><div class="value">{{ agent.avg_duration|duration }}</div></div>
+  <div class="card kpi"><div class="label">Calls</div><div class="value">{{ agent.calls }}</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-h"><h2>QA criteria</h2>{% if team_avg %}<span class="small muted">▏ marks team average</span>{% endif %}</div>
+    <div class="card-b">
+      {% for c in data.criteria %}
+      <div class="crit">
+        <div class="crit-top"><span>{{ c.name }}</span><span class="score {{ c.avg|score_class }}">{{ c.avg|pct }}</span></div>
+        <div class="bar {{ c.avg|score_class }}" style="position:relative"><span style="width:{{ c.avg }}%"></span>
+          {% with t=team_avg|get:c.id %}{% if t is not None %}<i style="position:absolute;top:-3px;bottom:-3px;left:{{ t }}%;width:2px;background:var(--text)" title="Team {{ t|pct }}"></i>{% endif %}{% endwith %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>QA score trend</h2></div>
+    <div class="card-b"><div class="chart-box"><canvas id="chart-qa"></canvas></div></div>
+  </div>
+</div>
+
+<div class="grid grid-2 mt">
+  <div class="card">
+    <div class="card-h"><h2>Compliance checks</h2></div>
+    <div class="card-b">
+      {% for c in data.compliance %}
+      <div class="rank-row"><span class="name">{{ c.name }}</span><div class="bar {{ c.pass_rate|score_class }}"><span style="width:{{ c.pass_rate|default:0 }}%"></span></div><span class="right small">{{ c.pass_rate|pct }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Recent calls</h2></div>
+    <ul class="list">
+      {% for c in recent %}
+      <li>
+        <div class="grow"><a class="cell-title" href="{% url 'portal:call_detail' c.call_id %}">{{ c.call_reason_name|default:c.call_id }}</a>
+          <div class="cell-sub">{{ c.started_at|dt:"d M, H:i" }} · {{ c.resolution|humanize }}{% for f in c.flag_list %} · <span class="flag {{ f }}">{{ flag_labels|get:f }}</span>{% endfor %}</div></div>
+        <span class="score {{ c.qa.percent|score_class }}">{{ c.qa.percent|pct }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{{ chart_data|json_script:"chart-data" }}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const d = CC.data("chart-data");
+    if (d && d.trend.length) CC.charts.qaTrend("chart-qa", d.trend);
+  });
+</script>
+{% endblock %}

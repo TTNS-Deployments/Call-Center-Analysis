@@ -1,0 +1,53 @@
+{% load portal_tags %}
+<div class="card">
+  <div class="steps">
+    {% for status, n in status_counts.items %}
+    <div class="step {{ status }}"><div class="n">{{ n }}</div><div class="l">{{ status }}</div></div>
+    {% endfor %}
+  </div>
+</div>
+<div class="small muted" style="margin:8px 2px 16px">Processing success rate: <b>{{ success_rate|pct:1 }}</b> · refreshes every 5 seconds</div>
+
+<div class="card">
+  <div class="card-h"><h2>In progress and failed</h2></div>
+  <div class="table-wrap card-b flush">
+    <table class="data">
+      <thead><tr><th>Call</th><th>Status</th><th>Stage</th><th class="right">Attempts</th><th>Last update</th><th></th></tr></thead>
+      <tbody>
+      {% for c in active %}
+        <tr>
+          <td><a class="cell-title mono" href="{% url 'portal:call_detail' c.call_id %}">{{ c.call_id }}</a><div class="cell-sub">{{ c.agent_name|default:"" }}</div></td>
+          <td><span class="badge {{ c.status }}">{% if c.status != "failed" %}<span class="spin"></span>{% endif %} {{ c.status|humanize }}</span>
+            {% if c.error %}<div class="cell-sub" style="max-width:320px">{{ c.error|truncatechars:160 }}</div>{% endif %}</td>
+          <td>{{ c.stage|humanize }}</td>
+          <td class="right">{{ c.attempts|default:0 }}</td>
+          <td class="nowrap small">{{ c.updated_at|dt:"d M H:i:s" }}</td>
+          <td class="right">{% if c.status == "failed" %}
+            <form method="post" action="{% url 'portal:call_retry' c.call_id %}">{% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'portal:pipeline' %}">
+              <button class="btn sm" type="submit">Retry</button></form>{% endif %}</td>
+        </tr>
+      {% empty %}<tr><td colspan="6" class="empty">Nothing in progress. All recordings are processed.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card mt">
+  <div class="card-h"><h2>Recently completed</h2></div>
+  <div class="table-wrap card-b flush">
+    <table class="data">
+      <thead><tr><th>Call</th><th>Processed</th><th>Engines</th><th class="right">QA</th></tr></thead>
+      <tbody>
+      {% for c in recent %}
+        <tr class="clickable" data-href="{% url 'portal:call_detail' c.call_id %}">
+          <td><span class="cell-title mono">{{ c.call_id }}</span><div class="cell-sub">{{ c.call_reason_name }}</div></td>
+          <td class="nowrap small">{{ c.processed_at|dt:"d M H:i:s" }}</td>
+          <td class="small muted">{{ c.sources.speech }} · {{ c.sources.language }} · {{ c.sources.llm }}</td>
+          <td class="right"><span class="score {{ c.qa.percent|score_class }}">{{ c.qa.percent|pct }}</span></td>
+        </tr>
+      {% empty %}<tr><td colspan="4" class="empty">No calls processed yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

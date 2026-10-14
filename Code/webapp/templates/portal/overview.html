@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Overview</h1>
+    <div class="sub">{{ range.label }}{% if team %} · {{ team }}{% endif %} · {{ data.kpis.completed }} analysed calls</div>
+  </div>
+  <div class="toolbar">
+    {% if teams|length > 1 or team %}
+    <form method="get" class="toolbar">
+      <input type="hidden" name="range" value="{{ range.key }}">
+      <select name="team" onchange="this.form.submit()" aria-label="Team">
+        <option value="">All teams</option>
+        {% for t in teams %}<option value="{{ t }}" {% if t == team %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    {% include "portal/partials/range.html" %}
+  </div>
+</div>
+
+{% if not data.kpis.total %}
+  <div class="card empty">
+    <h2>No calls yet</h2>
+    <p style="margin-top:6px">Recordings appear here once they are uploaded and analysed.
+    {% if cc_mode == "local" %}Run <span class="mono">python -m callcenter seed</span> to load sample calls.{% endif %}</p>
+  </div>
+{% else %}
+<div class="kpis">
+  <div class="card kpi"><div class="label">Calls analysed</div><div class="value">{{ data.kpis.completed }}</div>
+    <div class="hint">{% if data.kpis.failed %}{{ data.kpis.failed }} failed · {% endif %}{{ data.kpis.in_progress }} in progress</div></div>
+  <div class="card kpi {{ data.kpis.avg_qa|score_class }}"><div class="label">Average QA score</div><div class="value">{{ data.kpis.avg_qa|pct }}</div>
+    <div class="hint">{{ data.kpis.qa_pass_rate|pct }} of calls passed</div></div>
+  <div class="card kpi {{ data.kpis.compliance_rate|score_class }}"><div class="label">Compliance pass rate</div><div class="value">{{ data.kpis.compliance_rate|pct }}</div>
+    <div class="hint">all mandatory checks met</div></div>
+  <div class="card kpi"><div class="label">Negative sentiment</div><div class="value">{{ data.kpis.negative_pct|pct }}</div>
+    <div class="hint">of customers overall</div></div>
+  <div class="card kpi"><div class="label">Unresolved / escalated</div><div class="value">{{ data.kpis.unresolved_pct|pct }}</div>
+    <div class="hint">{{ data.kpis.repeat_pct|pct }} repeat contacts</div></div>
+  <div class="card kpi"><div class="label">Avg handle time</div><div class="value">{{ data.kpis.avg_duration|duration }}</div>
+    <div class="hint">minutes : seconds</div></div>
+</div>
+
+<div class="grid grid-main">
+  <div class="card">
+    <div class="card-h"><h2>Call volume and customer sentiment</h2></div>
+    <div class="card-b"><div class="chart-box tall"><canvas id="chart-trend"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Customer sentiment</h2></div>
+    <div class="card-b"><div class="chart-box short"><canvas id="chart-sentiment"></canvas></div></div>
+    <div class="card-h" style="padding-top:4px"><h2>Resolution</h2></div>
+    <div class="card-b"><div class="chart-box short"><canvas id="chart-resolution"></canvas></div></div>
+  </div>
+</div>
+
+<div class="grid grid-main mt">
+  <div class="card">
+    <div class="card-h"><h2>Top call reasons</h2><a class="small" href="{% url 'portal:calls' %}?range={{ range.key }}">View calls →</a></div>
+    <div class="table-wrap card-b flush">
+      <table class="data">
+        <thead><tr><th>Reason</th><th class="right">Calls</th><th>Unresolved</th><th>Negative</th><th class="right">Avg QA</th></tr></thead>
+        <tbody>
+        {% for r in data.reasons|slice:":8" %}
+          <tr class="clickable" data-href="{% url 'portal:calls' %}?range={{ range.key }}&reason={{ r.id }}">
+            <td class="cell-title">{{ r.name }}</td>
+            <td class="right">{{ r.calls }}</td>
+            <td><div class="bar bad" title="{{ r.unresolved_pct|pct }}"><span style="width:{{ r.unresolved_pct|default:0 }}%"></span></div><span class="small muted">{{ r.unresolved_pct|pct }}</span></td>
+            <td><div class="bar ok" title="{{ r.negative_pct|pct }}"><span style="width:{{ r.negative_pct|default:0 }}%"></span></div><span class="small muted">{{ r.negative_pct|pct }}</span></td>
+            <td class="right"><span class="score {{ r.avg_qa|score_class }}">{{ r.avg_qa|pct }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Needs attention</h2><a class="small" href="{% url 'portal:calls' %}?range={{ range.key }}&flag=unhappy_customer">All flagged →</a></div>
+    <ul class="list" style="margin-top:8px">
+      {% for c in data.flagged %}
+      <li>
+        <div class="grow">
+          <a class="cell-title" href="{% url 'portal:call_detail' c.call_id %}">{{ c.call_reason_name|default:c.call_id }}</a>
+          <div class="cell-sub">{{ c.agent_name }} · {{ c.started_at|dt:"d M, H:i" }}</div>
+          <div style="margin-top:4px">{% for f in c.flag_list %}<span class="flag {{ f }}">{{ flag_labels|get:f }}</span>{% endfor %}</div>
+        </div>
+        <span class="score {{ c.qa.percent|score_class }}">{{ c.qa.percent|pct }}</span>
+      </li>
+      {% empty %}<li class="muted">Nothing flagged in this period.</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="grid grid-2 mt">
+  <div class="card">
+    <div class="card-h"><h2>Root causes</h2></div>
+    <div class="card-b">
+      {% for cause, n in data.root_causes %}
+      <div class="rank-row"><span class="name">{{ cause }}</span><div class="bar"><span style="width:{% widthratio n data.kpis.completed 100 %}%"></span></div><span class="right small">{{ n }}</span></div>
+      {% empty %}<p class="muted">No root causes identified yet.</p>{% endfor %}
+    </div>
+  </div>
+  {% if perms.view_agents %}
+  <div class="card">
+    <div class="card-h"><h2>Agent leaderboard</h2><a class="small" href="{% url 'portal:agents' %}?range={{ range.key }}">All agents →</a></div>
+    <div class="table-wrap card-b flush">
+      <table class="data">
+        <thead><tr><th>Agent</th><th class="right">Calls</th><th class="right">QA</th><th class="right">Compliance</th></tr></thead>
+        <tbody>
+        {% for a in data.agents|slice:":6" %}
+          <tr class="clickable" data-href="{% url 'portal:agent_detail' a.agent_id %}?range={{ range.key }}">
+            <td><span class="cell-title">{{ a.agent_name }}</span><div class="cell-sub">{{ a.team }}</div></td>
+            <td class="right">{{ a.calls }}</td>
+            <td class="right"><span class="score {{ a.avg_qa|score_class }}">{{ a.avg_qa|pct }}</span></td>
+            <td class="right">{{ a.compliance_rate|pct }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="card-h"><h2>Scorecard by criterion</h2><a class="small" href="{% url 'portal:agent_detail' 'me' %}?range={{ range.key }}">My scorecard →</a></div>
+    <div class="card-b">
+      {% for c in data.criteria %}
+      <div class="rank-row"><span class="name">{{ c.name }}</span><div class="bar {{ c.avg|score_class }}"><span style="width:{{ c.avg }}%"></span></div><span class="right small">{{ c.avg|pct }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{{ chart_data|json_script:"chart-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const d = CC.data("chart-data");
+    if (!d || !d.trend.length) return;
+    CC.charts.trend("chart-trend", d.trend);
+    CC.charts.doughnut("chart-sentiment", d.sentiment);
+    CC.charts.doughnut("chart-resolution", d.resolution);
+  });
+</script>
+{% endblock %}

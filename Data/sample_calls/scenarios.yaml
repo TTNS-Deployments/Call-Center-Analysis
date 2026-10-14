@@ -1,0 +1,178 @@
+# Synthetic English call scripts used in LOCAL MODE ONLY.
+#
+# `python -m callcenter seed` turns these into sample calls: a placeholder WAV file plus
+# a metadata JSON file. The mock speech service returns the script as the transcript,
+# so the whole pipeline (PII redaction, sentiment, LLM insights, QA, Parquet, UI) can be
+# exercised without Azure keys. All names and numbers are fictitious.
+#
+# Line format: [speaker, text, tag]
+#   tag "opt:<name>"  line is dropped for lower-quality calls (tests QA scoring)
+#   tag "bad:<name>"  line is only included for a few poor-quality calls (compliance breach)
+# Placeholders: {company} {agent} {customer} {phone} {card} {card4} {email} {account}
+#               {ref} {dob} {amount} {address}
+
+company: Northwind Services
+
+agents:
+  - {id: A1001, name: Priya Sharma,   email: priya.sharma@contoso.com,   team: Team Alpha, skill: 0.92}
+  - {id: A1002, name: Rahul Verma,    email: rahul.verma@contoso.com,    team: Team Alpha, skill: 0.75}
+  - {id: A1003, name: Ananya Iyer,    email: ananya.iyer@contoso.com,    team: Team Alpha, skill: 0.85}
+  - {id: A1004, name: Vikram Singh,   email: vikram.singh@contoso.com,   team: Team Beta,  skill: 0.55}
+  - {id: A1005, name: Neha Kapoor,    email: neha.kapoor@contoso.com,    team: Team Beta,  skill: 0.88}
+  - {id: A1006, name: Arjun Mehta,    email: arjun.mehta@contoso.com,    team: Team Beta,  skill: 0.65}
+
+customers:
+  - Rohan Das
+  - Meera Nair
+  - Karan Malhotra
+  - Sneha Kulkarni
+  - Amit Joshi
+  - Divya Reddy
+  - Sanjay Gupta
+  - Pooja Banerjee
+  - Farhan Ali
+  - Kavya Menon
+
+scenarios:
+  - id: billing_dispute
+    weight: 3
+    lines:
+      - [agent, "Good morning, thank you for calling {company}. My name is {agent}, how may I help you today?", "opt:greeting"]
+      - [agent, "Please note this call is being recorded for quality and training purposes.", "opt:disclosure"]
+      - [customer, "Hi, I'm {customer}. I've been charged {amount} rupees extra on my bill this month and I have no idea why."]
+      - [agent, "I'm sorry to hear about the unexpected charge, I understand how frustrating that is.", "opt:empathy"]
+      - [agent, "Before we proceed, may I verify your registered mobile number and date of birth please?", "opt:verify"]
+      - [customer, "Sure, it's {phone} and my date of birth is {dob}."]
+      - [agent, "Thank you for confirming. Let me check your account."]
+      - [agent, "Can you please read out the OTP you just received so I can open the bill?", "bad:otp"]
+      - [customer, "Okay. It's annoying that this keeps happening, I was overcharged two months ago as well."]
+      - [agent, "I can see a roaming add-on was applied by mistake. That charge is not valid."]
+      - [agent, "I have raised a refund of {amount} rupees, which will reflect on your next bill. Your reference number is {ref}."]
+      - [customer, "Okay, that's good. Thank you for sorting it out quickly."]
+      - [agent, "You're welcome. Is there anything else I can help you with today?", "opt:closing"]
+      - [customer, "No, that's all."]
+      - [agent, "Thank you for calling {company}. Have a great day!", "opt:closing"]
+
+  - id: card_fraud_block
+    weight: 2
+    lines:
+      - [agent, "Thank you for calling {company} card services, this is {agent}. How can I help?", "opt:greeting"]
+      - [agent, "This call may be recorded for quality and training purposes.", "opt:disclosure"]
+      - [customer, "Hello, I just got an SMS about a transaction I did not make. I'm really worried, someone is using my card."]
+      - [agent, "I completely understand your concern, let's secure your card right away.", "opt:empathy"]
+      - [agent, "For security purposes, can you confirm the last four digits of the card and your date of birth?", "opt:verify"]
+      - [customer, "The card ends with {card4} and my date of birth is {dob}. My name is {customer}."]
+      - [agent, "Thank you. Could you also give me the full card number and CVV to confirm?", "bad:cvv"]
+      - [customer, "The full number is {card}."]
+      - [agent, "I can see a transaction of {amount} rupees at an online merchant ten minutes ago. I have blocked the card now."]
+      - [customer, "Thank god. Will I get my money back?"]
+      - [agent, "I have raised a dispute for the transaction. Your reference number is {ref} and the amount will be credited within seven working days once verified."]
+      - [agent, "A replacement card will be delivered to your registered address within five days, free of charge."]
+      - [customer, "Okay, thank you so much, that's a relief."]
+      - [agent, "Is there anything else I can help you with?", "opt:closing"]
+      - [customer, "No, thank you."]
+      - [agent, "Thank you for calling, have a nice day.", "opt:closing"]
+
+  - id: address_change
+    weight: 2
+    lines:
+      - [agent, "Good afternoon, thanks for calling {company}. My name is {agent}. How may I assist you?", "opt:greeting"]
+      - [agent, "Just to let you know, this call is being recorded for quality purposes.", "opt:disclosure"]
+      - [customer, "Hi, this is {customer}. I moved recently and want to update my address."]
+      - [agent, "Certainly, I'd be happy to help. Before we proceed, may I verify your registered mobile number?", "opt:verify"]
+      - [customer, "Yes, it's {phone}."]
+      - [agent, "Thank you. What is the new address?"]
+      - [customer, "It's {address}."]
+      - [agent, "Got it. Could you please also confirm your email address for the confirmation?"]
+      - [customer, "Sure, it's {email}."]
+      - [agent, "I have updated the address on your account {account}. You will receive a confirmation email shortly."]
+      - [customer, "Great, that was easy. Thanks!"]
+      - [agent, "Is there anything else I can help you with today?", "opt:closing"]
+      - [customer, "No, that's everything."]
+      - [agent, "Thank you for calling {company}. Have a good day!", "opt:closing"]
+
+  - id: plan_upgrade
+    weight: 2
+    lines:
+      - [agent, "Thank you for calling {company}, my name is {agent}. How can I help you today?", "opt:greeting"]
+      - [agent, "Please note this call is being recorded for quality and training purposes.", "opt:disclosure"]
+      - [customer, "Hi, I'm {customer}. My data runs out every month, so I want to upgrade my plan."]
+      - [agent, "Absolutely, let me verify your account first. Can you confirm your registered mobile number?", "opt:verify"]
+      - [customer, "It's {phone}."]
+      - [agent, "Thank you. I can offer the unlimited plan with 3 GB per day."]
+      - [agent, "The new plan has a fee of 799 rupees per month, which will be charged from your next billing cycle.", "opt:fee"]
+      - [customer, "That sounds good. Please go ahead and upgrade."]
+      - [agent, "Done, your plan has been upgraded and it is active right away. Your reference number is {ref}."]
+      - [customer, "Excellent, thank you, that's very helpful."]
+      - [agent, "My pleasure. Is there anything else I can help you with?", "opt:closing"]
+      - [customer, "No, thanks."]
+      - [agent, "Thank you for choosing {company}. Have a great day!", "opt:closing"]
+
+  - id: network_issue_escalation
+    weight: 2
+    lines:
+      - [agent, "Thank you for calling {company} technical support, this is {agent}.", "opt:greeting"]
+      - [agent, "This call is being recorded for quality and training purposes.", "opt:disclosure"]
+      - [customer, "Hi, I'm {customer}. My internet has not been working for three days. This is terrible service."]
+      - [agent, "I'm really sorry about the inconvenience, I understand how frustrating it is.", "opt:empathy"]
+      - [agent, "Can you confirm your registered mobile number so I can check the connection?", "opt:verify"]
+      - [customer, "It's {phone}. I have already called twice and nothing has happened."]
+      - [agent, "Let me check. I can see there is a fault at the local exchange."]
+      - [customer, "So when will it be fixed? I work from home, I'm losing money every day."]
+      - [agent, "I'm unable to give an exact time as the field team is still working on it."]
+      - [customer, "This is unacceptable. I want to speak to a supervisor."]
+      - [agent, "I am escalating this to my supervisor and the field team. Your complaint reference number is {ref} and you will get a call back within 24 hours.", "opt:escalation"]
+      - [customer, "Fine, but if this isn't fixed tomorrow I'm cancelling my connection."]
+      - [agent, "I understand. Is there anything else I can help you with?", "opt:closing"]
+      - [customer, "No."]
+      - [agent, "Thank you for your patience. Have a good day.", "opt:closing"]
+
+  - id: payment_failed
+    weight: 2
+    lines:
+      - [agent, "Good morning, thank you for calling {company}. My name is {agent}. How may I help you?", "opt:greeting"]
+      - [agent, "Please note this call is recorded for quality and training purposes.", "opt:disclosure"]
+      - [customer, "Hi, I'm {customer}. I paid my bill of {amount} rupees yesterday, the money was deducted but the payment shows as failed."]
+      - [agent, "I'm sorry for the trouble. Let me look into it. For security purposes, can you confirm your account number?", "opt:verify"]
+      - [customer, "Yes, it's {account}."]
+      - [agent, "Thank you. I can see the transaction is pending with the bank gateway."]
+      - [customer, "Will I be charged a late fee? The due date is tomorrow."]
+      - [agent, "No late fee will be charged since the payment was initiated before the due date."]
+      - [agent, "I have raised a ticket with our payments team. Your ticket number is {ref}. It will be resolved within 48 hours, and if the payment fails the amount will be refunded to your account."]
+      - [customer, "Okay. I hope it gets sorted."]
+      - [agent, "It will, I appreciate your patience. Is there anything else I can help with?", "opt:closing"]
+      - [customer, "No, that's all."]
+      - [agent, "Thank you for calling. Have a nice day.", "opt:closing"]
+
+  - id: cancellation_retention
+    weight: 1
+    lines:
+      - [agent, "Thank you for calling {company}, this is {agent}. How can I help you today?", "opt:greeting"]
+      - [agent, "This call may be recorded for quality and training purposes.", "opt:disclosure"]
+      - [customer, "I'm {customer}. I want to cancel my subscription, it's too expensive."]
+      - [agent, "I'm sorry to hear that. Before we proceed, may I verify your registered mobile number?", "opt:verify"]
+      - [customer, "It's {phone}."]
+      - [agent, "Thank you. Could you tell me what is making it expensive for you?"]
+      - [customer, "I'm paying for channels I never watch."]
+      - [agent, "I understand. I can move you to the basic plan, which costs 299 rupees per month instead of 599. The new price will be charged from the next billing cycle.", "opt:fee"]
+      - [customer, "Hmm, okay, that works. Let's do that instead of cancelling."]
+      - [agent, "Done, I have changed your plan. Your reference number is {ref}."]
+      - [customer, "Thanks."]
+      - [agent, "Is there anything else I can help you with?", "opt:closing"]
+      - [customer, "No."]
+      - [agent, "Thank you for staying with {company}. Have a great day!", "opt:closing"]
+
+  - id: repeat_complaint_refund
+    weight: 1
+    lines:
+      - [agent, "{company}, {agent} speaking.", "opt:greeting"]
+      - [customer, "This is {customer}. This is the third time I'm calling about my refund of {amount} rupees. Nobody has done anything."]
+      - [agent, "Can you give me your registered mobile number?", "opt:verify"]
+      - [customer, "{phone}. It's been a month. This is ridiculous."]
+      - [agent, "I can see the earlier requests. The refund is still pending approval."]
+      - [customer, "That's what they said last time. I'm extremely disappointed with your service."]
+      - [agent, "I'm sorry, I'm unable to process it myself."]
+      - [agent, "I am escalating this to the billing manager. Your complaint reference number is {ref}, you should hear back within three working days.", "opt:escalation"]
+      - [customer, "I don't believe it will happen. I'm going to file a complaint with the ombudsman."]
+      - [agent, "Is there anything else?", "opt:closing"]
+      - [customer, "No."]

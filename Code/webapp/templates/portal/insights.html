@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% block title %}Insights{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Insights</h1>
+    <div class="sub">{{ range.label }} · {{ data.kpis.completed }} analysed calls</div>
+  </div>
+  <div class="toolbar">
+    {% if powerbi_configured %}<a class="btn" href="{% url 'portal:insights' %}">Open Power BI report</a>{% endif %}
+    {% include "portal/partials/range.html" %}
+  </div>
+</div>
+
+{% if not powerbi_configured %}
+<div class="callout" style="margin-bottom:16px">
+  Built-in analytics. When a Power BI report is published (see <span class="mono">Analytics/README.md</span>) and
+  <span class="mono">POWERBI_WORKSPACE_ID</span> / <span class="mono">POWERBI_REPORT_ID</span> are set, this page embeds it instead.
+</div>
+{% endif %}
+
+{% if not data.kpis.completed %}
+  <div class="card empty">No analysed calls in this period.</div>
+{% else %}
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-h"><h2>Average score by QA criterion</h2></div>
+    <div class="card-b"><div class="chart-box"><canvas id="chart-criteria"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Compliance pass rate by check</h2><span class="small muted">applicable calls only</span></div>
+    <div class="card-b">
+      {% for c in data.compliance %}
+      <div class="rank-row" style="grid-template-columns:minmax(0,1fr) 140px 120px">
+        <span class="name">{{ c.name }}</span>
+        <div class="bar {{ c.pass_rate|score_class }}"><span style="width:{{ c.pass_rate|default:0 }}%"></span></div>
+        <span class="right small"><b>{{ c.pass_rate|pct }}</b> · {{ c.fail }} fail{% if c.na %} · {{ c.na }} n/a{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-3 mt">
+  <div class="card"><div class="card-h"><h2>Customer sentiment</h2></div><div class="card-b"><div class="chart-box short"><canvas id="chart-sentiment"></canvas></div></div></div>
+  <div class="card"><div class="card-h"><h2>Resolution</h2></div><div class="card-b"><div class="chart-box short"><canvas id="chart-resolution"></canvas></div></div></div>
+  <div class="card"><div class="card-h"><h2>Customer emotion at end of call</h2></div><div class="card-b"><div class="chart-box short"><canvas id="chart-emotion"></canvas></div></div></div>
+</div>
+
+<div class="grid grid-2 mt">
+  <div class="card">
+    <div class="card-h"><h2>QA score trend</h2></div>
+    <div class="card-b"><div class="chart-box"><canvas id="chart-qa"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Call reasons and outcomes</h2></div>
+    <div class="table-wrap card-b flush">
+      <table class="data">
+        <thead><tr><th>Reason</th><th class="right">Calls</th><th class="right">Unresolved</th><th class="right">Negative</th><th class="right">Avg QA</th></tr></thead>
+        <tbody>{% for r in data.reasons %}
+          <tr class="clickable" data-href="{% url 'portal:calls' %}?range={{ range.key }}&reason={{ r.id }}">
+            <td class="cell-title">{{ r.name }}</td><td class="right">{{ r.calls }}</td>
+            <td class="right">{{ r.unresolved_pct|pct }}</td><td class="right">{{ r.negative_pct|pct }}</td>
+            <td class="right"><span class="score {{ r.avg_qa|score_class }}">{{ r.avg_qa|pct }}</span></td></tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card mt">
+  <div class="card-h"><h2>Root causes</h2><span class="small muted">what drives calls; use it to fix processes and scripts</span></div>
+  <div class="card-b">
+    {% for cause, n in data.root_causes %}
+    <div class="rank-row"><span class="name">{{ cause }}</span><div class="bar"><span style="width:{% widthratio n data.kpis.completed 100 %}%"></span></div><span class="right small">{{ n }}</span></div>
+    {% empty %}<p class="muted">No root causes identified yet.</p>{% endfor %}
+  </div>
+</div>
+{% endif %}
+{{ chart_data|json_script:"chart-data" }}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const d = CC.data("chart-data");
+    if (!d || !d.criteria.length) return;
+    CC.charts.hbar("chart-criteria", d.criteria.map(x => x.name), d.criteria.map(x => x.avg),
+                   { max: 100, colors: d.criteria.map(x => CC.charts.scoreColor(x.avg)) });
+    CC.charts.doughnut("chart-sentiment", d.sentiment);
+    CC.charts.doughnut("chart-resolution", d.resolution);
+    CC.charts.doughnut("chart-emotion", d.emotion);
+    CC.charts.qaTrend("chart-qa", d.trend);
+  });
+</script>
+{% endblock %}

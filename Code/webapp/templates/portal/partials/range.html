@@ -1,0 +1,5 @@
+<div class="segmented" role="group" aria-label="Date range">
+  {% for key, label in ranges.items %}
+  <a href="?range={{ key }}{% if keep_params %}&{{ keep_params }}{% endif %}" class="{% if range.key == key %}on{% endif %}">{% if key == "all" %}All{% else %}{{ key }}d{% endif %}</a>
+  {% endfor %}
+</div>

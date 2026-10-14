@@ -1,0 +1,45 @@
+# Call reason taxonomy. Every call is classified into exactly one category.
+# SAMPLE: align with the customer's CRM disposition codes so reports match.
+# Editable at runtime from the web app (Settings -> Call reasons, Admin role).
+
+version: 1
+categories:
+  - id: billing
+    name: Billing and charges
+    description: Questions or disputes about bills, invoices, unexpected charges or refunds.
+    mock_keywords: ["bill", "charged", "charge", "invoice", "refund", "overcharged"]
+
+  - id: payments
+    name: Payment failure
+    description: Payments that failed, are pending, or were deducted but not credited.
+    mock_keywords: ["payment failed", "payment", "deducted", "not credited", "transaction"]
+
+  - id: card_services
+    name: Card services
+    description: Card blocking, lost or stolen cards, suspicious transactions, card replacement or activation.
+    mock_keywords: ["card", "block", "stolen", "lost", "fraud", "suspicious"]
+
+  - id: account_update
+    name: Account and profile update
+    description: Change of address, phone number, email, name or other profile details.
+    mock_keywords: ["address", "update my", "change my", "email address", "phone number"]
+
+  - id: plan_change
+    name: Plan change or upgrade
+    description: Upgrading, downgrading or changing a plan, product or subscription.
+    mock_keywords: ["upgrade", "plan", "downgrade", "subscription", "offer"]
+
+  - id: technical_issue
+    name: Technical or service issue
+    description: Service not working, network or connectivity problems, app or website errors.
+    mock_keywords: ["not working", "network", "internet", "slow", "error", "outage", "signal"]
+
+  - id: cancellation
+    name: Cancellation request
+    description: Customer wants to cancel or close a service or account.
+    mock_keywords: ["cancel", "close my account", "terminate", "discontinue"]
+
+  - id: general_enquiry
+    name: General enquiry
+    description: Information requests that do not fit another category.
+    mock_keywords: []

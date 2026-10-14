@@ -1,0 +1,618 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "config": {
+      "isWizard": false,
+      "basics": {
+        "description": "**Call Center Analysis** \u2013 records, transcribes and analyses customer calls with Azure AI Speech, Azure AI Language and Azure OpenAI, and shows the insights in a web app and Power BI. Choose the tier (SKU) of every service on the following tabs; defaults match the dev baseline."
+      }
+    },
+    "basics": [
+      {
+        "name": "solutionPrefix",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Solution prefix",
+        "defaultValue": "ccai",
+        "toolTip": "Lowercase letters and digits, 3-8 characters. Used in all resource names.",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z0-9]{3,8}$",
+          "validationMessage": "3-8 lowercase letters or digits."
+        },
+        "visible": true
+      },
+      {
+        "name": "environmentName",
+        "type": "Microsoft.Common.DropDown",
+        "label": "Environment",
+        "defaultValue": "dev",
+        "toolTip": "",
+        "constraints": {
+          "allowedValues": [
+            {
+              "label": "Development",
+              "value": "dev"
+            },
+            {
+              "label": "Test",
+              "value": "test"
+            },
+            {
+              "label": "UAT",
+              "value": "uat"
+            },
+            {
+              "label": "Production",
+              "value": "prod"
+            }
+          ],
+          "required": true
+        },
+        "visible": true
+      }
+    ],
+    "steps": [
+      {
+        "name": "ai",
+        "label": "AI services",
+        "elements": [
+          {
+            "name": "speech",
+            "type": "Microsoft.Common.Section",
+            "label": "Azure AI Speech and Language",
+            "elements": [
+              {
+                "name": "speechSku",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Speech tier",
+                "defaultValue": "S0",
+                "toolTip": "",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "Standard (S0)",
+                      "value": "S0"
+                    },
+                    {
+                      "label": "Free (F0) \u2013 5 audio hours/month, one per subscription",
+                      "value": "F0"
+                    }
+                  ],
+                  "required": true
+                },
+                "visible": true
+              },
+              {
+                "name": "languageSku",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Language tier",
+                "defaultValue": "S",
+                "toolTip": "",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "Standard (S)",
+                      "value": "S"
+                    },
+                    {
+                      "label": "Free (F0) \u2013 5,000 records/month, one per subscription",
+                      "value": "F0"
+                    }
+                  ],
+                  "required": true
+                },
+                "visible": true
+              }
+            ],
+            "visible": true
+          },
+          {
+            "name": "openai",
+            "type": "Microsoft.Common.Section",
+            "label": "Azure OpenAI",
+            "elements": [
+              {
+                "name": "openAiLocation",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Azure OpenAI region",
+                "defaultValue": "Central India",
+                "toolTip": "Must offer the chosen model and deployment type. Check model availability before changing.",
+                "constraints": {
+                  "required": true,
+                  "allowedValues": [
+                    {
+                      "label": "Central India",
+                      "value": "centralindia"
+                    },
+                    {
+                      "label": "South India",
+                      "value": "southindia"
+                    },
+                    {
+                      "label": "East US",
+                      "value": "eastus"
+                    },
+                    {
+                      "label": "East US 2",
+                      "value": "eastus2"
+                    },
+                    {
+                      "label": "Sweden Central",
+                      "value": "swedencentral"
+                    },
+                    {
+                      "label": "West Europe",
+                      "value": "westeurope"
+                    },
+                    {
+                      "label": "UK South",
+                      "value": "uksouth"
+                    },
+                    {
+                      "label": "Japan East",
+                      "value": "japaneast"
+                    },
+                    {
+                      "label": "Australia East",
+                      "value": "australiaeast"
+                    }
+                  ]
+                },
+                "visible": true
+              },
+              {
+                "name": "openAiModelName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Model",
+                "defaultValue": "gpt-4.1-mini",
+                "toolTip": "Chat model used to summarise and score calls.",
+                "constraints": {
+                  "required": true
+                },
+                "visible": true
+              },
+              {
+                "name": "openAiModelVersion",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Model version",
+                "defaultValue": "2025-04-14",
+                "toolTip": "",
+                "constraints": {
+                  "required": true
+                },
+                "visible": true
+              },
+              {
+                "name": "openAiDeploymentSku",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Deployment type",
+                "defaultValue": "GlobalStandard",
+                "toolTip": "Standard keeps processing in the selected region. Global Standard has the widest availability and highest default quota.",
+                "constraints": {
+                  "allowedValues": [
+                    {
+                      "label": "Global Standard",
+                      "value": "GlobalStandard"
+                    },
+                    {
+                      "label": "Data Zone Standard",
+                      "value": "DataZoneStandard"
+                    },
+                    {
+                      "label": "Standard (regional)",
+                      "value": "Standard"
+                    }
+                  ],
+                  "required": true
+                },
+                "visible": true
+              },
+              {
+                "name": "openAiCapacity",
+                "type": "Microsoft.Common.Slider",
+                "label": "Capacity",
+                "min": 1,
+                "max": 500,
+                "defaultValue": 30,
+                "showStepMarkers": false,
+                "subLabel": "thousand tokens per minute",
+                "toolTip": "",
+                "constraints": {
+                  "required": true
+                },
+                "visible": true
+              }
+            ],
+            "visible": true
+          }
+        ]
+      },
+      {
+        "name": "data",
+        "label": "Storage and database",
+        "elements": [
+          {
+            "name": "storageSku",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Storage redundancy",
+            "defaultValue": "Standard_LRS",
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "Locally redundant (LRS)",
+                  "value": "Standard_LRS"
+                },
+                {
+                  "label": "Zone redundant (ZRS)",
+                  "value": "Standard_ZRS"
+                },
+                {
+                  "label": "Geo redundant (GRS)",
+                  "value": "Standard_GRS"
+                },
+                {
+                  "label": "Geo-zone redundant (GZRS)",
+                  "value": "Standard_GZRS"
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "recordingCoolAfterDays",
+            "type": "Microsoft.Common.Slider",
+            "label": "Move recordings to Cool tier after",
+            "min": 1,
+            "max": 365,
+            "defaultValue": 30,
+            "showStepMarkers": false,
+            "subLabel": "days",
+            "toolTip": "",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "recordingDeleteAfterDays",
+            "type": "Microsoft.Common.Slider",
+            "label": "Delete recordings after",
+            "min": 2,
+            "max": 3650,
+            "defaultValue": 365,
+            "showStepMarkers": false,
+            "subLabel": "days",
+            "toolTip": "",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "rawTranscriptDeleteAfterDays",
+            "type": "Microsoft.Common.Slider",
+            "label": "Delete raw (un-redacted) transcripts after",
+            "min": 1,
+            "max": 3650,
+            "defaultValue": 90,
+            "showStepMarkers": false,
+            "subLabel": "days",
+            "toolTip": "",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "cosmosCapacityMode",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Cosmos DB capacity mode",
+            "defaultValue": "Serverless",
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "Serverless (pay per request)",
+                  "value": "Serverless"
+                },
+                {
+                  "label": "Provisioned throughput",
+                  "value": "Provisioned"
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "cosmosThroughput",
+            "type": "Microsoft.Common.Slider",
+            "label": "Provisioned throughput",
+            "min": 400,
+            "max": 10000,
+            "step": 100,
+            "defaultValue": 400,
+            "subLabel": "RU/s",
+            "constraints": {
+              "required": false
+            },
+            "visible": "[equals(steps('data').cosmosCapacityMode, 'Provisioned')]"
+          }
+        ]
+      },
+      {
+        "name": "compute",
+        "label": "Compute and messaging",
+        "elements": [
+          {
+            "name": "webAppSku",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Web app plan",
+            "defaultValue": "S1",
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "Basic B1",
+                  "value": "B1"
+                },
+                {
+                  "label": "Basic B2",
+                  "value": "B2"
+                },
+                {
+                  "label": "Standard S1",
+                  "value": "S1"
+                },
+                {
+                  "label": "Standard S2",
+                  "value": "S2"
+                },
+                {
+                  "label": "Premium v3 P0v3",
+                  "value": "P0v3"
+                },
+                {
+                  "label": "Premium v3 P1v3",
+                  "value": "P1v3"
+                },
+                {
+                  "label": "Premium v3 P2v3",
+                  "value": "P2v3"
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "webAppInstanceCount",
+            "type": "Microsoft.Common.Slider",
+            "label": "Web app instances",
+            "min": 1,
+            "max": 10,
+            "defaultValue": 1,
+            "showStepMarkers": false,
+            "subLabel": "instances",
+            "toolTip": "",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "functionMaximumInstances",
+            "type": "Microsoft.Common.Slider",
+            "label": "Functions maximum instances (Flex Consumption)",
+            "min": 1,
+            "max": 1000,
+            "defaultValue": 40,
+            "showStepMarkers": false,
+            "subLabel": "instances",
+            "toolTip": "Caps scale-out and therefore the concurrency of calls to the AI services.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "functionInstanceMemoryMB",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Functions instance memory",
+            "defaultValue": 2048,
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "512 MB",
+                  "value": 512
+                },
+                {
+                  "label": "2048 MB",
+                  "value": 2048
+                },
+                {
+                  "label": "4096 MB",
+                  "value": 4096
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "deployEventHubs",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Deploy Event Hubs (CRM event feed, real-time phase)",
+            "defaultValue": true,
+            "visible": true
+          },
+          {
+            "name": "eventHubSku",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Event Hubs tier",
+            "defaultValue": "Basic",
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "Basic",
+                  "value": "Basic"
+                },
+                {
+                  "label": "Standard",
+                  "value": "Standard"
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "logAnalyticsRetentionDays",
+            "type": "Microsoft.Common.Slider",
+            "label": "Log retention",
+            "min": 30,
+            "max": 730,
+            "defaultValue": 30,
+            "showStepMarkers": false,
+            "subLabel": "days",
+            "toolTip": "",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          }
+        ]
+      },
+      {
+        "name": "auth",
+        "label": "Sign-in and reporting",
+        "elements": [
+          {
+            "name": "authInfo",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "Info",
+              "text": "Users sign in with Microsoft Entra ID. Leave these empty to create the app registration after deployment with Deployment/scripts/setup_entra.sh."
+            }
+          },
+          {
+            "name": "entraClientId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "App registration client ID",
+            "defaultValue": "",
+            "toolTip": "Application (client) ID",
+            "constraints": {
+              "required": false,
+              "regex": "^$|^[0-9a-fA-F-]{36}$",
+              "validationMessage": "Must be a GUID or empty."
+            },
+            "visible": true
+          },
+          {
+            "name": "entraClientSecret",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": {
+              "password": "Client secret",
+              "confirmPassword": "Confirm client secret"
+            },
+            "constraints": {
+              "required": false
+            },
+            "options": {
+              "hideConfirmation": true
+            },
+            "visible": true
+          },
+          {
+            "name": "entraDefaultRole",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Role for users without an assigned role",
+            "defaultValue": "Agent",
+            "toolTip": "",
+            "constraints": {
+              "allowedValues": [
+                {
+                  "label": "Agent (own calls only)",
+                  "value": "Agent"
+                },
+                {
+                  "label": "QA",
+                  "value": "QA"
+                },
+                {
+                  "label": "Supervisor",
+                  "value": "Supervisor"
+                },
+                {
+                  "label": "No access",
+                  "value": ""
+                }
+              ],
+              "required": true
+            },
+            "visible": true
+          },
+          {
+            "name": "powerBiWorkspaceId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Power BI workspace ID (optional)",
+            "defaultValue": "",
+            "toolTip": "",
+            "constraints": {
+              "required": false
+            },
+            "visible": true
+          },
+          {
+            "name": "powerBiReportId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Power BI report ID (optional)",
+            "defaultValue": "",
+            "toolTip": "",
+            "constraints": {
+              "required": false
+            },
+            "visible": true
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[location()]",
+      "solutionPrefix": "[basics('solutionPrefix')]",
+      "environmentName": "[basics('environmentName')]",
+      "speechSku": "[steps('ai').speech.speechSku]",
+      "languageSku": "[steps('ai').speech.languageSku]",
+      "openAiLocation": "[steps('ai').openai.openAiLocation]",
+      "openAiModelName": "[steps('ai').openai.openAiModelName]",
+      "openAiModelVersion": "[steps('ai').openai.openAiModelVersion]",
+      "openAiDeploymentSku": "[steps('ai').openai.openAiDeploymentSku]",
+      "openAiCapacity": "[steps('ai').openai.openAiCapacity]",
+      "storageSku": "[steps('data').storageSku]",
+      "recordingCoolAfterDays": "[steps('data').recordingCoolAfterDays]",
+      "recordingDeleteAfterDays": "[steps('data').recordingDeleteAfterDays]",
+      "rawTranscriptDeleteAfterDays": "[steps('data').rawTranscriptDeleteAfterDays]",
+      "cosmosCapacityMode": "[steps('data').cosmosCapacityMode]",
+      "cosmosThroughput": "[if(equals(steps('data').cosmosCapacityMode, 'Provisioned'), steps('data').cosmosThroughput, 400)]",
+      "webAppSku": "[steps('compute').webAppSku]",
+      "webAppInstanceCount": "[steps('compute').webAppInstanceCount]",
+      "functionMaximumInstances": "[steps('compute').functionMaximumInstances]",
+      "functionInstanceMemoryMB": "[steps('compute').functionInstanceMemoryMB]",
+      "deployEventHubs": "[steps('compute').deployEventHubs]",
+      "eventHubSku": "[steps('compute').eventHubSku]",
+      "logAnalyticsRetentionDays": "[steps('compute').logAnalyticsRetentionDays]",
+      "entraClientId": "[steps('auth').entraClientId]",
+      "entraClientSecret": "[steps('auth').entraClientSecret]",
+      "entraDefaultRole": "[steps('auth').entraDefaultRole]",
+      "powerBiWorkspaceId": "[steps('auth').powerBiWorkspaceId]",
+      "powerBiReportId": "[steps('auth').powerBiReportId]"
+    }
+  }
+}

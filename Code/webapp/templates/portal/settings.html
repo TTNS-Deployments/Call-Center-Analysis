@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Settings</h1><div class="sub">Scoring rules used for every new call. Changes apply to calls analysed after saving.</div></div>
+</div>
+
+<div class="grid grid-main">
+  <div>
+    <div class="tabs">
+      {% for name, label, desc in tabs %}<a href="?file={{ name }}" class="{% if name == current %}on{% endif %}">{{ label }}</a>{% endfor %}
+    </div>
+    {% for name, label, desc in tabs %}{% if name == current %}<p class="muted">{{ desc }} File: <span class="mono">{{ name }}</span> ·
+      {% if source == "storage" %}customised (saved in the <span class="mono">config</span> container){% elif source == "default" %}default from the repository{% else %}unsaved changes{% endif %}</p>{% endif %}{% endfor %}
+    {% if error %}<div class="msg error" style="margin-bottom:12px"><b>Not saved.</b> {{ error }}</div>{% endif %}
+    <form method="post" class="stack">
+      {% csrf_token %}
+      <input type="hidden" name="file" value="{{ current }}">
+      <textarea name="content" rows="30" spellcheck="false" aria-label="YAML configuration">{{ content }}</textarea>
+      <div class="toolbar">
+        <button class="btn primary" type="submit" name="action" value="save">Validate and save</button>
+        <button class="btn danger" type="submit" name="action" value="reset" onclick="return confirm('Replace with the repository default?')">Reset to default</button>
+        <span class="small muted">To re-score existing calls, use Re-analyse on a call.</span>
+      </div>
+    </form>
+  </div>
+  <div class="card" style="align-self:start">
+    <div class="card-h"><h2>Environment</h2></div>
+    <div class="card-b">
+      <dl class="kv small">{% for k, v in backends.items %}<dt>{{ k }}</dt><dd class="mono">{{ v }}</dd>{% endfor %}</dl>
+      <p class="small muted mt">Backends are switched with environment variables (see <span class="mono">Documents/configuration.md</span>). Service SKUs are set in <span class="mono">Deployment/ARM/parameters/*.parameters.json</span>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

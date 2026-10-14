@@ -1,0 +1,98 @@
+# QA scorecard used to score every call automatically.
+#
+# SAMPLE: replace with the customer's approved scorecard. No code change is needed:
+#   - edit this file before deployment, or
+#   - edit it at runtime from the web app (Settings -> QA rubric, Admin role).
+#     The runtime copy is saved to the `config` storage container and takes precedence.
+#
+# Fields
+#   id           stable identifier (used in reports, Power BI and Parquet). Do not rename after go-live.
+#   name         label shown in the UI
+#   category     grouping for dashboards (Greeting, Compliance, Resolution, Tone, ...)
+#   type         objective | subjective   (success criteria track agreement separately for each)
+#   max_points   weight of the criterion in the total score
+#   description  instruction given to the LLM; be specific, it is the scoring rule
+#   mock_keywords / mock_window  only used by the local mock scorer (window: opening | closing | any)
+
+version: 1
+name: Standard Customer Service Scorecard
+pass_threshold: 75          # percent of total points needed to pass
+
+criteria:
+  - id: greeting
+    name: Greeting and introduction
+    category: Greeting
+    type: objective
+    max_points: 10
+    description: >
+      Within the first two agent turns the agent greets the customer, names the company
+      and gives their own name.
+    mock_window: opening
+    mock_keywords: ["thank you for calling", "thanks for calling", "my name is", "this is"]
+
+  - id: verification
+    name: Customer identity verification
+    category: Compliance
+    type: objective
+    max_points: 15
+    description: >
+      Before discussing or changing any account details, the agent verifies the caller's
+      identity using at least one approved factor (registered mobile number, date of birth,
+      account number or last four digits of the card). Full card numbers, CVV or OTP must never be requested.
+    mock_window: any
+    mock_keywords: ["verify", "verification", "date of birth", "registered mobile", "last four digits", "confirm your"]
+
+  - id: needs_identification
+    name: Understanding the customer's need
+    category: Resolution
+    type: subjective
+    max_points: 15
+    description: >
+      The agent asks relevant questions, restates or confirms the customer's issue and does
+      not make the customer repeat themselves.
+    mock_window: any
+    mock_keywords: ["understand", "let me check", "can you tell me", "just to confirm", "could you please"]
+
+  - id: resolution
+    name: Resolution and next steps
+    category: Resolution
+    type: objective
+    max_points: 20
+    description: >
+      The issue is resolved on the call, or the agent gives a clear next step with a reference
+      or ticket number and an expected timeline.
+    mock_window: any
+    mock_keywords: ["resolved", "reference number", "ticket number", "within", "has been processed", "i have updated", "done"]
+
+  - id: empathy
+    name: Empathy and courtesy
+    category: Tone
+    type: subjective
+    max_points: 15
+    description: >
+      The agent acknowledges the customer's feelings, apologises where appropriate and stays
+      polite throughout, especially when the customer is frustrated.
+    mock_window: any
+    mock_keywords: ["sorry", "apologize", "apologise", "i understand", "completely understand", "appreciate your patience"]
+
+  - id: professional_tone
+    name: Professional tone and clarity
+    category: Tone
+    type: subjective
+    max_points: 10
+    description: >
+      The agent speaks clearly, avoids jargon, does not interrupt or argue, and keeps a
+      confident, professional tone.
+    mock_window: any
+    mock_keywords: ["please", "certainly", "absolutely", "happy to help", "of course"]
+
+  - id: closing
+    name: Closing
+    category: Greeting
+    type: objective
+    max_points: 15
+    description: >
+      Before ending, the agent summarises what was done, asks whether there is anything else
+      they can help with, and thanks the customer.
+    mock_window: closing
+    mock_keywords: ["anything else", "thank you for", "have a great", "have a nice", "good day"]

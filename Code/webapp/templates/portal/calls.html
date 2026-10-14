@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% block title %}Calls{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Calls</h1>
+    <div class="sub">{{ range.label }}{% if not perms.view_all_calls %} · your calls only{% endif %}</div>
+  </div>
+  <div class="toolbar">{% include "portal/partials/range.html" %}</div>
+</div>
+
+<div class="card">
+  <form class="filters" method="get" hx-get="{% url 'portal:calls' %}" hx-target="#calls-table" hx-push-url="true"
+        hx-trigger="change, keyup changed delay:400ms from:input[type=search], submit">
+    <input type="hidden" name="range" value="{{ range.key }}">
+    <input type="search" name="q" value="{{ filters.q }}" placeholder="Search call ID, agent, summary…" aria-label="Search">
+    {% if perms.view_all_calls %}
+    <select name="agent" aria-label="Agent"><option value="">All agents</option>
+      {% for id, name in options.agents %}<option value="{{ id }}" {% if filters.agent == id %}selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <select name="team" aria-label="Team"><option value="">All teams</option>
+      {% for t in options.teams %}<option value="{{ t }}" {% if filters.team == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select>
+    {% endif %}
+    <select name="reason" aria-label="Call reason"><option value="">All reasons</option>
+      {% for id, name in options.reasons %}<option value="{{ id }}" {% if filters.reason == id %}selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <select name="sentiment" aria-label="Customer sentiment"><option value="">Any sentiment</option>
+      <option value="positive" {% if filters.sentiment == "positive" %}selected{% endif %}>Positive</option>
+      <option value="neutral" {% if filters.sentiment == "neutral" %}selected{% endif %}>Neutral</option>
+      <option value="negative" {% if filters.sentiment == "negative" %}selected{% endif %}>Negative</option>
+    </select>
+    <select name="resolution" aria-label="Resolution"><option value="">Any resolution</option>
+      <option value="resolved" {% if filters.resolution == "resolved" %}selected{% endif %}>Resolved</option>
+      <option value="follow_up" {% if filters.resolution == "follow_up" %}selected{% endif %}>Follow up</option>
+      <option value="escalated" {% if filters.resolution == "escalated" %}selected{% endif %}>Escalated</option>
+      <option value="unresolved" {% if filters.resolution == "unresolved" %}selected{% endif %}>Unresolved</option>
+    </select>
+    <select name="flag" aria-label="Flag"><option value="">Any flag</option>
+      {% for key, label in flag_labels.items %}<option value="{{ key }}" {% if filters.flag == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <span class="small muted">QA</span>
+    <input type="number" name="qa_min" value="{{ filters.qa_min }}" min="0" max="100" placeholder="min" aria-label="Minimum QA score">
+    <input type="number" name="qa_max" value="{{ filters.qa_max }}" min="0" max="100" placeholder="max" aria-label="Maximum QA score">
+    {% if active_filters %}<a class="btn sm" href="?range={{ range.key }}">Clear</a>{% endif %}
+  </form>
+  <div id="calls-table">{% include "portal/partials/calls_table.html" %}</div>
+</div>
+{% endblock %}

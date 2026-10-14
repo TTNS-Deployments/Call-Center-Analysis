@@ -1,0 +1,13 @@
+# The `callcenter` package (Code/core) is copied into this folder at packaging time
+# by Deployment/scripts/package.sh. Keep these in line with Code/core/pyproject.toml.
+azure-functions>=1.20
+pyyaml>=6.0
+pyarrow>=16.0
+requests>=2.31
+azure-identity>=1.17
+azure-storage-blob>=12.20
+azure-storage-queue>=12.10
+azure-cosmos>=4.7
+azure-ai-textanalytics>=5.3
+azure-eventhub>=5.12
+openai>=1.40

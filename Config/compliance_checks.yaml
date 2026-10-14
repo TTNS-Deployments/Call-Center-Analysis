@@ -1,0 +1,77 @@
+# Mandatory script and disclosure checks.
+#
+# SAMPLE: replace with the customer's approved scripts and regulatory disclosures.
+# Editable at runtime from the web app (Settings -> Compliance checks, Admin role).
+#
+# Fields
+#   id            stable identifier
+#   name          label shown in the UI
+#   kind          required    -> the agent MUST say it (fails if missing)
+#                 prohibited  -> the agent must NOT do it (fails if detected)
+#   applies_when  optional condition; the check is skipped (N/A) when the condition does not occur
+#   description   rule given to the LLM
+#   example_phrases  approved wording; helps the LLM and is used by the local mock
+#   mock_keywords          local mock only: keywords that count as the agent saying/doing it
+#   mock_applies_keywords  local mock only: keywords that make a conditional check applicable
+
+version: 1
+checks:
+  - id: recording_disclosure
+    name: Call recording disclosure
+    kind: required
+    description: >
+      Early in the call the agent informs the customer that the call is recorded or monitored
+      for quality and training purposes.
+    example_phrases:
+      - "this call is being recorded for quality and training purposes"
+      - "this call may be recorded"
+    mock_keywords: ["recorded", "monitored"]
+
+  - id: identity_before_account_details
+    name: Identity verified before account details
+    kind: required
+    description: >
+      The agent completes identity verification before sharing or changing any account,
+      balance, card or personal details.
+    example_phrases:
+      - "before we proceed, may I verify"
+      - "for security purposes, can you confirm"
+    mock_keywords: ["verify", "security purposes", "confirm your registered", "confirm the last four"]
+
+  - id: no_sensitive_credentials
+    name: No request for OTP, CVV, PIN or full card number
+    kind: prohibited
+    description: >
+      The agent asks the customer for an OTP, CVV, ATM/UPI PIN, password or the full card number.
+    example_phrases:
+      - "please tell me the OTP"
+      - "read out your CVV"
+      - "what is your PIN"
+    mock_keywords: ["otp", "cvv", "full card number", " pin "]
+
+  - id: fee_disclosure
+    name: Fees and charges disclosed
+    kind: required
+    applies_when: A fee, charge, penalty, interest or price change is discussed or applied.
+    description: >
+      When a fee, charge or price change applies, the agent states the amount and when it
+      will be charged before the customer agrees.
+    example_phrases:
+      - "a charge of"
+      - "a fee of"
+      - "will be charged"
+    mock_keywords: ["will be charged", "a fee of", "fee of", "charged from", "free of charge"]
+    mock_applies_keywords: ["a fee", "fee of", "late fee", "will be charged", "upgrade", "new plan", "per month", "price"]
+
+  - id: escalation_offer
+    name: Escalation path offered
+    kind: required
+    applies_when: The issue cannot be resolved on the call or the customer asks for a supervisor.
+    description: >
+      If the issue is not resolved on the call, the agent offers escalation or a complaint
+      reference number and explains the expected turnaround time.
+    example_phrases:
+      - "I am escalating this"
+      - "your complaint reference number is"
+    mock_keywords: ["escalating", "complaint reference"]
+    mock_applies_keywords: ["escalat", "supervisor", "manager", "complaint", "not resolved", "unable to"]

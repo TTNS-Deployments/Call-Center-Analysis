@@ -1,0 +1,16 @@
+# The `callcenter` package (Code/core) and the Config/ folder are copied into this folder
+# at packaging time by Deployment/scripts/package.sh. Locally: pip install -e Code/core[azure]
+Django>=5.1
+gunicorn>=22.0
+whitenoise>=6.7
+msal>=1.30
+requests>=2.31
+pyyaml>=6.0
+pyarrow>=16.0
+azure-identity>=1.17
+azure-storage-blob>=12.20
+azure-storage-queue>=12.10
+azure-cosmos>=4.7
+azure-ai-textanalytics>=5.3
+azure-eventhub>=5.12
+openai>=1.40

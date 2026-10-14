@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% block title %}Agents{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Agents</h1><div class="sub">{{ range.label }} · {{ agents|length }} agent{{ agents|length|pluralize }}</div></div>
+  <div class="toolbar">{% include "portal/partials/range.html" %}</div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr>
+        <th>Agent</th><th class="right">Calls</th><th>Avg QA</th><th class="right">QA pass</th><th class="right">Compliance</th>
+        <th class="right">Resolved</th><th class="right">Customer sentiment</th><th class="right">AHT</th><th>Coaching focus</th>
+      </tr></thead>
+      <tbody>
+      {% for a in agents %}
+        <tr class="clickable" data-href="{% url 'portal:agent_detail' a.agent_id %}?range={{ range.key }}">
+          <td><a class="cell-title" href="{% url 'portal:agent_detail' a.agent_id %}?range={{ range.key }}">{{ a.agent_name }}</a><div class="cell-sub">{{ a.team }} · {{ a.agent_id }}</div></td>
+          <td class="right">{{ a.calls }}</td>
+          <td style="min-width:140px"><div class="toolbar"><div class="bar {{ a.avg_qa|score_class }}" style="flex:1"><span style="width:{{ a.avg_qa }}%"></span></div><span class="score {{ a.avg_qa|score_class }}">{{ a.avg_qa|pct }}</span></div></td>
+          <td class="right">{{ a.qa_pass_rate|pct }}</td>
+          <td class="right"><span class="score {{ a.compliance_rate|score_class }}">{{ a.compliance_rate|pct }}</span></td>
+          <td class="right">{{ a.resolved_pct|pct }}</td>
+          <td class="right">{{ a.avg_sentiment|signed }}</td>
+          <td class="right mono">{{ a.avg_duration|duration }}</td>
+          <td>{% if a.weakest %}<span class="chip">{{ a.weakest.name }} · {{ a.weakest.avg|pct }}</span>{% endif %}</td>
+        </tr>
+      {% empty %}<tr><td colspan="9" class="empty">No analysed calls in this period.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if criteria %}
+<div class="card mt">
+  <div class="card-h"><h2>Team average by QA criterion</h2></div>
+  <div class="card-b"><div class="chart-box"><canvas id="chart-criteria"></canvas></div></div>
+</div>
+{{ criteria|json_script:"criteria-data" }}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const c = CC.data("criteria-data");
+    if (c) CC.charts.hbar("chart-criteria", c.map(x => x.name), c.map(x => x.avg), { max: 100, colors: c.map(x => CC.charts.scoreColor(x.avg)) });
+  });
+</script>
+{% endblock %}

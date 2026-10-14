@@ -1,0 +1,111 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "solutionPrefix": {
+      "value": "ccai"
+    },
+    "location": {
+      "value": "centralindia"
+    },
+    "openAiLocation": {
+      "value": "centralindia"
+    },
+    "openAiModelName": {
+      "value": "gpt-4.1-mini"
+    },
+    "openAiModelVersion": {
+      "value": "2025-04-14"
+    },
+    "entraClientId": {
+      "value": ""
+    },
+    "entraDefaultRole": {
+      "value": "Agent"
+    },
+    "displayTimeZone": {
+      "value": "Asia/Kolkata"
+    },
+    "powerBiWorkspaceId": {
+      "value": ""
+    },
+    "powerBiReportId": {
+      "value": ""
+    },
+    "tags": {
+      "value": {
+        "owner": "TTNS",
+        "project": "call-center-analysis"
+      }
+    },
+    "environmentName": {
+      "value": "dev"
+    },
+    "storageSku": {
+      "value": "Standard_LRS"
+    },
+    "recordingCoolAfterDays": {
+      "value": 30
+    },
+    "recordingDeleteAfterDays": {
+      "value": 90
+    },
+    "rawTranscriptDeleteAfterDays": {
+      "value": 30
+    },
+    "speechSku": {
+      "value": "S0"
+    },
+    "languageSku": {
+      "value": "S"
+    },
+    "openAiDeploymentSku": {
+      "value": "GlobalStandard"
+    },
+    "openAiCapacity": {
+      "value": 30
+    },
+    "cosmosCapacityMode": {
+      "value": "Serverless"
+    },
+    "cosmosThroughput": {
+      "value": 400
+    },
+    "cosmosEnableFreeTier": {
+      "value": false
+    },
+    "webAppSku": {
+      "value": "B1"
+    },
+    "webAppInstanceCount": {
+      "value": 1
+    },
+    "functionPlanSku": {
+      "value": "FC1"
+    },
+    "functionMaximumInstances": {
+      "value": 10
+    },
+    "functionInstanceMemoryMB": {
+      "value": 2048
+    },
+    "deployEventHubs": {
+      "value": false
+    },
+    "eventHubSku": {
+      "value": "Basic"
+    },
+    "eventHubCapacity": {
+      "value": 1
+    },
+    "logAnalyticsRetentionDays": {
+      "value": 30
+    },
+    "logAnalyticsDailyQuotaGb": {
+      "value": 1
+    },
+    "keyVaultSku": {
+      "value": "standard"
+    }
+  }
+}

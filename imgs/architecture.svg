@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" font-family="Segoe UI, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+    <style>
+      .box{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:10}
+      .zone{fill:#f8fafc;stroke:#94a3b8;stroke-dasharray:6 5;rx:16}
+      .t{font-weight:600;fill:#0f172a}
+      .s{fill:#475569;font-size:11.5px}
+      .z{font-weight:700;fill:#334155;font-size:14px}
+      .ln{stroke:#475569;stroke-width:1.6;fill:none;marker-end:url(#a)}
+      .dash{stroke-dasharray:5 4}
+      .n{fill:#16a34a}
+      .nt{fill:#fff;font-weight:700;font-size:12px;text-anchor:middle}
+    </style>
+  </defs>
+  <rect width="1200" height="560" fill="#ffffff"/>
+
+  <!-- Ingest -->
+  <rect class="zone" x="20" y="40" width="200" height="300"/>
+  <text class="z" x="40" y="68">Call center</text>
+  <rect class="box" x="40" y="90" width="160" height="56"/><text class="t" x="56" y="114">Caller ⇄ Agent</text><text class="s" x="56" y="132">person-to-person call</text>
+  <rect class="box" x="40" y="180" width="160" height="56"/><text class="t" x="56" y="204">Telephony server</text><text class="s" x="56" y="222">uploads audio + metadata</text>
+  <path class="ln" d="M120 146V180"/>
+
+  <!-- Pipeline zone -->
+  <rect class="zone" x="250" y="40" width="660" height="480"/>
+  <text class="z" x="270" y="68">Intelligent transcription pipeline (Azure, managed identities)</text>
+
+  <rect class="box" x="270" y="180" width="150" height="56"/><text class="t" x="284" y="204">Blob / ADLS Gen2</text><text class="s" x="284" y="222">recordings/</text>
+  <path class="ln" d="M200 208H270"/>
+  <circle class="n" cx="235" cy="196" r="10"/><text class="nt" x="235" y="200">1</text>
+
+  <rect class="box" x="270" y="300" width="150" height="56"/><text class="t" x="284" y="324">Event Grid → Queue</text><text class="s" x="284" y="342">BlobCreated, retries</text>
+  <path class="ln dash" d="M345 236V300"/>
+
+  <rect class="box" x="460" y="300" width="170" height="56"/><text class="t" x="474" y="324">Function: transcribe</text><text class="s" x="474" y="342">Flex Consumption</text>
+  <path class="ln" d="M420 328H460"/>
+
+  <rect class="box" x="460" y="180" width="170" height="56"/><text class="t" x="474" y="204">Azure AI Speech</text><text class="s" x="474" y="222">fast transcription, diarization</text>
+  <path class="ln" d="M545 300V236"/>
+  <circle class="n" cx="560" cy="268" r="10"/><text class="nt" x="560" y="272">2</text>
+
+  <rect class="box" x="460" y="420" width="170" height="56"/><text class="t" x="474" y="444">Blob: transcripts/</text><text class="s" x="474" y="462">raw, auto-deleted</text>
+  <path class="ln" d="M545 356V420"/>
+
+  <rect class="box" x="680" y="420" width="200" height="56"/><text class="t" x="694" y="444">Function: enrich</text><text class="s" x="694" y="462">via Event Grid → Queue</text>
+  <path class="ln dash" d="M630 448H680"/>
+
+  <rect class="box" x="680" y="300" width="200" height="56"/><text class="t" x="694" y="324">Azure AI Language</text><text class="s" x="694" y="342">PII redaction · sentiment</text>
+  <path class="ln" d="M780 420V356"/>
+  <circle class="n" cx="795" cy="388" r="10"/><text class="nt" x="795" y="392">3</text>
+
+  <rect class="box" x="680" y="180" width="200" height="56"/><text class="t" x="694" y="204">Azure OpenAI</text><text class="s" x="694" y="222">summary · reason · QA · compliance</text>
+  <path class="ln" d="M780 300V236"/>
+  <circle class="n" cx="795" cy="268" r="10"/><text class="nt" x="795" y="272">4</text>
+
+  <rect class="box" x="680" y="90" width="200" height="56"/><text class="t" x="694" y="114">Insights store</text><text class="s" x="694" y="132">Cosmos DB + Parquet (ADLS)</text>
+  <path class="ln" d="M780 180V146"/>
+  <circle class="n" cx="795" cy="163" r="10"/><text class="nt" x="795" y="167">5</text>
+
+  <rect class="box" x="270" y="90" width="150" height="56"/><text class="t" x="284" y="114">Key Vault · Monitor</text><text class="s" x="284" y="132">secrets · App Insights</text>
+
+  <!-- Consume -->
+  <rect class="zone" x="940" y="40" width="240" height="480"/>
+  <text class="z" x="960" y="68">Interact and visualise</text>
+  <rect class="box" x="960" y="90" width="200" height="66"/><text class="t" x="974" y="114">Web app (Django)</text><text class="s" x="974" y="132">App Service · Entra ID sign-in</text><text class="s" x="974" y="147">calls · scorecards · pipeline</text>
+  <rect class="box" x="960" y="190" width="200" height="56"/><text class="t" x="974" y="214">Power BI</text><text class="s" x="974" y="232">KPIs, embedded in web app</text>
+  <rect class="box" x="960" y="280" width="200" height="56"/><text class="t" x="974" y="304">CRM</text><text class="s" x="974" y="322">REST API + Event Hubs feed</text>
+  <path class="ln" d="M880 112H960"/>
+  <path class="ln" d="M880 128C920 128 920 218 960 218"/>
+  <path class="ln" d="M880 136C910 136 910 308 960 308"/>
+  <circle class="n" cx="920" cy="100" r="10"/><text class="nt" x="920" y="104">6</text>
+
+  <text class="s" x="20" y="548">Numbers follow the TSD flow: 1 upload · 2 speech to text · 3 PII redaction and sentiment · 4 LLM insights · 5 store · 6 web app / Power BI / CRM</text>
+</svg>

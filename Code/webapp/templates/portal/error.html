@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="error-page">
+  <div class="code">{{ code }}</div>
+  <h1>{{ title }}</h1>
+  <p class="muted" style="margin-top:8px">{{ message }}</p>
+  <p style="margin-top:20px"><a class="btn" href="{% url 'portal:overview' %}">Back to overview</a></p>
+</div>
+{% endblock %}

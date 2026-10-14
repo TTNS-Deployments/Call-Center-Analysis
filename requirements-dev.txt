@@ -1,0 +1,5 @@
+# Everything needed to run, test and develop locally:  pip install -r requirements-dev.txt
+-e Code/core[azure]
+-r Code/webapp/requirements.txt
+azure-functions>=1.20
+pytest>=8.0

@@ -1,0 +1,38 @@
+# Local stack: web app (pipeline runs in-process with mock AI services) + Azurite storage emulator.
+#   docker compose up --build -d && docker compose run --rm seed
+#   open http://localhost:8000
+x-app-env: &app-env
+  CC_MODE: local
+  DJANGO_DEBUG: "false"
+  DJANGO_ALLOWED_HOSTS: "*"
+  # Exercise the real Azure Storage SDK against Azurite; call store stays SQLite in the volume.
+  STORAGE_BACKEND: azure
+  AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;"
+  LOCAL_DATA_DIR: /data
+
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.33.0
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --skipApiVersionCheck --loose
+    ports: ["10000:10000", "10001:10001"]
+    volumes: [azurite:/data]
+
+  web:
+    build: .
+    environment: *app-env
+    ports: ["8000:8000"]
+    volumes: [appdata:/data]
+    depends_on: [azurite]
+
+  seed:
+    build: .
+    profiles: [tools]
+    environment: *app-env
+    volumes: [appdata:/data]
+    depends_on: [azurite]
+    working_dir: /app
+    command: python -m callcenter seed --count 40
+
+volumes:
+  azurite:
+  appdata:

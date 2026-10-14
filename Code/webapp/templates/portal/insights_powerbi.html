@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Insights{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Insights</h1><div class="sub">Power BI report</div></div>
+  <div class="toolbar"><a class="btn" href="?view=builtin">Built-in analytics</a></div>
+</div>
+<div class="card" style="overflow:hidden">
+  <div id="pbi-error" class="msg error hidden" style="margin:16px"></div>
+  <div id="pbi-report" style="height:calc(100vh - 160px);min-height:560px"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/powerbi-client@2.23.1/dist/powerbi.min.js"></script>
+<script>
+  (async function () {
+    const container = document.getElementById("pbi-report");
+    const showError = (msg) => { const e = document.getElementById("pbi-error"); e.textContent = msg; e.classList.remove("hidden"); };
+    async function fetchConfig() {
+      const r = await fetch("{% url 'portal:powerbi_token' %}", { credentials: "same-origin" });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.error || "Failed to load report");
+      return body;
+    }
+    try {
+      const cfg = await fetchConfig();
+      const models = window["powerbi-client"].models;
+      const report = powerbi.embed(container, {
+        type: "report", id: cfg.reportId, embedUrl: cfg.embedUrl, accessToken: cfg.token,
+        tokenType: models.TokenType.Embed, settings: { panes: { filters: { visible: true } }, background: models.BackgroundType.Transparent },
+      });
+      // Refresh the embed token a few minutes before it expires.
+      const schedule = (expiry) => setTimeout(async () => {
+        const next = await fetchConfig(); await report.setAccessToken(next.token); schedule(next.expiry);
+      }, Math.max(60000, new Date(expiry) - Date.now() - 5 * 60000));
+      schedule(cfg.expiry);
+    } catch (err) { showError(err.message); }
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+// DAX measures for the Call Center Analysis model.
+// Tables: calls (1 row per call), qa_scores (1 row per criterion), compliance (1 row per check),
+//         utterances (1 row per utterance), plus a Date table marked as date table.
+// Relationships: calls[call_id] 1-* qa_scores/compliance/utterances[call_id]; Date[Date] 1-* calls[call_date].
+
+Calls = COUNTROWS ( calls )
+
+Avg QA % = AVERAGE ( calls[qa_percent] )
+
+QA Pass Rate = DIVIDE ( CALCULATE ( [Calls], calls[qa_passed] = TRUE () ), [Calls] )
+
+Compliance Pass Rate = DIVIDE ( CALCULATE ( [Calls], calls[compliance_passed] = TRUE () ), [Calls] )
+
+Negative Sentiment % = DIVIDE ( CALCULATE ( [Calls], calls[sentiment_label] = "negative" ), [Calls] )
+
+Avg Customer Sentiment = AVERAGE ( calls[customer_sentiment_score] )
+
+Resolved on Call % = DIVIDE ( CALCULATE ( [Calls], calls[resolution] = "resolved" ), [Calls] )
+
+Unresolved or Escalated % =
+DIVIDE ( CALCULATE ( [Calls], calls[resolution] IN { "unresolved", "escalated" } ), [Calls] )
+
+Repeat Contact % = DIVIDE ( CALCULATE ( [Calls], calls[flag_repeat_contact] = TRUE () ), [Calls] )
+
+Avg Handle Time (min) = DIVIDE ( AVERAGE ( calls[duration_sec] ), 60 )
+
+Flagged Calls =
+CALCULATE (
+    [Calls],
+    FILTER ( calls, calls[flag_unhappy] || calls[flag_repeat_contact] || calls[flag_unresolved] || calls[flag_compliance_breach] )
+)
+
+Criterion Avg % = AVERAGE ( qa_scores[percent] )
+
+Check Pass Rate =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( compliance ), compliance[status] = "pass" ),
+    CALCULATE ( COUNTROWS ( compliance ), compliance[status] IN { "pass", "fail" } )
+)
+
+Check Failures = CALCULATE ( COUNTROWS ( compliance ), compliance[status] = "fail" )
+
+Calls vs Previous Period % =
+VAR cur = [Calls]
+VAR prev = CALCULATE ( [Calls], DATEADD ( 'Date'[Date], -1, MONTH ) )
+RETURN DIVIDE ( cur - prev, prev )

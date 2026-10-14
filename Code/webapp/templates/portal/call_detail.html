@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% block title %}{{ call.call_id }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="small"><a href="{% url 'portal:calls' %}">← Calls</a></div>
+    <h1 style="margin-top:4px">{{ call.call_reason_name|default:call.call_id }}</h1>
+    <div class="call-head">
+      <span>Call <b class="mono">{{ call.call_id }}</b></span>
+      <span>Agent <b>{{ call.agent_name|default:"Unknown" }}</b>{% if call.team %} · {{ call.team }}{% endif %}</span>
+      <span>{{ call.started_at|dt }}</span>
+      <span>Duration <b>{{ call.duration_sec|duration }}</b></span>
+      {% if call.customer_id %}<span>Customer <b class="mono">{{ call.customer_id }}</b></span>{% endif %}
+    </div>
+  </div>
+  <div class="toolbar">
+    {% if call.status == "completed" %}
+      <span class="badge {{ call.resolution }}">{{ call.resolution|humanize }}</span>
+      <span class="badge {{ call.sentiment.customer }}"><span class="dot"></span>Customer {{ call.sentiment.customer }}</span>
+    {% else %}
+      <span class="badge {{ call.status }}">{{ call.status|humanize }}</span>
+    {% endif %}
+    {% if can_retry %}
+    <form method="post" action="{% url 'portal:call_retry' call.call_id %}">{% csrf_token %}
+      <button class="btn sm" type="submit" title="Run the analysis again">{% if call.status == "failed" %}Retry{% else %}Re-analyse{% endif %}</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if call.status != "completed" %}
+  <div class="card card-b">
+    {% if call.status == "failed" %}
+      <div class="msg error"><b>Processing failed</b> at the {{ call.stage }} stage: {{ call.error }}</div>
+    {% else %}
+      <div class="callout"><span class="spin"></span> This call is being processed ({{ call.status|humanize }}). Refresh in a moment.</div>
+    {% endif %}
+    <h3 class="mt">History</h3>
+    <ul class="list">{% for h in call.history reversed %}<li><span>{{ h.event }}</span><span class="small muted nowrap">{{ h.at|dt:"d M H:i:s" }}</span></li>{% endfor %}</ul>
+  </div>
+{% else %}
+
+{% if call.flag_list %}
+<div class="messages">
+  <div class="msg error">{% for f in call.flag_list %}<span class="flag {{ f }}">{{ flag_labels|get:f }}</span>{% endfor %}</div>
+</div>
+{% endif %}
+
+<div class="grid grid-main">
+  <!-- Left: player + transcript -->
+  <div class="card">
+    <div class="player">
+      <audio id="call-audio" controls preload="metadata" src="{% url 'portal:call_audio' call.call_id %}"></audio>
+      <div class="sentiment-strip" title="Sentiment per utterance – click to jump">
+        {% for u in call.transcript %}<span class="{% if u.sentiment == 'positive' %}pos{% elif u.sentiment == 'negative' %}neg{% elif u.sentiment == 'mixed' %}mix{% endif %}" data-start="{{ u.start_ms|seconds }}" title="{{ u.start_ms|clock }} {{ u.speaker }}: {{ u.sentiment }}"></span>{% endfor %}
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--good)"></i>Positive</span><span><i style="background:var(--neutral-soft)"></i>Neutral</span>
+        <span><i style="background:var(--bad)"></i>Negative</span><span><i style="background:var(--ok)"></i>Mixed</span>
+        <label style="margin-left:auto"><input type="checkbox" id="follow-audio" checked> Follow audio</label>
+      </div>
+    </div>
+    <div class="card-h"><h2>Transcript</h2><span class="small muted">{{ call.pii.total }} personal data item{{ call.pii.total|pluralize }} redacted</span></div>
+    <div class="transcript">
+      {% for u in call.transcript %}
+      <div class="line {{ u.speaker }}" data-start="{{ u.start_ms|seconds }}">
+        <span class="t">{{ u.start_ms|clock }}</span>
+        <span class="who">{{ u.speaker }}</span>
+        <span class="txt">{{ u.text|pii }}</span>
+        <span class="s {{ u.sentiment }}" title="{{ u.sentiment }}"></span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Right: insights -->
+  <div class="stack">
+    <div class="card">
+      <div class="card-h"><h2>Summary</h2></div>
+      <div class="card-b">
+        <p>{{ call.summary|pii }}</p>
+        <dl class="kv mt">
+          <dt>Reason</dt><dd>{{ call.call_reason_name }}{% if call.call_reason_detail %}<div class="small muted">{{ call.call_reason_detail|pii }}</div>{% endif %}</dd>
+          <dt>Root cause</dt><dd>{{ call.root_cause|default:"–" }}</dd>
+          <dt>Outcome</dt><dd><span class="badge {{ call.resolution }}">{{ call.resolution|humanize }}</span></dd>
+          <dt>Emotion</dt><dd class="emotion-flow"><span class="chip">{{ call.emotion.start }}</span>→<span class="chip">{{ call.emotion.end }}</span></dd>
+          <dt>Sentiment</dt><dd>Customer <b>{{ call.sentiment.customer_score|signed }}</b> · Agent <b>{{ call.sentiment.agent_score|signed }}</b></dd>
+        </dl>
+        {% if call.follow_up_actions %}<h3 class="mt">Follow-up</h3><ul style="margin:6px 0 0;padding-left:18px">{% for a in call.follow_up_actions %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">
+        <h2>QA scorecard</h2>
+        <span class="badge {% if call.qa.passed %}pass{% else %}fail{% endif %}">{% if call.qa.passed %}Pass{% else %}Below threshold{% endif %}</span>
+      </div>
+      <div class="card-b">
+        <div class="big-score"><span class="n score {{ call.qa.percent|score_class }}">{{ call.qa.percent|floatformat:0 }}</span><span class="muted">/ 100 · {{ call.qa.score }} of {{ call.qa.max }} points</span></div>
+        <div class="mt">
+          {% for c in call.qa.criteria %}
+          {% with p=c.score|ratio_pct:c.max_points %}
+          <div class="crit">
+            <div class="crit-top"><span>{{ c.name }} <span class="chip small">{{ c.type }}</span></span><span class="score {{ p|score_class }}">{{ c.score }}/{{ c.max_points }}</span></div>
+            <div class="bar {{ p|score_class }}"><span style="width:{{ p }}%"></span></div>
+            <details><summary>Why this score</summary>
+              {% if c.evidence %}<div class="quote">“{{ c.evidence|pii }}”</div>{% endif %}
+              <div class="small muted">{{ c.rationale }}</div>
+            </details>
+          </div>
+          {% endwith %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Compliance</h2>
+        <span class="badge {% if call.compliance.passed %}pass{% else %}fail{% endif %}">{% if call.compliance.passed %}All checks met{% else %}{{ call.compliance.failed_count }} failed{% endif %}</span></div>
+      <div class="card-b">
+        {% for c in call.compliance.checks %}
+        <div class="check">
+          <span class="ic {{ c.status }}">{% if c.status == "pass" %}✓{% elif c.status == "fail" %}✕{% else %}–{% endif %}</span>
+          <div class="grow">
+            <div><b>{{ c.name }}</b> <span class="small muted">{% if c.status == "not_applicable" %}not applicable{% else %}{{ c.kind }}{% endif %}</span></div>
+            {% if c.evidence %}<div class="quote">“{{ c.evidence|pii }}”</div>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if call.coaching_tips %}
+    <div class="card">
+      <div class="card-h"><h2>Coaching</h2></div>
+      <div class="card-b"><ul style="margin:0;padding-left:18px">{% for t in call.coaching_tips %}<li>{{ t }}</li>{% endfor %}</ul></div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-h"><h2>Processing</h2></div>
+      <div class="card-b small">
+        <dl class="kv">
+          <dt>Processed</dt><dd>{{ call.processed_at|dt }}</dd>
+          <dt>Speech</dt><dd>{{ call.sources.speech }}</dd>
+          <dt>Language</dt><dd>{{ call.sources.language }}</dd>
+          <dt>LLM</dt><dd>{{ call.model }} · {{ call.prompt_version }}</dd>
+          {% if call.token_usage %}<dt>Tokens</dt><dd>{{ call.token_usage.prompt_tokens }} in / {{ call.token_usage.completion_tokens }} out</dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

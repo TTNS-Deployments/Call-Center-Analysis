@@ -1,0 +1,49 @@
+{% load portal_tags %}
+{% sort_toggle sort "started_at" as s_started %}{% sort_toggle sort "agent" as s_agent %}{% sort_toggle sort "sentiment" as s_sentiment %}{% sort_toggle sort "qa" as s_qa %}{% sort_toggle sort "duration" as s_duration %}
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th><a href="{% qs sort=s_started %}">Date {% if sort == "-started_at" %}↓{% elif sort == "started_at" %}↑{% endif %}</a></th>
+        <th>Call</th>
+        <th><a href="{% qs sort=s_agent %}">Agent {% if sort == "-agent" %}↓{% elif sort == "agent" %}↑{% endif %}</a></th>
+        <th>Summary</th>
+        <th><a href="{% qs sort=s_sentiment %}">Sentiment {% if sort == "-sentiment" %}↓{% elif sort == "sentiment" %}↑{% endif %}</a></th>
+        <th>Resolution</th>
+        <th class="right"><a href="{% qs sort=s_qa %}">QA {% if sort == "-qa" %}↓{% elif sort == "qa" %}↑{% endif %}</a></th>
+        <th class="right"><a href="{% qs sort=s_duration %}">Duration</a></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for c in page.object_list %}
+      <tr class="clickable" data-href="{% url 'portal:call_detail' c.call_id %}">
+        <td class="nowrap">{{ c.started_at|dt:"d M Y" }}<div class="cell-sub">{{ c.started_at|dt:"H:i" }}</div></td>
+        <td class="nowrap"><a class="cell-title" href="{% url 'portal:call_detail' c.call_id %}">{{ c.call_id }}</a>
+          <div class="cell-sub">{{ c.call_reason_name|default:"" }}</div></td>
+        <td class="nowrap">{{ c.agent_name|default:"–" }}<div class="cell-sub">{{ c.team|default:"" }}</div></td>
+        <td>
+          {% if c.status == "completed" %}
+            <div class="summary-cell">{{ c.summary|pii }}</div>
+            {% if c.flag_list %}<div style="margin-top:4px">{% for f in c.flag_list %}<span class="flag {{ f }}">{{ flag_labels|get:f }}</span>{% endfor %}</div>{% endif %}
+          {% else %}
+            <span class="badge {{ c.status }}">{% if c.status != "failed" %}<span class="spin"></span>{% endif %} {{ c.status|humanize }}</span>
+          {% endif %}
+        </td>
+        <td>{% if c.sentiment %}<span class="badge {{ c.sentiment.customer }}"><span class="dot"></span>{{ c.sentiment.customer|humanize }}</span>{% endif %}</td>
+        <td>{% if c.resolution %}<span class="badge {{ c.resolution }}">{{ c.resolution|humanize }}</span>{% endif %}</td>
+        <td class="right">{% if c.qa %}<span class="score {{ c.qa.percent|score_class }}">{{ c.qa.percent|pct }}</span>{% endif %}</td>
+        <td class="right mono">{{ c.duration_sec|duration }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" class="empty">No calls match these filters.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="pager">
+  <span>{{ total }} call{{ total|pluralize }}{% if page.paginator.num_pages > 1 %} · page {{ page.number }} of {{ page.paginator.num_pages }}{% endif %}</span>
+  <span class="toolbar">
+    {% if page.has_previous %}<a class="btn sm" href="{% qs page=page.previous_page_number %}">← Previous</a>{% endif %}
+    {% if page.has_next %}<a class="btn sm" href="{% qs page=page.next_page_number %}">Next →</a>{% endif %}
+  </span>
+</div>

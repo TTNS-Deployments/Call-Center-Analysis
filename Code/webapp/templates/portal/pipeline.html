@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Pipeline{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Pipeline</h1><div class="sub">Recording → transcription → PII redaction & sentiment → LLM insights → Parquet / Power BI</div></div>
+</div>
+
+<div class="grid grid-main">
+  <div id="pipeline-tables" hx-get="{% url 'portal:pipeline' %}" hx-trigger="every 5s" hx-swap="innerHTML">
+    {% include "portal/partials/pipeline_tables.html" %}
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>Upload a recording</h2></div>
+    <div class="card-b">
+      <p class="small muted">In production the telephony server uploads recordings to the <span class="mono">recordings</span> storage container. Use this form to test with your own file.{% if local %} In local mode the mock speech service returns a sample conversation instead of real recognition.{% endif %}</p>
+      <form method="post" action="{% url 'portal:upload' %}" enctype="multipart/form-data" class="stack">
+        {% csrf_token %}
+        <label class="dropzone">
+          <input type="file" name="audio" accept="{{ audio_ext }}" required style="display:block;margin:0 auto 8px">
+          <span class="small">Drop an audio file here ({{ audio_ext }}), max {{ max_upload_mb }} MB</span>
+          <div class="file-name cell-title"></div>
+        </label>
+        <div class="form-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+          <label class="field">Call ID <input type="text" name="call_id" placeholder="auto"></label>
+          <label class="field">Call start <input type="datetime-local" name="started_at"></label>
+          <label class="field">Agent ID <input type="text" name="agent_id" placeholder="A1001"></label>
+          <label class="field">Agent name <input type="text" name="agent_name"></label>
+          <label class="field">Agent email <input type="email" name="agent_email"></label>
+          <label class="field">Team <input type="text" name="team"></label>
+          <label class="field">Customer ID <input type="text" name="customer_id"></label>
+          <label class="field">Direction <select name="direction"><option value="inbound">Inbound</option><option value="outbound">Outbound</option></select></label>
+        </div>
+        <div><label class="small"><input type="checkbox" name="stereo"> Stereo recording (agent and customer on separate channels)</label></div>
+        <div><button class="btn primary" type="submit">Upload and analyse</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
