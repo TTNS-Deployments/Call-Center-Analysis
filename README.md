@@ -55,7 +55,7 @@ Who sees what is controlled by Entra ID app roles:
 | Role | Access |
 |---|---|
 | **Admin** | Everything, including settings |
-| **Supervisor** | Everything, plus the pipeline |
+| **Supervisor** | All calls, agents, insights and the pipeline (not Settings) |
 | **QA** | All calls, agents and insights |
 | **Agent** | Their own calls and their own scorecard |
 
@@ -88,7 +88,7 @@ python -m callcenter seed
 cd Code/webapp && python manage.py runserver
 ```
 
-**Moving to real services:** set the variables for one service at a time in `.env`, for example `LLM_BACKEND=azure` with `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_KEY`. Everything else stays mocked. See [Local development](Documents/local-development.md) and [Configuration](Documents/configuration.md).
+**Moving to real services:** copy `.env.example` to `.env` and set the variables for one service at a time, for example `LLM_BACKEND=azure` with `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_KEY` and `AZURE_OPENAI_DEPLOYMENT`. Everything else stays mocked. The `make` targets load `.env`; when you run Python directly, export the variables in your shell instead. See [Local development](Documents/local-development.md) and [Configuration](Documents/configuration.md).
 
 Docker alternative: `make docker-up` runs the web app with the Azurite storage emulator.
 
@@ -132,9 +132,9 @@ Full steps, CI/CD with GitHub Actions and troubleshooting are in the [Deployment
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Post-call analysis: recording, transcription, PII redaction, sentiment, QA, compliance, insights, web app, Power BI, CRM API | Implemented (sample QA rubric and compliance scripts, to be replaced with the customer's) |
-| 2 | Real-time transcription and agent assist during the call | Planned: Event Hubs is provisioned; see [Architecture → Phase 2](Documents/architecture.md#phase-2-real-time) |
+| 2 | Real-time transcription and agent assist during the call | Planned: Event Hubs is provisioned when `deployEventHubs` is `true` (the prod parameters file); see [Architecture → Phase 2](Documents/architecture.md#phase-2-real-time) |
 
-The language is English only (`en-US`) for now. Other locales are a configuration change (`SPEECH_LOCALE`), plus validation of accuracy.
+The language is English only (`en-US`) for now. Other languages need code changes as well as `SPEECH_LOCALE`: PII redaction and sentiment are called with English, and the LLM prompt is written in English. Accuracy would also need re-validation.
 
 <br/>
 
