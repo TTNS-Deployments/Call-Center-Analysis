@@ -22,3 +22,7 @@ local.settings.json
 !.vscode/extensions.json
 .idea/
 .DS_Store
+
+# Client PDF build files and brand images (kept out of git; see artifact-build/README.md)
+artifact-build/
+brand/
