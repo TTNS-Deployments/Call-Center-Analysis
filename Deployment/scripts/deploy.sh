@@ -9,7 +9,7 @@
 #   -l, --location         region for the resource group (default: centralindia)
 #   -s, --subscription     subscription ID or name (default: current az account)
 #       --setup-entra      create the Entra ID app registration and roles (first deployment)
-#       --seed             upload synthetic sample calls after deployment (demo / smoke test)
+#       --seed             upload synthetic sample calls after deployment (demo / smoke test; needs `make setup`)
 #       --skip-infra       only deploy code
 #       --skip-code        only deploy infrastructure
 #
@@ -88,8 +88,14 @@ if [[ $SEED -eq 1 ]]; then
   echo "==> Uploading sample calls (processed by the Functions)"
   (
     cd "$ROOT"
+    PY="python3"
+    [[ -x "$ROOT/.venv/bin/python" ]] && PY="$ROOT/.venv/bin/python"
+    if ! "$PY" -c "import callcenter, azure.storage.blob" 2>/dev/null; then
+      echo "Cannot seed: the callcenter package is not installed. Run 'make setup' and re-run with --skip-infra --skip-code --seed." >&2
+      exit 1
+    fi
     export CC_MODE=azure AZURE_STORAGE_ACCOUNT_URL="$(out storageBlobEndpoint)" COSMOS_ENDPOINT="$(out cosmosEndpoint)"
-    python3 -m callcenter seed --count 20
+    "$PY" -m callcenter seed --count 20
   )
 fi
 

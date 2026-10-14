@@ -34,7 +34,7 @@ The script:
 3. Packages the code and deploys it to the Function app and the web app. Both use remote build, so dependencies are installed by Azure.
 4. With `--setup-entra`, runs `setup_entra.sh`. This creates the app registration with the redirect URI and four app roles, stores a client secret in Key Vault, sets `ENTRA_CLIENT_ID` on the web app, writes it into your parameters file, and assigns you **Admin**.
 
-Re-running is safe. Use `--skip-infra` to deploy code only, `--skip-code` to deploy infrastructure only, and `--seed` to upload 20 synthetic calls as a smoke test.
+Re-running is safe. Use `--skip-infra` to deploy code only, `--skip-code` to deploy infrastructure only, and `--seed` to upload 20 synthetic calls as a smoke test. `--seed` runs the `callcenter` package on your machine, so run `make setup` first (the script uses `.venv` automatically).
 
 ## 2b. Deploy with the button
 
