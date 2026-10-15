@@ -7,7 +7,7 @@
 | Azure subscription | **Owner** on the target resource group (or Contributor + User Access Administrator), because the template creates role assignments. |
 | Entra ID permissions | Ability to create app registrations (the default for members), and Cloud Application Administrator or similar to assign app roles to others. |
 | Azure OpenAI | The subscription must have access and quota for the chosen model and deployment type in `openAiLocation`. Check *Azure AI Foundry → Quotas*. |
-| Tools | Azure CLI 2.60+ (`az login`), bash, `rsync`, `zip` and `python3` (Linux, macOS, WSL or Cloud Shell). |
+| Tools | Azure CLI 2.60+ (`az login`), bash, `zip` and `python3` (Linux, macOS, WSL or Azure Cloud Shell, which has all of them and is already signed in). |
 | Resource providers | `Microsoft.Web`, `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.EventGrid`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.OperationalInsights`, `Microsoft.Insights`, `Microsoft.Storage`. Register them with `az provider register -n <ns>`. |
 
 ### If you only have Owner on one resource group

@@ -15,10 +15,11 @@ rm -rf "$BUILD" && mkdir -p "$BUILD"
 stage() {  # stage <name> <app source dir>
   local dir="$BUILD/$1"
   mkdir -p "$dir"
-  rsync -a --exclude '__pycache__' --exclude '*.pyc' --exclude 'staticfiles' --exclude 'local.settings*.json' \
-        --exclude '.venv' --exclude 'tests' "$2/" "$dir/"
-  rsync -a --exclude '__pycache__' --exclude '*.pyc' "$ROOT/Code/core/callcenter" "$dir/"
-  rsync -a "$ROOT/Config" "$dir/"
+  # tar instead of rsync so this also runs in Azure Cloud Shell and minimal images
+  tar -C "$2" --exclude='__pycache__' --exclude='*.pyc' --exclude='staticfiles' --exclude='local.settings*.json' \
+      --exclude='.venv' --exclude='tests' -cf - . | tar -C "$dir" -xf -
+  tar -C "$ROOT/Code/core" --exclude='__pycache__' --exclude='*.pyc' -cf - callcenter | tar -C "$dir" -xf -
+  tar -C "$ROOT" -cf - Config | tar -C "$dir" -xf -
   (cd "$dir" && zip -qr "$BUILD/$1.zip" .)
   echo "Built $BUILD/$1.zip"
 }
