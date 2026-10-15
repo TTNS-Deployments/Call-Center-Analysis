@@ -1,0 +1,81 @@
+# Three scripted demo calls for testing a REAL Azure deployment end to end.
+# The audio (DEMO-000x.wav) was synthesised from these scripts with generate_audio.py (Piper TTS, offline).
+# All names, numbers and addresses are fictitious.
+#
+# Each call is designed to exercise different features; expected results are in README.md.
+
+calls:
+  - id: DEMO-0001
+    title: Plan upgrade, model call (stereo)
+    channels: 2              # agent on channel 0, customer on channel 1 -> tests per-channel speakers
+    metadata:
+      agent_id: A1001
+      agent_name: Priya Sharma
+      agent_email: priya.sharma@contoso.com
+      team: Team Alpha
+      customer_id: CUST-10021
+      direction: inbound
+    voices: {agent: en_US-amy-medium, customer: en_US-ryan-medium}
+    lines:
+      - [agent, "Good morning, thank you for calling Northwind Services. My name is Priya. How may I help you today?"]
+      - [agent, "Please note that this call is being recorded for quality and training purposes."]
+      - [customer, "Hi Priya, this is Rohan Das. My mobile data runs out every month, so I'd like to upgrade my plan."]
+      - [agent, "I'd be happy to help with that. Before we proceed, may I verify your registered mobile number and your date of birth?"]
+      - [customer, "Sure. It's 9 8 7 6 5, 4 3 2 1 0. And my date of birth is the twelfth of March, nineteen ninety."]
+      - [agent, "Thank you, Mister Das, you are verified. I can offer you the unlimited plan with three gigabytes of data per day."]
+      - [agent, "The new plan has a fee of seven hundred and ninety nine rupees per month, which will be charged from your next billing cycle. Would you like to go ahead?"]
+      - [customer, "Yes, that sounds good. Please go ahead."]
+      - [agent, "Done. Your plan has been upgraded and it is active right away. Your reference number is C R N 4 5 2 7 8 1 9. Could you confirm your email address for the confirmation?"]
+      - [customer, "It's rohan dot das at example dot com."]
+      - [agent, "Thank you. To summarise, your plan is now unlimited, and the new fee starts from your next bill. Is there anything else I can help you with today?"]
+      - [customer, "No, that's all. Thanks a lot, that was really helpful."]
+      - [agent, "You're welcome. Thank you for calling Northwind Services, and have a great day!"]
+
+  - id: DEMO-0002
+    title: Card fraud with compliance breaches (mono)
+    channels: 1              # one channel -> tests speaker diarization (first speaker = agent)
+    metadata:
+      agent_id: A1004
+      agent_name: Vikram Singh
+      agent_email: vikram.singh@contoso.com
+      team: Team Beta
+      customer_id: CUST-20457
+      direction: inbound
+    voices: {agent: en_GB-alan-medium, customer: en_US-amy-medium}
+    lines:
+      - [agent, "Northwind card services, Vikram speaking."]
+      - [customer, "Hello, I just got a message about a transaction I did not make. I'm really worried, someone is using my card."]
+      - [agent, "Okay. Tell me the full card number and the C V V on the back."]
+      - [customer, "Um, okay. It's 4 1 1 1, 2 2 2 2, 3 3 3 3, 4 4 4 4. The C V V is 1 2 3. My name is Meera Nair."]
+      - [agent, "And read me the O T P you just received."]
+      - [customer, "It says 5 8 2 9 1 4. Is that safe?"]
+      - [agent, "I can see a transaction of two thousand four hundred rupees at an online store. I have blocked the card."]
+      - [customer, "Thank god. Will I get my money back?"]
+      - [agent, "I have raised a dispute. Your reference number is C R N 7 7 3 1 0 4 2. The amount will be credited within seven working days if the dispute is approved."]
+      - [customer, "Okay. Thank you, that's a relief."]
+      - [agent, "Bye."]
+
+  - id: DEMO-0003
+    title: Repeat complaint, escalated and unresolved (mono)
+    channels: 1
+    metadata:
+      agent_id: A1002
+      agent_name: Rahul Verma
+      agent_email: rahul.verma@contoso.com
+      team: Team Alpha
+      customer_id: CUST-31188
+      direction: inbound
+    voices: {agent: en_US-ryan-medium, customer: en_GB-alan-medium}
+    lines:
+      - [agent, "Thank you for calling Northwind Services technical support. This is Rahul. This call may be recorded for quality and training purposes."]
+      - [customer, "This is Karan Malhotra. This is the third time I'm calling about my internet. It has not worked for four days. This is completely unacceptable."]
+      - [agent, "I'm really sorry about this, Mister Malhotra. I understand how frustrating it is. Can you confirm your registered mobile number so I can check the line?"]
+      - [customer, "9 1 2 3 4, 5 6 7 8 9. I already gave all of this the last two times."]
+      - [agent, "Thank you. I can see a fault at the local exchange, and the field team is still working on it."]
+      - [customer, "So when will it be fixed? I work from home. I'm losing money every single day."]
+      - [agent, "I'm unable to give you an exact time today."]
+      - [customer, "Then I want to speak to a supervisor. If this isn't fixed, I will cancel my connection."]
+      - [agent, "I understand. I am escalating this to my supervisor and the field team. Your complaint reference number is C R N 3 3 9 0 1 5 6, and you will get a call back within twenty four hours."]
+      - [customer, "Fine. But I don't believe anything will happen."]
+      - [agent, "Is there anything else I can help you with?"]
+      - [customer, "No."]

@@ -29,3 +29,8 @@ def test_sentiment_labels():
     assert analyze("This is terrible, I'm really disappointed")["sentiment"] == "negative"
     assert analyze("Great, thank you so much")["sentiment"] == "positive"
     assert analyze("My account number please")["sentiment"] == "neutral"
+
+
+def test_digits_read_out_one_by_one_are_redacted():
+    p = analyze("It's 4 1 1 1, 2 2 2 2, 3 3 3 3, 4 4 4 4 and my number is 9 8 7 6 5, 4 3 2 1 0.")
+    assert "[CARD]" in p["text"] and "[PHONE]" in p["text"] and "4 1 1 1" not in p["text"]

@@ -1,0 +1,9 @@
+{
+  "agent_id": "A1002",
+  "agent_name": "Rahul Verma",
+  "agent_email": "rahul.verma@contoso.com",
+  "team": "Team Alpha",
+  "customer_id": "CUST-31188",
+  "direction": "inbound",
+  "channels": 1
+}

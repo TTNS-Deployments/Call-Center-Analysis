@@ -1,0 +1,9 @@
+{
+  "agent_id": "A1004",
+  "agent_name": "Vikram Singh",
+  "agent_email": "vikram.singh@contoso.com",
+  "team": "Team Beta",
+  "customer_id": "CUST-20457",
+  "direction": "inbound",
+  "channels": 1
+}

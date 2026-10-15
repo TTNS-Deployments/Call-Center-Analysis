@@ -1,0 +1,10 @@
+{
+  "agent_id": "A1001",
+  "agent_name": "Priya Sharma",
+  "agent_email": "priya.sharma@contoso.com",
+  "team": "Team Alpha",
+  "customer_id": "CUST-10021",
+  "direction": "inbound",
+  "channels": 2,
+  "agent_channel": 0
+}

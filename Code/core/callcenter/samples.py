@@ -122,8 +122,23 @@ def _pick_scenario(data: dict, rng: random.Random) -> dict:
     return rng.choices(scenarios, weights=[s.get("weight", 1) for s in scenarios])[0]
 
 
+def demo_script(call_id: str) -> list[dict] | None:
+    """Lines of a scripted demo call (Data/demo_calls/scripts.yaml), if call_id is one of them."""
+    data_dir = get_settings().data_dir
+    path = data_dir / "demo_calls" / "scripts.yaml" if data_dir else None
+    if not path or not path.is_file():
+        return None
+    for call in yaml.safe_load(path.read_text(encoding="utf-8")).get("calls", []):
+        if call["id"] == call_id:
+            return [{"speaker": speaker, "text": text} for speaker, text in call["lines"]]
+    return None
+
+
 def script_for_upload(filename: str, metadata: dict) -> list[dict]:
     """Script for a file uploaded without one (mock mode), deterministic per file name."""
+    demo = demo_script(filename.rsplit(".", 1)[0])
+    if demo:
+        return demo
     data = load_scenarios()
     rng = random.Random(hash_int(filename))
     agent = {"name": metadata.get("agent_name") or rng.choice(data["agents"])["name"]}

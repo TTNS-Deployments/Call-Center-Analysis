@@ -4,12 +4,14 @@
 #   Deployment/scripts/deploy.sh -g <resource-group> -e <dev|prod> [options]
 #
 # Options
-#   -g, --resource-group   resource group (created if missing)            [required]
+#   -g, --resource-group   resource group (created if missing); default RESOURCE_GROUP from the env file
 #   -e, --environment      parameters file to use: Deployment/ARM/parameters/<env>.parameters.json [required]
+#                          Deployment/environments/<env>.env (optional) supplies defaults for -g/-l/-s and flags
 #   -l, --location         region for the resource group (default: centralindia)
 #   -s, --subscription     subscription ID or name (default: current az account)
 #       --setup-entra      create the Entra ID app registration and roles (first deployment)
-#       --seed             upload synthetic sample calls after deployment (demo / smoke test; needs `make setup`)
+#       --no-setup-entra   skip it even if the env file sets SETUP_ENTRA=1
+#       --seed             upload the 3 demo recordings (Data/demo_calls) after deployment (needs `make setup`)
 #       --skip-infra       only deploy code
 #       --skip-code        only deploy infrastructure
 #
@@ -19,15 +21,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCRIPTS="$ROOT/Deployment/scripts"
-RG="" ENV="" LOCATION="centralindia" SUBSCRIPTION="" SETUP_ENTRA=0 SEED=0 SKIP_INFRA=0 SKIP_CODE=0
+RG="" ENV="" LOCATION="centralindia" LOCATION_SET=0 SUBSCRIPTION="" SETUP_ENTRA=0 NO_SETUP_ENTRA=0 SEED=0 SKIP_INFRA=0 SKIP_CODE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -g|--resource-group) RG="$2"; shift 2 ;;
     -e|--environment) ENV="$2"; shift 2 ;;
-    -l|--location) LOCATION="$2"; shift 2 ;;
+    -l|--location) LOCATION="$2"; LOCATION_SET=1; shift 2 ;;
     -s|--subscription) SUBSCRIPTION="$2"; shift 2 ;;
     --setup-entra) SETUP_ENTRA=1; shift ;;
+    --no-setup-entra) NO_SETUP_ENTRA=1; shift ;;
     --seed) SEED=1; shift ;;
     --skip-infra) SKIP_INFRA=1; shift ;;
     --skip-code) SKIP_CODE=1; shift ;;
@@ -35,7 +38,23 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown option $1" >&2; exit 1 ;;
   esac
 done
-[[ -n "$RG" && -n "$ENV" ]] || { echo "Usage: $0 -g <resource-group> -e <environment>  (see --help)" >&2; exit 1; }
+[[ -n "$ENV" ]] || { echo "Usage: $0 -e <environment> [-g <resource-group>]  (see --help)" >&2; exit 1; }
+
+# Optional per-environment variables (Deployment/environments/<env>.env). Command-line options win.
+ENV_FILE="$ROOT/Deployment/environments/$ENV.env"
+if [[ -f "$ENV_FILE" ]]; then
+  echo "Using variables from $(basename "$ENV_FILE")"
+  CLI_LOCATION="$LOCATION" CLI_SETUP_ENTRA="$SETUP_ENTRA" CLI_SEED="$SEED"
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"   # may set RESOURCE_GROUP, LOCATION, AZURE_SUBSCRIPTION, SETUP_ENTRA, SEED
+  [[ -z "$RG" ]] && RG="${RESOURCE_GROUP:-}"
+  [[ "$LOCATION_SET" -eq 1 || -z "${LOCATION:-}" ]] && LOCATION="$CLI_LOCATION"
+  [[ -z "$SUBSCRIPTION" ]] && SUBSCRIPTION="${AZURE_SUBSCRIPTION:-}"
+  [[ "$CLI_SETUP_ENTRA" == "1" ]] && SETUP_ENTRA=1
+  [[ "$CLI_SEED" == "1" ]] && SEED=1
+fi
+[[ "$NO_SETUP_ENTRA" -eq 1 ]] && SETUP_ENTRA=0
+[[ -n "$RG" ]] || { echo "No resource group: pass -g or set RESOURCE_GROUP in $ENV_FILE" >&2; exit 1; }
 
 PARAMS="$ROOT/Deployment/ARM/parameters/$ENV.parameters.json"
 [[ -f "$PARAMS" ]] || { echo "Parameters file not found: $PARAMS" >&2; exit 1; }
@@ -85,7 +104,7 @@ if [[ $SETUP_ENTRA -eq 1 ]]; then
 fi
 
 if [[ $SEED -eq 1 ]]; then
-  echo "==> Uploading sample calls (processed by the Functions)"
+  echo "==> Uploading the 3 demo calls from Data/demo_calls (processed by the Functions)"
   (
     cd "$ROOT"
     PY="python3"
@@ -95,7 +114,7 @@ if [[ $SEED -eq 1 ]]; then
       exit 1
     fi
     export CC_MODE=azure AZURE_STORAGE_ACCOUNT_URL="$(out storageBlobEndpoint)" COSMOS_ENDPOINT="$(out cosmosEndpoint)"
-    "$PY" -m callcenter seed --count 20
+    "$PY" -m callcenter upload Data/demo_calls
   )
 fi
 

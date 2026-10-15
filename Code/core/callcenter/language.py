@@ -94,6 +94,7 @@ PII_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("DateTime", re.compile(rf"\b\d{{1,2}}(?:st|nd|rd|th)?\s+(?:{_MONTHS})\s+(?:19|20)\d{{2}}\b")),
     ("Address", re.compile(r"\b(?:Flat|House|Plot|Apt\.?)\s+\d+[^.]*?\b\d{6}\b")),
 ]
+SPOKEN_DIGITS = re.compile(r"\b\d(?:[ ,\-]{1,3}\d){9,18}\b")
 NAME_INTRO = re.compile(
     r"(?i:my name is|this is|I'm|I am|name is)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)|\b([A-Z][a-z]+) speaking\b"
 )
@@ -132,6 +133,11 @@ class MockLanguageClient(LanguageClient):
         for category, pattern in PII_PATTERNS:
             for m in pattern.finditer(text):
                 found.append({"category": category, "offset": m.start(), "length": m.end() - m.start()})
+        for m in SPOKEN_DIGITS.finditer(text):  # digits read out one by one: "4 1 1 1, 2 2 2 2, ..."
+            digits = re.sub(r"\D", "", m.group(0))
+            category = ("CreditCardNumber" if len(digits) in (15, 16) else
+                        "PhoneNumber" if len(digits) == 10 and digits[0] in "6789" else "BankAccountNumber")
+            found.append({"category": category, "offset": m.start(), "length": m.end() - m.start()})
         for m in NAME_INTRO.finditer(text):
             group = 1 if m.group(1) else 2
             name = m.group(group)

@@ -18,6 +18,7 @@
       "type": "string",
       "defaultValue": "dev",
       "allowedValues": [
+        "demo",
         "dev",
         "test",
         "uat",

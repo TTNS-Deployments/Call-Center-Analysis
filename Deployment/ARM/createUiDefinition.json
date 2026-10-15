@@ -32,6 +32,10 @@
         "constraints": {
           "allowedValues": [
             {
+              "label": "Demo",
+              "value": "demo"
+            },
+            {
               "label": "Development",
               "value": "dev"
             },

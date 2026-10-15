@@ -3,13 +3,30 @@
 | File | Purpose |
 |---|---|
 | `ARM/azuredeploy.json` | The ARM template for every Azure resource, role assignment and app setting |
-| `ARM/parameters/dev.parameters.json`, `prod.parameters.json` | **The SKU files.** Pick the tier and size of every service per environment. Copy one to add an environment (`test`, `uat`). |
+| `ARM/parameters/demo.parameters.json`, `dev.parameters.json`, `prod.parameters.json` | **The SKU files.** Pick the tier and size of every service per environment. Copy one to add an environment (`test`, `uat`). |
 | `ARM/createUiDefinition.json` | Portal form used by the *Deploy to Azure* button (a dropdown per SKU) |
-| `scripts/deploy.sh` | Infrastructure + code in one command (`-g <rg> -e <env> [--setup-entra] [--seed]`) |
+| `environments/<env>.env` | Optional deployment variables per environment (subscription, resource group, region, setup flags) read by `deploy.sh` |
+| `scripts/deploy.sh` | Infrastructure + code in one command (`-e <env> [-g <rg>] [--setup-entra] [--seed]`) |
 | `scripts/setup_entra.sh` | Entra ID app registration, app roles, client secret in Key Vault |
 | `scripts/package.sh` | Builds `build/webapp.zip` and `build/functions.zip` |
 
 Step-by-step instructions are in [Documents/deployment-guide.md](../Documents/deployment-guide.md).
+
+## Demo environment
+
+For a demo or proof of concept, use the `demo` files. They pick the cheapest settings that still run the whole pipeline:
+
+| File | Contents |
+|---|---|
+| `ARM/parameters/demo.parameters.json` | SKUs: web app B1; Functions Flex Consumption, max 5 instances; Speech S0 and Language S (pay per use, no fixed cost); Azure OpenAI `gpt-4.1-mini` GlobalStandard, 20K TPM; Cosmos DB serverless; Event Hubs off; LRS storage; recordings deleted after 30 days, raw transcripts after 7; logs capped at 1 GB/day; users without a role get **Supervisor** (sees all demo calls) |
+| `environments/demo.env` | Deployment variables: subscription, resource group (`rg-callcenter-demo`), region (`centralindia`), whether to set up Entra ID sign-in and whether to seed sample calls |
+
+```bash
+az login
+Deployment/scripts/deploy.sh -e demo        # everything comes from the two demo files
+```
+
+After the first run, set `SETUP_ENTRA=0` in `demo.env` (each setup run adds a new client secret). Remove the demo with `az group delete -n rg-callcenter-demo`.
 
 ## SKU and sizing parameters
 

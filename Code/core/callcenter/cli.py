@@ -1,6 +1,7 @@
 """Command line tools.
 
     python -m callcenter seed --count 40     # generate + process sample calls (local mode)
+    python -m callcenter upload              # upload the 3 demo recordings (Data/demo_calls); local or Azure
     python -m callcenter process path/to/call.wav [--meta meta.json]
     python -m callcenter worker              # watch the recordings container and process new files
     python -m callcenter retry CALL-...
@@ -40,6 +41,39 @@ def cmd_seed(args) -> int:
                   f"{doc['sentiment']['customer']:<8} {doc['resolution']}")
         except Exception as exc:  # noqa: BLE001
             print(f"  [{i}/{len(calls)}] {call_id}  FAILED: {exc}")
+    return 0
+
+
+def cmd_upload(args) -> int:
+    """Upload recordings (+ same-name .json metadata) to the recordings container.
+
+    Local mode: processed right away. Azure mode: Event Grid triggers the Functions.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from . import pipeline
+
+    s = get_settings()
+    blobs = get_blob_store()
+    paths = [Path(p) for p in (args.paths or [str(s.data_dir / "demo_calls")])]
+    files = sorted(f for p in paths for f in ([p] if p.is_file() else p.iterdir()) if pipeline.is_audio(f.name))
+    if not files:
+        print("No audio files found", file=sys.stderr)
+        return 1
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    for i, audio in enumerate(files):
+        sidecar = audio.with_suffix(".json")
+        meta = json.loads(sidecar.read_text()) if sidecar.is_file() else {}
+        meta.setdefault("started_at", (now - timedelta(hours=len(files) - i)).isoformat())
+        if args.agent_email and i == 0:
+            meta["agent_email"] = args.agent_email  # lets that user test the Agent ("My scorecard") view
+        blobs.put_json(s.container_recordings, f"{audio.stem}.json", meta)  # metadata first
+        blobs.put_bytes(s.container_recordings, audio.name, audio.read_bytes())
+        if s.mode == "azure" and not args.process:
+            print(f"Uploaded {audio.name} -> processing in Azure Functions")
+            continue
+        doc = pipeline.process_recording(audio.name, force=True)
+        print(f"Processed {audio.name}: QA {doc['qa']['percent']}%  {doc['resolution']}  flags={doc['flag_list']}")
     return 0
 
 
@@ -120,6 +154,12 @@ def main(argv=None) -> int:
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--process", action="store_true", help="in azure mode, also process in-process instead of via Functions")
     p.set_defaults(func=cmd_seed)
+
+    p = sub.add_parser("upload", help="upload recordings + metadata (default: the 3 demo calls)")
+    p.add_argument("paths", nargs="*", help="audio files or folders (default Data/demo_calls)")
+    p.add_argument("--agent-email", help="assign the first call to this agent email (to test the Agent view)")
+    p.add_argument("--process", action="store_true", help="in azure mode, process in-process instead of via Functions")
+    p.set_defaults(func=cmd_upload)
 
     p = sub.add_parser("process", help="upload and process one audio file")
     p.add_argument("file")
