@@ -108,7 +108,7 @@ You do not edit app settings for secrets. The template wires everything:
 Locally, everything runs with mocks. Each mock has an Azure counterpart that is selected by environment variables, so you can connect services one at a time and test them before a full deployment. For example, run locally but use the deployed OpenAI:
 
 ```bash
-LLM_BACKEND=azure AZURE_OPENAI_ENDPOINT=https://<name>.openai.azure.com AZURE_OPENAI_DEPLOYMENT=gpt-4.1-mini \
+LLM_BACKEND=azure AZURE_OPENAI_ENDPOINT=https://<name>.openai.azure.com AZURE_OPENAI_DEPLOYMENT=gpt-5-mini \
 python -m callcenter process path/to/call.wav
 ```
 

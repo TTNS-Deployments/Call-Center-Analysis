@@ -170,6 +170,12 @@ class AzureOpenAIInsightsClient(InsightsClient):
             kwargs["azure_ad_token_provider"] = get_bearer_token_provider(get_credential(), COGNITIVE_SCOPE)
         self.client = AzureOpenAI(**kwargs)
         self.deployment = settings.openai_deployment
+        self.reasoning_effort = settings.openai_reasoning_effort
+
+    def _model_options(self) -> dict:
+        if self.reasoning_effort and self.reasoning_effort != "none":
+            return {"reasoning_effort": self.reasoning_effort}  # GPT-5 / o-series: no temperature
+        return {"temperature": 0}
 
     def _generate(self, phrases, metadata, rules):
         user = (
@@ -178,7 +184,7 @@ class AzureOpenAIInsightsClient(InsightsClient):
         )
         response = self.client.chat.completions.create(
             model=self.deployment,
-            temperature=0,
+            **self._model_options(),
             messages=[{"role": "system", "content": build_system_prompt(rules)}, {"role": "user", "content": user}],
             response_format={
                 "type": "json_schema",

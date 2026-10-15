@@ -170,8 +170,8 @@
                 "name": "openAiModelName",
                 "type": "Microsoft.Common.TextBox",
                 "label": "Model",
-                "defaultValue": "gpt-4.1-mini",
-                "toolTip": "Chat model used to summarise and score calls.",
+                "defaultValue": "gpt-5-mini",
+                "toolTip": "Chat model used to summarise and score calls (GPT-5 family).",
                 "constraints": {
                   "required": true
                 },
@@ -181,7 +181,7 @@
                 "name": "openAiModelVersion",
                 "type": "Microsoft.Common.TextBox",
                 "label": "Model version",
-                "defaultValue": "2025-04-14",
+                "defaultValue": "2025-08-07",
                 "toolTip": "",
                 "constraints": {
                   "required": true
@@ -225,6 +225,39 @@
                 "toolTip": "",
                 "constraints": {
                   "required": true
+                },
+                "visible": true
+              },
+              {
+                "name": "openAiReasoningEffort",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Reasoning effort",
+                "defaultValue": "Low",
+                "toolTip": "GPT-5 models: more effort is slower and uses more tokens. Choose None only for a non-reasoning model.",
+                "constraints": {
+                  "required": true,
+                  "allowedValues": [
+                    {
+                      "label": "Minimal",
+                      "value": "minimal"
+                    },
+                    {
+                      "label": "Low",
+                      "value": "low"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "medium"
+                    },
+                    {
+                      "label": "High",
+                      "value": "high"
+                    },
+                    {
+                      "label": "None (non-reasoning model)",
+                      "value": "none"
+                    }
+                  ]
                 },
                 "visible": true
               }
@@ -616,7 +649,8 @@
       "entraClientSecret": "[steps('auth').entraClientSecret]",
       "entraDefaultRole": "[steps('auth').entraDefaultRole]",
       "powerBiWorkspaceId": "[steps('auth').powerBiWorkspaceId]",
-      "powerBiReportId": "[steps('auth').powerBiReportId]"
+      "powerBiReportId": "[steps('auth').powerBiReportId]",
+      "openAiReasoningEffort": "[steps('ai').openai.openAiReasoningEffort]"
     }
   }
 }

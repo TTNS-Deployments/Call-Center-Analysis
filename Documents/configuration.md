@@ -34,8 +34,9 @@ All runtime settings are environment variables:
 | `PII_IGNORE_CATEGORIES` | `Organization,DateTime,Quantity,PersonType,URL` | PII categories that are not redacted. DateTime values that contain a year are always redacted. |
 | `LLM_BACKEND` | `mock` / `azure` | |
 | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_KEY` | – | |
-| `AZURE_OPENAI_DEPLOYMENT` | `gpt-4.1-mini` | Deployment name. |
-| `AZURE_OPENAI_API_VERSION` | `2024-10-21` | Needs to support `json_schema` structured output. |
+| `AZURE_OPENAI_DEPLOYMENT` | `gpt-5-mini` | Deployment name. |
+| `AZURE_OPENAI_API_VERSION` | `2025-04-01-preview` | Must support the model and `json_schema` structured output. |
+| `AZURE_OPENAI_REASONING_EFFORT` | `low` | GPT-5 / o-series models: `minimal`, `low`, `medium` or `high` (sent instead of `temperature`). `none` = non-reasoning model, sends `temperature=0`. |
 | `EVENTS_BACKEND` | `none` | `eventhub` publishes a `call.insights.completed` event per call. |
 | `EVENTHUB_NAMESPACE`, `EVENTHUB_NAME` | –, `call-insights` | Fully qualified namespace (`<ns>.servicebus.windows.net`). |
 | `AZURE_CLIENT_ID` | – | Client ID of a user-assigned managed identity, if one is used. |

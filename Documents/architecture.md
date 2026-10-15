@@ -28,9 +28,9 @@ This document is the *Azure Deployment Architecture Document* deliverable (TSD Â
 | Monitoring | Log Analytics + Application Insights | Logs, traces and failures for both apps | `logAnalyticsRetentionDays`, `logAnalyticsDailyQuotaGb` |
 | Identity | Entra ID app registration and enterprise app | User sign-in (OIDC) and app roles: Admin, Supervisor, QA, Agent | `entraClientId` |
 
-**Differences from the TSD estimate.** The TSD estimate listed GPT-3.5-Turbo in East US. This template defaults to a current model (`gpt-4.1-mini`) in the solution region, for two reasons:
+**Differences from the TSD estimate.** The TSD estimate listed GPT-3.5-Turbo in East US. This template defaults to a current GPT-5 family model (`gpt-5-mini`) in the solution region, for two reasons:
 
-- GPT-3.5-Turbo is retired.
+- GPT-3.5-Turbo is retired, and the GPT-4 family is no longer recommended for new projects.
 - Processing PII-derived text outside India conflicts with the data-residency expectations in the TSD.
 
 Both are parameters. Azure Functions run on Flex Consumption because the Linux Consumption plan is being retired.

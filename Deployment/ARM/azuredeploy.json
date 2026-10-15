@@ -111,14 +111,14 @@
     },
     "openAiModelName": {
       "type": "string",
-      "defaultValue": "gpt-4.1-mini",
+      "defaultValue": "gpt-5-mini",
       "metadata": {
-        "description": "Chat model used for call insights."
+        "description": "Chat model used for call insights (GPT-5 family, e.g. gpt-5-mini, gpt-5, gpt-5-nano)."
       }
     },
     "openAiModelVersion": {
       "type": "string",
-      "defaultValue": "2025-04-14",
+      "defaultValue": "2025-08-07",
       "metadata": {
         "description": "Model version."
       }
@@ -141,6 +141,27 @@
       "minValue": 1,
       "metadata": {
         "description": "Deployment capacity in thousands of tokens per minute."
+      }
+    },
+    "openAiApiVersion": {
+      "type": "string",
+      "defaultValue": "2025-04-01-preview",
+      "metadata": {
+        "description": "Azure OpenAI API version used by the Functions (must support the model and JSON-schema output)."
+      }
+    },
+    "openAiReasoningEffort": {
+      "type": "string",
+      "defaultValue": "low",
+      "allowedValues": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "none"
+      ],
+      "metadata": {
+        "description": "Reasoning effort for GPT-5 / o-series models (more effort = slower and more tokens). Use 'none' for a non-reasoning model such as gpt-4.1."
       }
     },
     "cosmosCapacityMode": {
@@ -1055,6 +1076,14 @@
             {
               "name": "AZURE_OPENAI_DEPLOYMENT",
               "value": "[variables('openAiDeploymentName')]"
+            },
+            {
+              "name": "AZURE_OPENAI_API_VERSION",
+              "value": "[parameters('openAiApiVersion')]"
+            },
+            {
+              "name": "AZURE_OPENAI_REASONING_EFFORT",
+              "value": "[parameters('openAiReasoningEffort')]"
             },
             {
               "name": "EVENTS_BACKEND",

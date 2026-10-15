@@ -18,7 +18,7 @@ For a demo or proof of concept, use the `demo` files. They pick the cheapest set
 
 | File | Contents |
 |---|---|
-| `ARM/parameters/demo.parameters.json` | SKUs: web app B1; Functions Flex Consumption (max 40 instances, the lowest Flex allows; billed per execution); Speech S0 and Language S (pay per use, no fixed cost); Azure OpenAI `gpt-4.1-mini` GlobalStandard, 20K TPM; Cosmos DB serverless; Event Hubs off; LRS storage; recordings deleted after 30 days, raw transcripts after 7; logs capped at 1 GB/day; users without a role get **Supervisor** (sees all demo calls) |
+| `ARM/parameters/demo.parameters.json` | SKUs: web app B1; Functions Flex Consumption (max 40 instances, the lowest Flex allows; billed per execution); Speech S0 and Language S (pay per use, no fixed cost); Azure OpenAI `gpt-5-mini` GlobalStandard, 20K TPM, reasoning effort low; Cosmos DB serverless; Event Hubs off; LRS storage; recordings deleted after 30 days, raw transcripts after 7; logs capped at 1 GB/day; users without a role get **Supervisor** (sees all demo calls) |
 | `environments/demo.env` | Deployment variables: subscription, resource group (`rg-callcenter-demo`), region (`centralindia`), whether to set up Entra ID sign-in and whether to seed sample calls |
 
 ```bash
@@ -44,7 +44,9 @@ The values below are the defaults in the two parameter files. "Options" are the 
 | `speechSku` | S0 | S0 | `S0`, `F0` (free: 5 audio h/month, one per subscription) |
 | `languageSku` | S | S | `S`, `F0` (free: 5k records/month, one per subscription) |
 | `openAiLocation` | centralindia | centralindia | Region of the Azure OpenAI resource; must offer the model |
-| `openAiModelName` / `openAiModelVersion` | gpt-4.1-mini / 2025-04-14 | same | Any chat model that supports JSON-schema output |
+| `openAiModelName` / `openAiModelVersion` | gpt-5-mini / 2025-08-07 | same | A GPT-5 family chat model offered in the region (check with `az cognitiveservices model list -l <region>`) |
+| `openAiApiVersion` | 2025-04-01-preview | same | API version the Functions use; must support the model |
+| `openAiReasoningEffort` | low | low | `minimal`, `low`, `medium`, `high`; `none` for a non-reasoning model |
 | `openAiDeploymentSku` | GlobalStandard | GlobalStandard | `Standard` (in-region processing), `DataZoneStandard`, `GlobalStandard` |
 | `openAiCapacity` | 30 | 100 | Thousands of tokens per minute (TPM). About 4k tokens per 5-minute call. |
 | **Database** | | | |

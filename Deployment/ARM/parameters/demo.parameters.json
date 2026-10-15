@@ -33,16 +33,22 @@
       "value": "centralindia"
     },
     "openAiModelName": {
-      "value": "gpt-4.1-mini"
+      "value": "gpt-5-mini"
     },
     "openAiModelVersion": {
-      "value": "2025-04-14"
+      "value": "2025-08-07"
     },
     "openAiDeploymentSku": {
       "value": "GlobalStandard"
     },
     "openAiCapacity": {
       "value": 20
+    },
+    "openAiApiVersion": {
+      "value": "2025-04-01-preview"
+    },
+    "openAiReasoningEffort": {
+      "value": "low"
     },
     "cosmosCapacityMode": {
       "value": "Serverless"

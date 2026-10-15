@@ -72,7 +72,7 @@ The metadata file has this shape. All fields are optional:
 
 ## 4. LLM insights (`callcenter/llm.py`, prompt `callcenter/prompts/insights_v1.md`)
 
-- **Request:** `chat.completions` with `temperature=0` and `response_format = json_schema (strict)`. The schema is built from the current configuration, so the IDs of criteria, checks and reasons are enums.
+- **Request:** `chat.completions` with `response_format = json_schema (strict)`. GPT-5 models get `reasoning_effort` (default `low`, setting `AZURE_OPENAI_REASONING_EFFORT`) and no `temperature`, which they do not accept; a non-reasoning model (`none`) gets `temperature=0`. The schema is built from the current configuration, so the IDs of criteria, checks and reasons are enums.
 - **System prompt:** the rules, then the reason taxonomy, the QA criteria with `max_points` and type, the compliance checks with kind, `applies_when` and approved wording, and the resolution definitions.
 - **User message:** the call ID, the direction and the transcript as `[mm:ss] AGENT|CUSTOMER: text`.
 - **Output fields:**

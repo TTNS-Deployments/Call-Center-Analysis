@@ -87,8 +87,11 @@ class Settings:
     llm_backend: str = "mock"
     openai_endpoint: str = ""
     openai_key: str = ""
-    openai_deployment: str = "gpt-4.1-mini"
-    openai_api_version: str = "2024-10-21"
+    openai_deployment: str = "gpt-5-mini"
+    openai_api_version: str = "2025-04-01-preview"
+    # GPT-5 / o-series are reasoning models: they take reasoning_effort and reject temperature.
+    # "none" = classic chat model (e.g. gpt-4.1): temperature=0 is sent instead.
+    openai_reasoning_effort: str = "low"
 
     # Events (downstream CRM / real-time phase)
     events_backend: str = "none"
@@ -148,8 +151,9 @@ def get_settings() -> Settings:
         llm_backend=_env("LLM_BACKEND", "azure" if azure else "mock").lower(),
         openai_endpoint=_env("AZURE_OPENAI_ENDPOINT").rstrip("/"),
         openai_key=_env("AZURE_OPENAI_KEY"),
-        openai_deployment=_env("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-mini"),
-        openai_api_version=_env("AZURE_OPENAI_API_VERSION", "2024-10-21"),
+        openai_deployment=_env("AZURE_OPENAI_DEPLOYMENT", "gpt-5-mini"),
+        openai_api_version=_env("AZURE_OPENAI_API_VERSION", "2025-04-01-preview"),
+        openai_reasoning_effort=_env("AZURE_OPENAI_REASONING_EFFORT", "low").lower(),
         events_backend=_env("EVENTS_BACKEND", "none").lower(),
         eventhub_namespace=_env("EVENTHUB_NAMESPACE"),
         eventhub_name=_env("EVENTHUB_NAME", "call-insights"),

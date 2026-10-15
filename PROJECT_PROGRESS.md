@@ -46,14 +46,14 @@ Repository: https://github.com/TTNS-Deployments/Call-Center-Analysis (**public**
 - Done and pushed: full solution, tests (core 26, webapp 8), CI workflow green, client PDF, README/docs
   fact-checked and corrected, official TTBS logo in web app + PDF.
 - Verified only locally (mocks, Azurite, Bicep compile of the ARM template). **Nothing deployed to Azure yet.**
-- Unverified: gpt-4.1-mini GlobalStandard availability/quota in centralindia; Flex Consumption remote
+- Unverified: GPT-5 model availability/quota in centralindia; Flex Consumption remote
   build; Event Grid queue message encoding (code accepts both); Entra setup script against a real tenant.
 
 ## Current task (2026-10-15): demo deployment
 
 User has Azure subscription access and wants a **demo deployment**, then to test every feature.
 - `Deployment/ARM/parameters/demo.parameters.json`: cheapest working SKUs (B1 web, Flex max 40 (Flex minimum), Speech S0,
-  Language S, gpt-4.1-mini GlobalStandard 20K TPM, Cosmos serverless, Event Hubs off, entraDefaultRole=Supervisor).
+  Language S, gpt-5-mini GlobalStandard 20K TPM (reasoning effort low), Cosmos serverless, Event Hubs off, entraDefaultRole=Supervisor).
 - `Deployment/environments/demo.env`: RG `rg-callcenter-demo`, `centralindia`, SETUP_ENTRA=1, SEED=1.
   `deploy.sh -e demo` reads it (CLI options override; `--no-setup-entra` added). `demo` added to allowed env names.
 - `Data/demo_calls/`: 3 real-speech recordings (Piper TTS, offline) + JSON metadata + `scripts.yaml` +
@@ -67,6 +67,11 @@ User has Azure subscription access and wants a **demo deployment**, then to test
   about unregistered providers; deployment guide documents RG-only limits and how Key Vault secrets reach the app.
 - RESOURCE_GROUP set to "Vaibhav.Chaudhary" (centralindia) in demo.env. Next: user runs `make setup`, `az login`, checks OpenAI quota/model in centralindia, then
   `Deployment/scripts/deploy.sh -e demo`, then follows `Data/demo_calls/README.md`.
+
+- **Model switched to GPT-5 family** (user: GPT-4 deprecated). Default `gpt-5-mini` 2025-08-07, API version
+  2025-04-01-preview, `AZURE_OPENAI_REASONING_EFFORT=low` (no temperature for reasoning models). User would like
+  "gpt-5.1-mini" if Azure offers it: after `az login`, run `az cognitiveservices model list -l centralindia` and set
+  openAiModelName/openAiModelVersion in demo.parameters.json to the exact name/version listed.
 
 ## Open items / ideas
 

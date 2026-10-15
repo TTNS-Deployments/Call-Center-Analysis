@@ -51,7 +51,7 @@ LANGUAGE_BACKEND=azure
 LANGUAGE_ENDPOINT=https://<language>.cognitiveservices.azure.com
 LLM_BACKEND=azure
 AZURE_OPENAI_ENDPOINT=https://<aoai>.openai.azure.com
-AZURE_OPENAI_DEPLOYMENT=gpt-4.1-mini
+AZURE_OPENAI_DEPLOYMENT=gpt-5-mini
 ```
 
 You can authenticate in either of two ways:
