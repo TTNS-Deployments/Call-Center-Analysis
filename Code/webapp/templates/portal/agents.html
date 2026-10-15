@@ -35,8 +35,8 @@
 
 {% if criteria %}
 <div class="card mt">
-  <div class="card-h"><h2>Team average by QA criterion</h2></div>
-  <div class="card-b"><div class="chart-box"><canvas id="chart-criteria"></canvas></div></div>
+  <div class="card-h"><h2>Team % met by QA parameter</h2><span class="small muted">N/A ratings excluded</span></div>
+  <div class="card-b"><div class="chart-box tall" style="height:520px"><canvas id="chart-criteria"></canvas></div></div>
 </div>
 {{ criteria|json_script:"criteria-data" }}
 {% endif %}
@@ -44,8 +44,8 @@
 {% block scripts %}
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const c = CC.data("criteria-data");
-    if (c) CC.charts.hbar("chart-criteria", c.map(x => x.name), c.map(x => x.avg), { max: 100, colors: c.map(x => CC.charts.scoreColor(x.avg)) });
+    const c = (CC.data("criteria-data") || []).filter(x => x.avg !== null);
+    if (c.length) CC.charts.hbar("chart-criteria", c.map(x => x.name), c.map(x => x.avg), { max: 100, colors: c.map(x => CC.charts.scoreColor(x.avg)) });
   });
 </script>
 {% endblock %}

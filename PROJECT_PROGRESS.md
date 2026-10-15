@@ -73,6 +73,16 @@ User has Azure subscription access and wants a **demo deployment**, then to test
   "gpt-5.1-mini" if Azure offers it: after `az login`, run `az cognitiveservices model list -l centralindia` and set
   openAiModelName/openAiModelVersion in demo.parameters.json to the exact name/version listed.
 
+- **QA rubric replaced with the customer's 20-parameter evaluation** (user's "Parameters for call center
+  analysis" PDF): ratings Fully met (5) / Partial (3) / Not met (0) / N/A (excluded); QA % = weighted credit over
+  applicable parameters; per-parameter recommendation; prioritised coaching (High/Medium/Low); agent page shows the
+  parameter table (avg score, counts, % met, verdict Strength/Inconsistent/Needs improvement, example quote).
+  Speech metrics (wpm, dead air >=10 s, talk-overs) in `callcenter/metrics.py` feed audio-based parameters.
+  Prompt now `insights_v2`. Parquet `qa_scores` has rating/score/credit/applicable; Power BI measures updated.
+  Open: "Not met" score assumed 0; customer's calls look like outbound B2B sales in Hinglish (English-only today);
+  added DEMO-0004 outbound B2B sales call (3 min stereo, 12 s hold) so all 20 parameters are exercised;
+  added call reason `sales_opportunity`; identity compliance check now applies only when account details are discussed.
+
 ## Open items / ideas
 
 - Power BI report not built (option: generate a PBIP project). Embedding needs Fabric/Embedded capacity (not in TSD estimate).

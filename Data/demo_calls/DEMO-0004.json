@@ -1,0 +1,10 @@
+{
+  "agent_id": "A1005",
+  "agent_name": "Neha Kapoor",
+  "agent_email": "neha.kapoor@contoso.com",
+  "team": "Team Beta",
+  "customer_id": "CUST-40912",
+  "direction": "outbound",
+  "channels": 2,
+  "agent_channel": 0
+}

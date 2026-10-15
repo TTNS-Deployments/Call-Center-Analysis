@@ -1,98 +1,249 @@
-# QA scorecard used to score every call automatically.
+# QA scorecard: the 20-parameter evaluation used to score every call.
 #
-# SAMPLE: replace with the customer's approved scorecard. No code change is needed:
-#   - edit this file before deployment, or
-#   - edit it at runtime from the web app (Settings -> QA rubric, Admin role).
-#     The runtime copy is saved to the `config` storage container and takes precedence.
+# Every parameter is rated on each call as:
+#   met             Fully met       -> score 5, counts 100% towards the QA %
+#   partial         Partially met   -> score 3, counts 50%
+#   not_met         Not met         -> score 0, counts 0%
+#   not_applicable  N/A             -> the situation did not arise; left out of the score entirely
+# The call's QA % = weighted average of the credit over the APPLICABLE parameters.
+#
+# Edit before deployment, or at runtime from the web app (Settings -> QA rubric, Admin role).
 #
 # Fields
-#   id           stable identifier (used in reports, Power BI and Parquet). Do not rename after go-live.
+#   id           stable identifier (reports, Power BI, Parquet). Do not rename after go-live.
 #   name         label shown in the UI
-#   category     grouping for dashboards (Greeting, Compliance, Resolution, Tone, ...)
-#   type         objective | subjective   (success criteria track agreement separately for each)
-#   max_points   weight of the criterion in the total score
-#   description  instruction given to the LLM; be specific, it is the scoring rule
-#   mock_keywords / mock_window  only used by the local mock scorer (window: opening | closing | any)
+#   category     grouping for dashboards
+#   type         objective | subjective  (success criteria track agreement with human QA separately)
+#   weight       relative importance in the QA % (default 1)
+#   source       transcript (default) | audio_metrics: also judged on measured pace, silences and overlaps
+#                | crm: depends on what the agent records in the CRM; judged only from what is said on the call
+#   description  the scoring rule given to the language model, incl. what counts as fully met / partial / N/A
+#   mock_keywords / mock_applies_keywords   local mock scorer only
 
-version: 1
-name: Standard Customer Service Scorecard
-pass_threshold: 75          # percent of total points needed to pass
+version: 2
+name: 20-parameter evaluation
+pass_threshold: 75          # QA % needed to pass
+
+ratings:
+  met:     {label: Fully met, score: 5, credit: 1.0}
+  partial: {label: Partial,   score: 3, credit: 0.5}
+  not_met: {label: Not met,   score: 0, credit: 0.0}
+
+verdicts:                    # agent-level verdict from % met across calls (highest matching first)
+  - {min: 80, label: Strength}
+  - {min: 50, label: Inconsistent}
+  - {min: 0,  label: Needs improvement}
 
 criteria:
-  - id: greeting
-    name: Greeting and introduction
-    category: Greeting
+  - id: greeting_introduction
+    name: Greeting / Self & Company Introduction
+    category: Opening
     type: objective
-    max_points: 10
+    weight: 1
     description: >
-      Within the first two agent turns the agent greets the customer, names the company
-      and gives their own name.
+      Fully met: in the opening the agent greets, gives their own name and ONE clear company name, states
+      the purpose of the call and (outbound) asks permission to continue. Partial: some elements missing or
+      confusing (e.g. two company names). Not met: no proper introduction.
+    mock_keywords: ["thank you for calling", "my name is", "this is", "calling from"]
     mock_window: opening
-    mock_keywords: ["thank you for calling", "thanks for calling", "my name is", "this is"]
 
-  - id: verification
-    name: Customer identity verification
-    category: Compliance
+  - id: rpc_confirmation
+    name: RPC confirmation
+    category: Opening
     type: objective
-    max_points: 15
+    weight: 1
     description: >
-      Before discussing or changing any account details, the agent verifies the caller's
-      identity using at least one approved factor (registered mobile number, date of birth,
-      account number or last four digits of the card). Full card numbers, CVV or OTP must never be requested.
-    mock_window: any
-    mock_keywords: ["verify", "verification", "date of birth", "registered mobile", "last four digits", "confirm your"]
+      Right party contact: the agent confirms they are speaking to the intended person (name or role)
+      before discussing details. N/A on inbound calls where the caller has identified themselves.
+    mock_keywords: ["am i speaking", "are you speaking", "speaking with", "is this mr", "is this ms"]
+    mock_applies_keywords: ["calling from", "outbound"]
 
-  - id: needs_identification
-    name: Understanding the customer's need
-    category: Resolution
+  - id: probing_basic_details
+    name: Probing for Basic Details
+    category: Discovery
     type: subjective
-    max_points: 15
+    weight: 1
     description: >
-      The agent asks relevant questions, restates or confirms the customer's issue and does
-      not make the customer repeat themselves.
-    mock_window: any
-    mock_keywords: ["understand", "let me check", "can you tell me", "just to confirm", "could you please"]
+      The agent asks relevant open questions to understand the customer's current situation, setup,
+      requirement or issue, without making the customer repeat information.
+    mock_keywords: ["can you tell me", "could you please", "what is", "how many", "which", "let me check"]
 
-  - id: resolution
-    name: Resolution and next steps
-    category: Resolution
-    type: objective
-    max_points: 20
+  - id: company_profiling
+    name: Complete & correct company profiling done & used on call
+    category: Discovery
+    type: subjective
+    weight: 1
     description: >
-      The issue is resolved on the call, or the agent gives a clear next step with a reference
-      or ticket number and an expected timeline.
-    mock_window: any
-    mock_keywords: ["resolved", "reference number", "ticket number", "within", "has been processed", "i have updated", "done"]
+      B2B/sales calls: the agent establishes the customer's company, industry, size and use case correctly
+      and uses that information in the pitch. N/A for individual consumer or service calls.
+    mock_keywords: ["your company", "industry", "employees", "business", "organisation", "organization"]
+    mock_applies_keywords: ["company", "business", "licences", "licenses", "organisation", "organization"]
+
+  - id: bant_confirmation
+    name: BANT confirmation (Budget, Authority, Need, Time)
+    category: Discovery
+    type: objective
+    weight: 1
+    description: >
+      Sales calls: Fully met when all four of budget, decision authority, need and timeline are confirmed;
+      Partial when two or three are; Not met when one or none. N/A when the call is not a sales/qualification call.
+    mock_keywords: ["budget", "decision", "timeline", "by when", "who decides"]
+    mock_applies_keywords: ["budget", "licences", "licenses", "quotation", "deal", "purchase", "buy"]
+
+  - id: active_listening
+    name: Active listening / Repetition / Interruption / Overlapping
+    category: Communication
+    type: subjective
+    weight: 1
+    source: audio_metrics
+    description: >
+      The agent listens without interrupting or talking over the customer, paraphrases or confirms what was
+      said, and avoids constant filler ("mm-hmm") over the customer. Use the measured overlap count as evidence.
+    mock_keywords: ["just to confirm", "so you mean", "i understand", "let me repeat", "to summarise", "to summarize"]
 
   - id: empathy
-    name: Empathy and courtesy
-    category: Tone
+    name: Appreciate / Apologize / Empathy
+    category: Communication
     type: subjective
-    max_points: 15
+    weight: 1
     description: >
-      The agent acknowledges the customer's feelings, apologises where appropriate and stays
-      polite throughout, especially when the customer is frustrated.
-    mock_window: any
-    mock_keywords: ["sorry", "apologize", "apologise", "i understand", "completely understand", "appreciate your patience"]
+      The agent acknowledges feelings, apologises for problems or past friction, and thanks or appreciates
+      the customer where appropriate, especially when handling objections or complaints.
+    mock_keywords: ["sorry", "apologize", "apologise", "i understand", "appreciate", "thank you for your patience"]
 
-  - id: professional_tone
-    name: Professional tone and clarity
-    category: Tone
+  - id: two_way_communication
+    name: Two-way communication / Rapport building / Personalization
+    category: Communication
     type: subjective
-    max_points: 10
+    weight: 1
     description: >
-      The agent speaks clearly, avoids jargon, does not interrupt or argue, and keeps a
-      confident, professional tone.
-    mock_window: any
-    mock_keywords: ["please", "certainly", "absolutely", "happy to help", "of course"]
+      The conversation is a dialogue rather than a monologue: the agent uses the customer's name, refers to
+      their situation and builds rapport.
+    mock_keywords: ["mister", "mr", "ms", "for you", "in your case", "you mentioned"]
 
-  - id: closing
-    name: Closing
-    category: Greeting
+  - id: grammar_pronunciation
+    name: Grammar / Pronunciation / Sentence formation
+    category: Communication
+    type: subjective
+    weight: 1
+    description: >
+      Sentences are well formed and clearly articulated (code-mixed language such as Hinglish is acceptable
+      when clear). Judge from the transcript; recognition errors are not the agent's fault.
+    mock_keywords: ["please", "thank you", "certainly", "may i"]
+
+  - id: speech_clarity
+    name: Rate of speech / Speech clarity / Voice modulation
+    category: Communication
+    type: subjective
+    weight: 1
+    source: audio_metrics
+    description: >
+      Pace is comfortable (roughly 110-170 words per minute) and speech is clear. Use the measured agent
+      words-per-minute; a rate far outside this range is Partial or Not met.
+    mock_keywords: []
+
+  - id: professionalism
+    name: Professionalism / Casual / Politeness
+    category: Communication
+    type: subjective
+    weight: 1
+    description: >
+      Polite, respectful and professional throughout; no casual, rude, sarcastic or argumentative language.
+    mock_keywords: ["please", "certainly", "absolutely", "happy to help", "of course", "thank you"]
+
+  - id: hold_protocol
+    name: Hold Protocol / Dead Air
+    category: Call handling
     type: objective
-    max_points: 15
+    weight: 1
+    source: audio_metrics
     description: >
-      Before ending, the agent summarises what was done, asks whether there is anything else
-      they can help with, and thanks the customer.
+      Before any pause the agent asks permission to hold and thanks the customer afterwards; no unexplained
+      silences. Use the measured dead-air periods (silences over 10 seconds). N/A when no hold or long pause occurred.
+    mock_keywords: ["may i put you on hold", "please hold", "one minute", "let me check", "thank you for holding"]
+
+  - id: script_adherence
+    name: Customized script adherence
+    category: Call handling
+    type: objective
+    weight: 1
+    description: >
+      The agent follows the expected call structure for this call type (opening, discovery, pitch or
+      resolution, next steps, closing) in a natural way.
+    mock_keywords: ["thank you for calling", "how may i help", "is there anything else", "reference number"]
+
+  - id: objection_handling
+    name: Convincing / Negotiation / Objection handling / Urgency creation
+    category: Sales
+    type: subjective
+    weight: 1
+    description: >
+      Objections (price, timing, competitor, past bad experience) are acknowledged and answered with
+      relevant benefits or options, with appropriate urgency. N/A when the customer raised no objection.
+    mock_keywords: ["i can offer", "instead", "benefit", "today", "special", "let me check what i can do"]
+    mock_applies_keywords: ["expensive", "too much", "cancel", "not sure", "price", "competitor"]
+
+  - id: pm_meeting_benefits
+    name: PM meeting benefits informed
+    category: Sales
+    type: objective
+    weight: 1
+    description: >
+      When a meeting with a product manager/specialist is proposed, the agent explains what the customer
+      gains from it (demo, tailored pricing, solution design). N/A when no such meeting is discussed.
+    mock_keywords: ["meeting", "demo", "specialist", "product manager"]
+    mock_applies_keywords: ["meeting", "demo", "specialist", "product manager"]
+
+  - id: appointment_probing
+    name: Probing for Appointment date & time
+    category: Sales
+    type: objective
+    weight: 1
+    description: >
+      When a follow-up, callback or meeting is needed, the agent agrees a concrete date and time window.
+      N/A when no follow-up is needed.
+    mock_keywords: ["tomorrow", "what time", "which day", "between", "call you back at", "monday", "tuesday"]
+    mock_applies_keywords: ["call back", "callback", "follow up", "meeting", "tomorrow", "appointment"]
+
+  - id: accurate_information
+    name: Incorrect / Falsifying information
+    category: Accuracy
+    type: objective
+    weight: 2
+    description: >
+      Fully met when the agent gives only correct information and makes no false promises or commitments
+      they cannot keep (e.g. unapproved prices or timelines). Not met when information is wrong or misleading.
+    mock_keywords: ["reference number", "will be", "within"]
+
+  - id: closing_summarization
+    name: Closing / Summarization
+    category: Closing
+    type: objective
+    weight: 1
+    description: >
+      Before ending, the agent summarises what was agreed or done and the next steps, asks if anything else
+      is needed and closes politely.
+    mock_keywords: ["to summarise", "to summarize", "anything else", "have a great", "have a nice", "good day"]
     mock_window: closing
-    mock_keywords: ["anything else", "thank you for", "have a great", "have a nice", "good day"]
+
+  - id: remarks_capturing
+    name: Remarks Capturing
+    category: Records
+    type: objective
+    weight: 1
+    source: crm
+    description: >
+      The agent captures and confirms the key details needed for the record (requirement, current plan,
+      quantities, price, contact details). Judged from what is said on the call; the CRM entry itself is not visible.
+    mock_keywords: ["let me note", "noted", "i have updated", "confirm your", "reference number"]
+
+  - id: tagging
+    name: Tagging
+    category: Records
+    type: objective
+    weight: 1
+    source: crm
+    description: >
+      The outcome is clear enough to tag correctly (lead status, callback, resolution). Judged from the call;
+      Not met when the outcome or disposition is left ambiguous. The CRM tag itself is not visible.
+    mock_keywords: ["reference number", "ticket", "callback", "resolved", "escalat", "done", "qualified lead", "mark this as"]

@@ -25,8 +25,8 @@
 {% else %}
 <div class="grid grid-2">
   <div class="card">
-    <div class="card-h"><h2>Average score by QA criterion</h2></div>
-    <div class="card-b"><div class="chart-box"><canvas id="chart-criteria"></canvas></div></div>
+    <div class="card-h"><h2>% met by QA parameter</h2><span class="small muted">N/A excluded</span></div>
+    <div class="card-b"><div class="chart-box" style="height:520px"><canvas id="chart-criteria"></canvas></div></div>
   </div>
   <div class="card">
     <div class="card-h"><h2>Compliance pass rate by check</h2><span class="small muted">applicable calls only</span></div>
@@ -85,8 +85,9 @@
   document.addEventListener("DOMContentLoaded", () => {
     const d = CC.data("chart-data");
     if (!d || !d.criteria.length) return;
-    CC.charts.hbar("chart-criteria", d.criteria.map(x => x.name), d.criteria.map(x => x.avg),
-                   { max: 100, colors: d.criteria.map(x => CC.charts.scoreColor(x.avg)) });
+    const crit = d.criteria.filter(x => x.avg !== null);
+    CC.charts.hbar("chart-criteria", crit.map(x => x.name), crit.map(x => x.avg),
+                   { max: 100, colors: crit.map(x => CC.charts.scoreColor(x.avg)) });
     CC.charts.doughnut("chart-sentiment", d.sentiment);
     CC.charts.doughnut("chart-resolution", d.resolution);
     CC.charts.doughnut("chart-emotion", d.emotion);

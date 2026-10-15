@@ -42,13 +42,14 @@ def synth(voice: PiperVoice, text: str) -> np.ndarray:
 def build_call(call: dict, voices_dir: Path) -> tuple[np.ndarray, int]:
     voices = {role: PiperVoice.load(str(voices_dir / f"{name}.onnx")) for role, name in call["voices"].items()}
     stereo = int(call.get("channels", 1)) == 2
-    tracks = {"agent": [], "customer": []}
     pos = int(LEAD_S * RATE)
     segments = []
-    for speaker, text in call["lines"]:
+    for line in call["lines"]:
+        speaker, text = line[0], line[1]
+        pause = float(line[2].get("pause_after_s", 0)) if len(line) > 2 else 0.0  # e.g. a hold
         audio = synth(voices[speaker], text)
         segments.append((speaker, pos, audio))
-        pos += len(audio) + int(GAP_S * RATE)
+        pos += len(audio) + int((GAP_S + pause) * RATE)
     total = pos + int(0.5 * RATE)
     out = np.zeros((total, 2 if stereo else 1), dtype=np.float32)
     for speaker, start, audio in segments:
@@ -62,10 +63,13 @@ def build_call(call: dict, voices_dir: Path) -> tuple[np.ndarray, int]:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--voices", type=Path, required=True, help="folder with the downloaded .onnx voice files")
+    parser.add_argument("--only", nargs="*", help="call IDs to (re)generate; default all")
     args = parser.parse_args()
 
     calls = yaml.safe_load((HERE / "scripts.yaml").read_text(encoding="utf-8"))["calls"]
     for call in calls:
+        if args.only and call["id"] not in args.only:
+            continue
         audio, channels = build_call(call, args.voices)
         with wave.open(str(HERE / f"{call['id']}.wav"), "wb") as w:
             w.setnchannels(channels)

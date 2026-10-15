@@ -1,7 +1,7 @@
 """Command line tools.
 
     python -m callcenter seed --count 40     # generate + process sample calls (local mode)
-    python -m callcenter upload              # upload the 3 demo recordings (Data/demo_calls); local or Azure
+    python -m callcenter upload              # upload the 4 demo recordings (Data/demo_calls); local or Azure
     python -m callcenter process path/to/call.wav [--meta meta.json]
     python -m callcenter worker              # watch the recordings container and process new files
     python -m callcenter retry CALL-...
@@ -155,7 +155,7 @@ def main(argv=None) -> int:
     p.add_argument("--process", action="store_true", help="in azure mode, also process in-process instead of via Functions")
     p.set_defaults(func=cmd_seed)
 
-    p = sub.add_parser("upload", help="upload recordings + metadata (default: the 3 demo calls)")
+    p = sub.add_parser("upload", help="upload recordings + metadata (default: the 4 demo calls)")
     p.add_argument("paths", nargs="*", help="audio files or folders (default Data/demo_calls)")
     p.add_argument("--agent-email", help="assign the first call to this agent email (to test the Agent view)")
     p.add_argument("--process", action="store_true", help="in azure mode, process in-process instead of via Functions")

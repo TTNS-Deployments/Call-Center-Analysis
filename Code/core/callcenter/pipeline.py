@@ -38,6 +38,7 @@ from .factory import (
     get_language_client,
     get_speech_client,
 )
+from .metrics import speech_metrics
 from .rules import Rules, load_rules
 from .store import utcnow
 
@@ -178,10 +179,12 @@ def enrich_transcript(transcript_blob: str) -> dict:
         transcript = blobs.get_json(s.container_transcripts, transcript_blob)
         rules = load_rules()
         language = get_language_client().analyze(transcript["phrases"])
-        metadata = {**transcript.get("metadata", {}), "call_id": call_id}
+        measured = speech_metrics(transcript["phrases"])
+        metadata = {**transcript.get("metadata", {}), "call_id": call_id, "speech_metrics": measured}
         insights = get_insights_client().generate(language["phrases"], metadata, rules)
 
         doc = build_call_document(store.get(call_id) or {}, transcript, language, insights, rules)
+        doc["speech_metrics"] = measured
         blobs.put_json(s.container_insights, f"json/{call_id}.json", doc)
         parquet.write_call(blobs, s.container_insights, doc)
         doc = store.upsert(doc)
@@ -191,6 +194,39 @@ def enrich_transcript(transcript_blob: str) -> dict:
 
     get_event_publisher().publish(doc)
     return doc
+
+
+def score_qa(ratings: list[dict], rules: Rules) -> dict:
+    """Per-parameter ratings -> call QA summary. N/A parameters are left out of the score."""
+    scale = rules.ratings
+    criteria = {c["id"]: c for c in rules.criteria}
+    items, counts = [], {r: 0 for r in ("met", "partial", "not_met", "not_applicable")}
+    for q in ratings:
+        c = criteria[q["id"]]
+        rating = q["rating"]
+        counts[rating] += 1
+        spec = scale.get(rating)
+        items.append({
+            "id": q["id"], "name": c["name"], "category": c.get("category", ""), "type": c.get("type", "objective"),
+            "source": c.get("source", "transcript"), "weight": float(c.get("weight", 1)), "rating": rating,
+            "rating_label": spec["label"] if spec else "N/A",
+            "score": spec["score"] if spec else None,
+            "credit": float(spec["credit"]) if spec else None,
+            "evidence": q["evidence"], "rationale": q["rationale"], "recommendation": q.get("recommendation", ""),
+        })
+    scored = [i for i in items if i["credit"] is not None]
+    total_weight = sum(i["weight"] for i in scored)
+    percent = round(100 * sum(i["weight"] * i["credit"] for i in scored) / total_weight, 1) if total_weight else None
+    avg_score = round(sum(i["score"] for i in scored) / len(scored), 2) if scored else None
+    return {
+        "percent": percent,
+        "avg_score": avg_score,
+        "max_score": max(spec["score"] for spec in scale.values()),
+        "passed": percent is not None and percent >= rules.pass_threshold,
+        "counts": counts,
+        "applicable": len(scored),
+        "criteria": items,
+    }
 
 
 def _avg(values: list[float]) -> float:
@@ -225,15 +261,8 @@ def build_call_document(existing: dict, transcript: dict, language: dict, insigh
     customer_score = _avg(customer_scores)
     overall = _avg([u["score"] for u in utterances])
 
-    criteria = {c["id"]: c for c in rules.criteria}
-    qa_items = [{
-        "id": q["id"], "name": criteria[q["id"]]["name"], "category": criteria[q["id"]].get("category", ""),
-        "type": criteria[q["id"]].get("type", "objective"), "score": q["score"],
-        "max_points": int(criteria[q["id"]]["max_points"]), "evidence": q["evidence"], "rationale": q["rationale"],
-    } for q in insights["qa"]]
-    qa_score = sum(q["score"] for q in qa_items)
-    qa_max = sum(q["max_points"] for q in qa_items) or 1
-    qa_percent = round(100 * qa_score / qa_max, 1)
+    qa = score_qa(insights["qa"], rules)
+    qa_percent = qa["percent"]
 
     checks = {c["id"]: c for c in rules.checks}
     comp_items = [{
@@ -250,7 +279,7 @@ def build_call_document(existing: dict, transcript: dict, language: dict, insigh
         "repeat_contact": insights["repeat_contact"],
         "unresolved": insights["resolution"] in ("unresolved", "escalated"),
         "compliance_breach": bool(failed_checks),
-        "low_qa": qa_percent < rules.pass_threshold,
+        "low_qa": qa_percent is not None and qa_percent < rules.pass_threshold,
     }
 
     started_at = normalize_timestamp(meta.get("started_at") or existing.get("started_at"))
@@ -284,17 +313,14 @@ def build_call_document(existing: dict, transcript: dict, language: dict, insigh
             "customer_end_score": _avg(customer_scores[-3:]),
         },
         "emotion": emotion,
-        "qa": {
-            "score": qa_score, "max": qa_max, "percent": qa_percent,
-            "passed": qa_percent >= rules.pass_threshold, "criteria": qa_items,
-        },
+        "qa": qa,
         "compliance": {"passed": not failed_checks, "failed_count": len(failed_checks), "checks": comp_items},
         "flags": flags,
         "flag_list": [k for k, v in flags.items() if v],
         "pii": language.get("pii_summary", {"total": 0, "categories": {}}),
         "topics": insights["topics"],
         "follow_up_actions": insights["follow_up_actions"],
-        "coaching_tips": insights["coaching_tips"],
+        "coaching": insights.get("coaching", []),
         "transcript": utterances,
         "processed_at": utcnow(),
         "prompt_version": insights.get("prompt_version"),

@@ -39,6 +39,11 @@ categories:
     description: Customer wants to cancel or close a service or account.
     mock_keywords: ["cancel", "close my account", "terminate", "discontinue"]
 
+  - id: sales_opportunity
+    name: Sales / new business
+    description: Sales conversations, usually outbound - new purchase, licences, quotation, demo or meeting with a specialist.
+    mock_keywords: ["licences", "licenses", "quotation", "users", "budget", "demo", "enquired"]
+
   - id: general_enquiry
     name: General enquiry
     description: Information requests that do not fit another category.

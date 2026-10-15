@@ -30,6 +30,7 @@ checks:
   - id: identity_before_account_details
     name: Identity verified before account details
     kind: required
+    applies_when: Account, balance, card, transaction or personal details of an existing customer are shared or changed.
     description: >
       The agent completes identity verification before sharing or changing any account,
       balance, card or personal details.
@@ -37,6 +38,7 @@ checks:
       - "before we proceed, may I verify"
       - "for security purposes, can you confirm"
     mock_keywords: ["verify", "security purposes", "confirm your registered", "confirm the last four"]
+    mock_applies_keywords: ["registered mobile", "your account", "account number", "card", "balance", "transaction", "bill", "address"]
 
   - id: no_sensitive_credentials
     name: No request for OTP, CVV, PIN or full card number
@@ -74,4 +76,4 @@ checks:
       - "I am escalating this"
       - "your complaint reference number is"
     mock_keywords: ["escalating", "complaint reference"]
-    mock_applies_keywords: ["escalat", "supervisor", "manager", "complaint", "not resolved", "unable to"]
+    mock_applies_keywords: ["escalat", "supervisor", "complaint", "not resolved", "unable to"]

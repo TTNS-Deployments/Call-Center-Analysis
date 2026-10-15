@@ -76,7 +76,7 @@ Key Vault references that cannot be resolved (for example a secret that has not 
 
 | File | Contents |
 |---|---|
-| `qa_rubric.yaml` | `pass_threshold`, plus `criteria[]` with `id`, `name`, `category`, `type` (objective/subjective), `max_points` and `description`. The description is the instruction the LLM scores against. |
+| `qa_rubric.yaml` | `pass_threshold`, `ratings` (score and credit for met / partial / not_met), `verdicts`, plus `criteria[]` with `id`, `name`, `category`, `type` (objective/subjective), `weight`, `source` (transcript / audio_metrics / crm) and `description`. The description is the rule the LLM rates against, including when the parameter is N/A. |
 | `compliance_checks.yaml` | `checks[]` with `id`, `name`, `kind` (required/prohibited), `applies_when` (optional), `description` and `example_phrases`. |
 | `call_reasons.yaml` | `categories[]` with `id`, `name` and `description`. Align these with the CRM disposition codes. |
 

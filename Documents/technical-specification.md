@@ -87,7 +87,10 @@ The metadata file has this shape. All fields are optional:
 ## 5. QA scoring and compliance
 
 - **Configuration:** `Config/qa_rubric.yaml`, `Config/compliance_checks.yaml` and `Config/call_reasons.yaml` are validated on save. The web app's Settings page saves an override to the `config` container, and the override takes precedence over the repository defaults.
-- **QA %:** the sum of scores divided by the sum of `max_points`. A call passes when the result is ≥ `pass_threshold` (default 75).
+- **Ratings:** every parameter is rated *Fully met* (score 5, 100% credit), *Partial* (3, 50%), *Not met* (0, 0%) or *N/A* (the situation did not arise; excluded). The scale is set under `ratings:` in the rubric.
+- **QA %:** weighted average credit over the applicable parameters only. A call passes when the result is ≥ `pass_threshold` (default 75); a call where every parameter is N/A has no QA %.
+- **Measured evidence:** before the LLM call, the pipeline measures agent words per minute, talk share, silences of 10 s or more and talk-overs from the transcript timings (`callcenter/metrics.py`). Parameters with `source: audio_metrics` are judged with these values; `source: crm` parameters are judged only from what is said on the call.
+- **Agent view:** per parameter across calls: counts of Fully met / Partial / Not met / N/A, % met, average score, a verdict (Strength ≥ 80%, Inconsistent ≥ 50%, otherwise Needs improvement; set under `verdicts:`), an example quote and the most frequent recommendation. Coaching recommendations carry a priority (High / Medium / Low).
 - **Compliance:** a call passes when no check has the status `fail`. `prohibited` checks fail when the behaviour *is* detected.
 - **Flags:**
 

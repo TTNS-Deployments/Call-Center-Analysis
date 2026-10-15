@@ -23,6 +23,36 @@ def _completed(items):
     return [c for c in items if c.get("status") == "completed"]
 
 
+def _qa(c) -> float | None:
+    """Call QA % (None when every parameter was N/A or the call has no QA yet)."""
+    return (c.get("qa") or {}).get("percent")
+
+
+def _mean_qa(calls) -> float | None:
+    vals = [_qa(c) for c in calls if _qa(c) is not None]
+    return _r(mean(vals)) if vals else None
+
+
+def _verdicts() -> list[dict]:
+    from .rules import DEFAULT_VERDICTS
+
+    try:
+        from .rules import load_rules
+
+        return load_rules().rubric.get("verdicts") or DEFAULT_VERDICTS
+    except Exception:  # noqa: BLE001 - config unavailable: use defaults
+        return DEFAULT_VERDICTS
+
+
+def verdict(percent: float | None, verdicts: list[dict] | None = None) -> str:
+    if percent is None:
+        return "Not applicable"
+    for v in sorted(verdicts or _verdicts(), key=lambda v: -float(v["min"])):
+        if percent >= float(v["min"]):
+            return v["label"]
+    return ""
+
+
 def _r(value, digits=1):
     return round(value, digits) if value is not None else None
 
@@ -76,7 +106,7 @@ def sort_calls(items: list[dict], key: str) -> list[dict]:
 
 def kpis(items: list[dict]) -> dict:
     done = _completed(items)
-    qa = [c["qa"]["percent"] for c in done if c.get("qa")]
+    qa = [_qa(c) for c in done if _qa(c) is not None]
     durations = [c.get("duration_sec") or 0 for c in done]
     return {
         "total": len(items),
@@ -84,7 +114,7 @@ def kpis(items: list[dict]) -> dict:
         "failed": sum(1 for c in items if c.get("status") == "failed"),
         "in_progress": sum(1 for c in items if c.get("status") not in ("completed", "failed")),
         "avg_qa": _r(mean(qa)) if qa else None,
-        "qa_pass_rate": _pct(sum(1 for c in done if c["qa"].get("passed")), len(done)),
+        "qa_pass_rate": _pct(sum(1 for c in done if (c.get("qa") or {}).get("passed")), len(done)),
         "compliance_rate": _pct(sum(1 for c in done if (c.get("compliance") or {}).get("passed")), len(done)),
         "negative_pct": _pct(sum(1 for c in done if (c.get("sentiment") or {}).get("customer") == "negative"), len(done)),
         "unresolved_pct": _pct(sum(1 for c in done if c.get("resolution") in ("unresolved", "escalated")), len(done)),
@@ -102,7 +132,7 @@ def daily_trend(items: list[dict]) -> list[dict]:
         "date": day,
         "calls": len(calls),
         "sentiment": _r(mean((c.get("sentiment") or {}).get("customer_score", 0) for c in calls), 2),
-        "qa": _r(mean(c["qa"]["percent"] for c in calls)),
+        "qa": _mean_qa(calls),
     } for day, calls in sorted(by_day.items())]
 
 
@@ -118,7 +148,7 @@ def reasons(items: list[dict]) -> list[dict]:
         "id": rid, "name": name, "calls": len(calls),
         "unresolved_pct": _pct(sum(1 for c in calls if c.get("resolution") in ("unresolved", "escalated")), len(calls)),
         "negative_pct": _pct(sum(1 for c in calls if (c.get("sentiment") or {}).get("customer") == "negative"), len(calls)),
-        "avg_qa": _r(mean(c["qa"]["percent"] for c in calls)),
+        "avg_qa": _mean_qa(calls),
     } for (rid, name), calls in groups.items()]
     return sorted(rows, key=lambda r: r["calls"], reverse=True)
 
@@ -128,15 +158,65 @@ def root_causes(items: list[dict], limit: int = 8) -> list[tuple[str, int]]:
                    if c.get("root_cause") and c["root_cause"] != "Not determined").most_common(limit)
 
 
-def criteria_averages(items: list[dict]) -> list[dict]:
-    scores = defaultdict(list)
-    meta = {}
+def criteria_averages(items: list[dict], verdicts: list[dict] | None = None) -> list[dict]:
+    """Per QA parameter across calls: Fully met / Partial / Not met / N/A counts, % met (partial = half),
+    average score (N/A excluded), verdict, an example quote and the most frequent recommendation."""
+    verdicts = verdicts or _verdicts()
+    order, stats = [], {}
     for c in _completed(items):
         for q in (c.get("qa") or {}).get("criteria", []):
-            scores[q["id"]].append(100 * q["score"] / q["max_points"] if q["max_points"] else 0)
-            meta[q["id"]] = q
-    return [{"id": cid, "name": meta[cid]["name"], "type": meta[cid].get("type"), "category": meta[cid].get("category"),
-             "avg": _r(mean(vals))} for cid, vals in scores.items()]
+            if "rating" not in q:  # analysed with an older rubric format
+                continue
+            st = stats.get(q["id"])
+            if st is None:
+                st = stats[q["id"]] = {"meta": q, "counts": Counter(), "credits": [], "scores": [], "weights": [],
+                                       "quotes": [], "recs": Counter()}
+                order.append(q["id"])
+            st["counts"][q["rating"]] += 1
+            if q.get("credit") is not None:
+                st["credits"].append(q["credit"])
+                st["scores"].append(q["score"])
+            if q.get("evidence"):
+                st["quotes"].append((q["rating"] == "met", q["evidence"], c.get("call_id")))
+            if q.get("recommendation"):
+                st["recs"][q["recommendation"]] += 1
+    rows = []
+    for cid in order:
+        st = stats[cid]
+        pct = _r(100 * mean(st["credits"])) if st["credits"] else None
+        quote = max(st["quotes"], key=lambda x: x[0], default=None)
+        rows.append({
+            "id": cid, "name": st["meta"]["name"], "type": st["meta"].get("type"), "category": st["meta"].get("category"),
+            "source": st["meta"].get("source", "transcript"),
+            "avg": pct,
+            "avg_score": _r(mean(st["scores"]), 1) if st["scores"] else None,
+            "met": st["counts"]["met"], "partial": st["counts"]["partial"],
+            "not_met": st["counts"]["not_met"], "na": st["counts"]["not_applicable"],
+            "applicable": len(st["credits"]),
+            "verdict": verdict(pct, verdicts),
+            "example": quote[1] if quote else "", "example_call": quote[2] if quote else "",
+            "recommendation": st["recs"].most_common(1)[0][0] if st["recs"] else "",
+        })
+    return rows
+
+
+PRIORITY_ORDER = {"High": 0, "Medium": 1, "Low": 2}
+
+
+def coaching_summary(items: list[dict], limit: int = 6) -> list[dict]:
+    """Coaching recommendations across calls, grouped by title; highest priority and most frequent first."""
+    groups: dict[str, dict] = {}
+    for c in _completed(items):
+        for rec in c.get("coaching") or []:
+            key = rec["title"].strip().lower()
+            g = groups.setdefault(key, {"title": rec["title"], "priority": rec["priority"], "detail": rec.get("detail", ""),
+                                        "calls": 0, "call_ids": []})
+            g["calls"] += 1
+            g["call_ids"].append(c.get("call_id"))
+            if PRIORITY_ORDER.get(rec["priority"], 1) < PRIORITY_ORDER.get(g["priority"], 1):
+                g["priority"], g["detail"] = rec["priority"], rec.get("detail", "")
+    rows = sorted(groups.values(), key=lambda g: (PRIORITY_ORDER.get(g["priority"], 1), -g["calls"]))
+    return rows[:limit]
 
 
 def compliance_summary(items: list[dict]) -> list[dict]:
@@ -160,15 +240,15 @@ def agents(items: list[dict]) -> list[dict]:
         groups[c.get("agent_id") or "unknown"].append(c)
     rows = []
     for agent_id, calls in groups.items():
-        crit = criteria_averages(calls)
+        crit = [x for x in criteria_averages(calls) if x["avg"] is not None]
         weakest = min(crit, key=lambda x: x["avg"]) if crit else None
         rows.append({
             "agent_id": agent_id,
             "agent_name": calls[0].get("agent_name") or agent_id,
             "team": calls[0].get("team") or "",
             "calls": len(calls),
-            "avg_qa": _r(mean(c["qa"]["percent"] for c in calls)),
-            "qa_pass_rate": _pct(sum(1 for c in calls if c["qa"].get("passed")), len(calls)),
+            "avg_qa": _mean_qa(calls),
+            "qa_pass_rate": _pct(sum(1 for c in calls if (c.get("qa") or {}).get("passed")), len(calls)),
             "compliance_rate": _pct(sum(1 for c in calls if (c.get("compliance") or {}).get("passed")), len(calls)),
             "avg_sentiment": _r(mean((c.get("sentiment") or {}).get("customer_score", 0) for c in calls), 2),
             "resolved_pct": _pct(sum(1 for c in calls if c.get("resolution") == "resolved"), len(calls)),
@@ -194,6 +274,7 @@ def overview(items: list[dict]) -> dict:
         "resolution": distribution(items, lambda c: c.get("resolution")),
         "emotion_end": distribution(items, lambda c: (c.get("emotion") or {}).get("end")),
         "criteria": criteria_averages(items),
+        "coaching": coaching_summary(items),
         "compliance": compliance_summary(items),
         "root_causes": root_causes(items),
         "agents": agents(items),

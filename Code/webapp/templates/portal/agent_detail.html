@@ -25,21 +25,48 @@
 
 <div class="grid grid-2">
   <div class="card">
-    <div class="card-h"><h2>QA criteria</h2>{% if team_avg %}<span class="small muted">▏ marks team average</span>{% endif %}</div>
-    <div class="card-b">
-      {% for c in data.criteria %}
-      <div class="crit">
-        <div class="crit-top"><span>{{ c.name }}</span><span class="score {{ c.avg|score_class }}">{{ c.avg|pct }}</span></div>
-        <div class="bar {{ c.avg|score_class }}" style="position:relative"><span style="width:{{ c.avg }}%"></span>
-          {% with t=team_avg|get:c.id %}{% if t is not None %}<i style="position:absolute;top:-3px;bottom:-3px;left:{{ t }}%;width:2px;background:var(--text)" title="Team {{ t|pct }}"></i>{% endif %}{% endwith %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="card">
     <div class="card-h"><h2>QA score trend</h2></div>
     <div class="card-b"><div class="chart-box"><canvas id="chart-qa"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Coaching recommendations</h2></div>
+    <div class="card-b">
+      {% for r in data.coaching %}
+      <div class="coach"><div class="crit-top"><span>{{ r.title }}</span><span class="prio {{ r.priority|lower }}">{{ r.priority }}</span></div>
+        <div class="small muted">{{ r.detail }}</div>
+        <div class="small muted">{{ r.calls }} call{{ r.calls|pluralize }}</div></div>
+      {% empty %}<p class="muted">No coaching recommendations in this period.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mt">
+  <div class="card-h"><h2>{{ data.criteria|length }}-parameter evaluation</h2>{% if team_avg %}<span class="small muted">▏ on the bar marks the team average</span>{% endif %}</div>
+  <div class="table-wrap card-b flush">
+    <table class="data">
+      <thead><tr><th>Parameter</th><th class="right">Avg score</th><th class="right">Fully</th><th class="right">Partial</th><th class="right">Not met</th><th class="right">N/A</th><th style="min-width:130px">% met</th><th>Analysis</th></tr></thead>
+      <tbody>
+      {% for c in data.criteria %}
+        <tr>
+          <td class="cell-title" style="min-width:180px">{{ c.name }}</td>
+          <td class="right">{% if c.avg_score is not None %}{{ c.avg_score }}{% else %}–{% endif %}</td>
+          <td class="right score good">{{ c.met }}</td>
+          <td class="right score ok">{{ c.partial }}</td>
+          <td class="right score bad">{{ c.not_met }}</td>
+          <td class="right muted">{{ c.na }}</td>
+          <td>{% if c.avg is not None %}
+            <div class="bar {{ c.avg|score_class }}" style="position:relative"><span style="width:{{ c.avg }}%"></span>
+              {% with t=team_avg|get:c.id %}{% if t is not None %}<i style="position:absolute;top:-3px;bottom:-3px;left:{{ t }}%;width:2px;background:var(--text)" title="Team {{ t|pct }}"></i>{% endif %}{% endwith %}
+            </div><span class="small">{{ c.avg|pct }}</span>{% else %}<span class="small muted">–</span>{% endif %}</td>
+          <td style="min-width:260px">
+            <span class="verdict {{ c.verdict|slugify }}">{{ c.verdict }}</span>
+            {% if c.example %}<div class="quote">“{{ c.example|pii }}”</div>{% endif %}
+            {% if c.recommendation %}<div class="small"><b>Recommendation:</b> {{ c.recommendation }}</div>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 

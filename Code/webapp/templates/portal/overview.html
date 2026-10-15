@@ -123,10 +123,10 @@
   </div>
   {% else %}
   <div class="card">
-    <div class="card-h"><h2>Scorecard by criterion</h2><a class="small" href="{% url 'portal:agent_detail' 'me' %}?range={{ range.key }}">My scorecard →</a></div>
+    <div class="card-h"><h2>% met by QA parameter</h2><a class="small" href="{% url 'portal:agent_detail' 'me' %}?range={{ range.key }}">My scorecard →</a></div>
     <div class="card-b">
       {% for c in data.criteria %}
-      <div class="rank-row"><span class="name">{{ c.name }}</span><div class="bar {{ c.avg|score_class }}"><span style="width:{{ c.avg }}%"></span></div><span class="right small">{{ c.avg|pct }}</span></div>
+      {% if c.avg is not None %}<div class="rank-row"><span class="name">{{ c.name }}</span><div class="bar {{ c.avg|score_class }}"><span style="width:{{ c.avg }}%"></span></div><span class="right small">{{ c.avg|pct }}</span></div>{% endif %}
       {% endfor %}
     </div>
   </div>

@@ -27,7 +27,7 @@ CALLS_SCHEMA = pa.schema([
     ("sentiment_label", pa.string()), ("sentiment_score", pa.float32()),
     ("customer_sentiment_score", pa.float32()), ("agent_sentiment_score", pa.float32()),
     ("emotion_start", pa.string()), ("emotion_end", pa.string()), ("emotion_dominant", pa.string()),
-    ("qa_score", pa.int32()), ("qa_max", pa.int32()), ("qa_percent", pa.float32()), ("qa_passed", pa.bool_()),
+    ("qa_avg_score", pa.float32()), ("qa_applicable", pa.int32()), ("qa_percent", pa.float32()), ("qa_passed", pa.bool_()),
     ("compliance_passed", pa.bool_()), ("compliance_failed_count", pa.int32()), ("pii_entities", pa.int32()),
     ("flag_unhappy", pa.bool_()), ("flag_repeat_contact", pa.bool_()), ("flag_unresolved", pa.bool_()),
     ("flag_compliance_breach", pa.bool_()), ("flag_low_qa", pa.bool_()),
@@ -37,7 +37,8 @@ CALLS_SCHEMA = pa.schema([
 QA_SCHEMA = pa.schema([
     ("call_id", pa.string()), ("call_date", pa.date32()), ("agent_id", pa.string()), ("team", pa.string()),
     ("criterion_id", pa.string()), ("criterion_name", pa.string()), ("category", pa.string()), ("type", pa.string()),
-    ("score", pa.int32()), ("max_points", pa.int32()), ("percent", pa.float32()), ("evidence", pa.string()),
+    ("rating", pa.string()), ("rating_label", pa.string()), ("score", pa.float32()), ("credit", pa.float32()),
+    ("weight", pa.float32()), ("applicable", pa.bool_()), ("evidence", pa.string()), ("recommendation", pa.string()),
 ])
 
 COMPLIANCE_SCHEMA = pa.schema([
@@ -80,7 +81,8 @@ def call_rows(doc: dict) -> dict[str, list[dict]]:
         "sentiment_label": sentiment.get("overall"), "sentiment_score": sentiment.get("score"),
         "customer_sentiment_score": sentiment.get("customer_score"), "agent_sentiment_score": sentiment.get("agent_score"),
         "emotion_start": emotion.get("start"), "emotion_end": emotion.get("end"), "emotion_dominant": emotion.get("dominant"),
-        "qa_score": qa.get("score"), "qa_max": qa.get("max"), "qa_percent": qa.get("percent"), "qa_passed": qa.get("passed"),
+        "qa_avg_score": qa.get("avg_score"), "qa_applicable": qa.get("applicable"), "qa_percent": qa.get("percent"),
+        "qa_passed": qa.get("passed"),
         "compliance_passed": comp.get("passed"), "compliance_failed_count": comp.get("failed_count"),
         "pii_entities": (doc.get("pii") or {}).get("total", 0),
         "flag_unhappy": flags.get("unhappy_customer", False), "flag_repeat_contact": flags.get("repeat_contact", False),
@@ -91,8 +93,9 @@ def call_rows(doc: dict) -> dict[str, list[dict]]:
     agent_cols = {"agent_id": doc.get("agent_id"), "team": doc.get("team")}
     qa_rows = [{
         **base, **agent_cols, "criterion_id": c["id"], "criterion_name": c["name"], "category": c.get("category"),
-        "type": c.get("type"), "score": c["score"], "max_points": c["max_points"],
-        "percent": round(100 * c["score"] / c["max_points"], 1) if c["max_points"] else 0.0, "evidence": c.get("evidence"),
+        "type": c.get("type"), "rating": c.get("rating"), "rating_label": c.get("rating_label"), "score": c.get("score"),
+        "credit": c.get("credit"), "weight": c.get("weight"), "applicable": c.get("credit") is not None,
+        "evidence": c.get("evidence"), "recommendation": c.get("recommendation"),
     } for c in qa.get("criteria", [])]
     comp_rows = [{
         **base, **agent_cols, "check_id": c["id"], "check_name": c["name"], "kind": c["kind"], "status": c["status"],

@@ -31,7 +31,7 @@ The column definitions are in [Documents/technical-specification.md §6](../Docu
 |---|---|---|
 | Overview | KPI cards (Calls, Avg QA %, Compliance Pass Rate, Negative Sentiment %, Unresolved %, AHT); calls and sentiment by day; resolution donut | Date, team, agent, call reason |
 | Call reasons & root causes | Calls by reason with Unresolved %; root cause bar chart; decomposition tree (reason → root cause → resolution) | Date, team |
-| Quality | Criterion Avg % by criterion; QA % by agent (matrix with conditional formatting); objective vs subjective | Date, team, agent, criterion category |
+| Quality | 20-parameter matrix (Parameter Avg Score, Fully Met, Partially Met, Not Met, Not Applicable, Parameter % Met, Parameter Verdict) per agent; QA % by agent; objective vs subjective | Date, team, agent, criterion category |
 | Compliance | Check Pass Rate by check; failures by agent; trend of Check Failures | Date, team, check |
 | Customer experience | Emotion start → end (Sankey or matrix); Flagged Calls table with summary; Repeat Contact % trend | Date, team, flag |
 

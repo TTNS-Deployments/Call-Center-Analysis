@@ -1,23 +1,33 @@
 from callcenter import llm, rules
 
 
-def test_normalize_clamps_and_completes():
+def test_normalize_validates_and_completes():
     r = rules.load_rules()
-    raw = {"call_reason": "nonsense", "resolution": "maybe", "qa": [{"id": "greeting", "score": 999}],
-           "compliance": [], "customer_emotion": {"start": "furious"}}
+    raw = {"call_reason": "nonsense", "resolution": "maybe",
+           "qa": [{"id": r.criteria[0]["id"], "rating": "partial", "recommendation": "Say the company name once."},
+                  {"id": r.criteria[1]["id"], "rating": "excellent"}],
+           "compliance": [], "customer_emotion": {"start": "furious"},
+           "coaching": [{"title": "Low thing", "priority": "Low"}, {"title": "Big thing", "priority": "High"},
+                        {"title": "", "priority": "High"}, {"title": "Odd", "priority": "urgent"}]}
     out = llm.normalize(raw, r)
     assert out["call_reason"] == r.categories[-1]["id"]
     assert out["resolution"] == "unresolved"
     assert [q["id"] for q in out["qa"]] == [c["id"] for c in r.criteria]
-    assert out["qa"][0]["score"] == 10  # clamped to max_points
+    assert out["qa"][0]["rating"] == "partial" and out["qa"][0]["recommendation"]
+    assert out["qa"][1]["rating"] == "not_applicable"      # invalid rating is not scored
+    assert out["qa"][2]["rating"] == "not_applicable"      # missing parameter is not scored
     assert out["customer_emotion"]["start"] == "neutral"
     assert len(out["compliance"]) == len(r.checks)
+    assert [c["title"] for c in out["coaching"]] == ["Big thing", "Odd", "Low thing"]  # sorted, empty dropped
+    assert out["coaching"][1]["priority"] == "Medium"
 
 
 def test_schema_and_prompt_cover_rules():
     r = rules.load_rules()
     schema = llm.output_schema(r)
     assert schema["properties"]["qa"]["items"]["properties"]["id"]["enum"] == [c["id"] for c in r.criteria]
+    assert schema["properties"]["qa"]["items"]["properties"]["rating"]["enum"] == ["met", "partial", "not_met", "not_applicable"]
+    assert "coaching" in schema["required"]
     prompt = llm.build_system_prompt(r)
     for c in r.criteria + r.checks + r.categories:
         assert c["id"] in prompt

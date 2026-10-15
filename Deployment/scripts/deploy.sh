@@ -11,7 +11,7 @@
 #   -s, --subscription     subscription ID or name (default: current az account)
 #       --setup-entra      create the Entra ID app registration and roles (first deployment)
 #       --no-setup-entra   skip it even if the env file sets SETUP_ENTRA=1
-#       --seed             upload the 3 demo recordings (Data/demo_calls) after deployment (needs `make setup`)
+#       --seed             upload the 4 demo recordings (Data/demo_calls) after deployment (needs `make setup`)
 #       --skip-infra       only deploy code
 #       --skip-code        only deploy infrastructure
 #
@@ -122,7 +122,7 @@ if [[ $SETUP_ENTRA -eq 1 ]]; then
 fi
 
 if [[ $SEED -eq 1 ]]; then
-  echo "==> Uploading the 3 demo calls from Data/demo_calls (processed by the Functions)"
+  echo "==> Uploading the 4 demo calls from Data/demo_calls (processed by the Functions)"
   (
     cd "$ROOT"
     PY="python3"

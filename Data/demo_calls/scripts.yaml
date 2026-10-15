@@ -79,3 +79,42 @@ calls:
       - [customer, "Fine. But I don't believe anything will happen."]
       - [agent, "Is there anything else I can help you with?"]
       - [customer, "No."]
+
+  - id: DEMO-0004
+    title: Outbound B2B sales call (stereo)
+    channels: 2
+    metadata:
+      agent_id: A1005
+      agent_name: Neha Kapoor
+      agent_email: neha.kapoor@contoso.com
+      team: Team Beta
+      customer_id: CUST-40912
+      direction: outbound
+    voices: {agent: en_US-amy-medium, customer: en_GB-alan-medium}
+    lines:
+      - [agent, "Hello, am I speaking with Mister Rajesh Kumar?"]
+      - [customer, "Yes, speaking."]
+      - [agent, "Good afternoon, Mister Kumar. My name is Neha, and I'm calling from Northwind Services. This call is recorded for quality purposes. I'm calling about the document management software you enquired about last week. Is this a good time to talk for five minutes?"]
+      - [customer, "Yes, go ahead."]
+      - [agent, "Thank you. Could you tell me a little about your company and how you manage documents today?"]
+      - [customer, "We are Sunrise Pharma, a pharmaceutical manufacturer with about two hundred employees. Right now everything is in shared folders, and audits are painful."]
+      - [agent, "I understand, audits in pharma need a clear trail. How many people would need access to the system?"]
+      - [customer, "Around forty users to start with."]
+      - [agent, "And is there a budget you are working with for this?"]
+      - [customer, "We have roughly eighty thousand rupees a month approved."]
+      - [agent, "That helps. Will you be making the decision, or is anyone else involved?"]
+      - [customer, "I recommend it, but our finance director signs off."]
+      - [agent, "And by when would you like the system running?"]
+      - [customer, "Before our next audit, so within two months."]
+      - [agent, "Thank you. Let me note that down: forty users, eighty thousand rupees a month, finance director approval, and go-live within two months."]
+      - [agent, "Our business plan costs one thousand nine hundred and fifty rupees per user per month, which will be charged annually."]
+      - [customer, "Hmm, that's more than we expected. Another vendor quoted us around seventeen hundred."]
+      - [agent, "I understand, price matters. Our plan includes the audit trails and electronic signatures that pharma compliance needs, so you avoid a separate add-on. May I put you on hold for a moment while I check what pricing I can offer for forty users?"]
+      - [customer, "Sure.", {pause_after_s: 12}]
+      - [agent, "Thank you for holding. I can't confirm a lower price myself, but my manager can review a volume discount for forty licences. I would also like to set up a short meeting with our product specialist. In that meeting she will show you the audit trail features with your own documents and prepare a tailored quotation."]
+      - [customer, "That sounds useful."]
+      - [agent, "Would tomorrow between twelve and one in the afternoon work for you?"]
+      - [customer, "Twelve thirty works."]
+      - [agent, "Perfect. To summarise, I will send you a meeting invite for tomorrow at twelve thirty with our product specialist, and my manager will review the volume pricing before then. I'll mark this as a qualified lead with a meeting scheduled. Is there anything else I can help you with?"]
+      - [customer, "No, that's all. Thank you."]
+      - [agent, "Thank you, Mister Kumar. Have a great day."]

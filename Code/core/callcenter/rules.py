@@ -23,6 +23,16 @@ class ConfigError(ValueError):
     pass
 
 
+RATINGS = ("met", "partial", "not_met", "not_applicable")
+DEFAULT_RATINGS = {
+    "met": {"label": "Fully met", "score": 5, "credit": 1.0},
+    "partial": {"label": "Partial", "score": 3, "credit": 0.5},
+    "not_met": {"label": "Not met", "score": 0, "credit": 0.0},
+}
+DEFAULT_VERDICTS = [{"min": 80, "label": "Strength"}, {"min": 50, "label": "Inconsistent"},
+                    {"min": 0, "label": "Needs improvement"}]
+
+
 @dataclass
 class Rules:
     rubric: dict
@@ -42,8 +52,17 @@ class Rules:
         return self.reasons["categories"]
 
     @property
-    def max_points(self) -> int:
-        return sum(int(c["max_points"]) for c in self.criteria)
+    def ratings(self) -> dict:
+        """Rating -> {label, score (0-5), credit (0-1)}; not_applicable is always allowed and excluded."""
+        return {**DEFAULT_RATINGS, **(self.rubric.get("ratings") or {})}
+
+    def verdict(self, percent_met: float | None) -> str:
+        if percent_met is None:
+            return "Not applicable"
+        for v in sorted(self.rubric.get("verdicts") or DEFAULT_VERDICTS, key=lambda v: -float(v["min"])):
+            if percent_met >= float(v["min"]):
+                return v["label"]
+        return ""
 
     @property
     def pass_threshold(self) -> float:
@@ -88,12 +107,23 @@ def parse_and_validate(name: str, text: str) -> dict:
         raise ConfigError("Top level must be a mapping")
 
     if name == RUBRIC_FILE:
-        _require_list(data, "criteria", ("id", "name", "max_points", "description"))
+        _require_list(data, "criteria", ("id", "name", "description"))
         for c in data["criteria"]:
             if c.get("type", "objective") not in ("objective", "subjective"):
                 raise ConfigError(f"criteria '{c['id']}': type must be objective or subjective")
-            if int(c["max_points"]) <= 0:
-                raise ConfigError(f"criteria '{c['id']}': max_points must be > 0")
+            try:
+                weight = float(c.get("weight", 1))
+            except (TypeError, ValueError):
+                raise ConfigError(f"criteria '{c['id']}': weight must be a number") from None
+            if weight <= 0:
+                raise ConfigError(f"criteria '{c['id']}': weight must be > 0")
+            if c.get("source", "transcript") not in ("transcript", "audio_metrics", "crm"):
+                raise ConfigError(f"criteria '{c['id']}': source must be transcript, audio_metrics or crm")
+        for key, spec in (data.get("ratings") or {}).items():
+            if key not in DEFAULT_RATINGS:
+                raise ConfigError(f"ratings: unknown rating '{key}' (use met, partial, not_met)")
+            if not isinstance(spec, dict) or not 0 <= float(spec.get("credit", -1)) <= 1:
+                raise ConfigError(f"ratings.{key}: credit must be between 0 and 1")
     elif name == COMPLIANCE_FILE:
         _require_list(data, "checks", ("id", "name", "kind", "description"))
         for c in data["checks"]:

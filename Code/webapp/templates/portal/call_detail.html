@@ -97,19 +97,29 @@
         <span class="badge {% if call.qa.passed %}pass{% else %}fail{% endif %}">{% if call.qa.passed %}Pass{% else %}Below threshold{% endif %}</span>
       </div>
       <div class="card-b">
-        <div class="big-score"><span class="n score {{ call.qa.percent|score_class }}">{{ call.qa.percent|floatformat:0 }}</span><span class="muted">/ 100 · {{ call.qa.score }} of {{ call.qa.max }} points</span></div>
+        <div class="big-score"><span class="n score {{ call.qa.percent|score_class }}">{% if call.qa.percent is not None %}{{ call.qa.percent|floatformat:0 }}%{% else %}–{% endif %}</span>
+          <span class="muted">QA{% if call.qa.avg_score is not None %} · avg score {{ call.qa.avg_score|floatformat:1 }} / {{ call.qa.max_score|default:5 }}{% endif %}</span></div>
+        <div class="chips mt">
+          <span class="rating met">Fully met {{ call.qa.counts.met|default:0 }}</span>
+          <span class="rating partial">Partial {{ call.qa.counts.partial|default:0 }}</span>
+          <span class="rating not_met">Not met {{ call.qa.counts.not_met|default:0 }}</span>
+          <span class="rating not_applicable">N/A {{ call.qa.counts.not_applicable|default:0 }}</span>
+        </div>
         <div class="mt">
           {% for c in call.qa.criteria %}
-          {% with p=c.score|ratio_pct:c.max_points %}
           <div class="crit">
-            <div class="crit-top"><span>{{ c.name }} <span class="chip small">{{ c.type }}</span></span><span class="score {{ p|score_class }}">{{ c.score }}/{{ c.max_points }}</span></div>
-            <div class="bar {{ p|score_class }}"><span style="width:{{ p }}%"></span></div>
-            <details><summary>Why this score</summary>
+            <div class="crit-top">
+              <span>{{ c.name }}{% if c.source == "audio_metrics" %} <span class="chip small" title="Judged with measured pace, silences and overlaps">audio</span>{% elif c.source == "crm" %} <span class="chip small" title="Judged from the call only; the CRM entry is not visible">from call</span>{% endif %}</span>
+              <span class="nowrap"><span class="rating {{ c.rating }}">{{ c.rating_label|default:c.rating }}</span>{% if c.score is not None %} <span class="small muted">{{ c.score|floatformat:0 }}/{{ call.qa.max_score|default:5 }}</span>{% endif %}</span>
+            </div>
+            {% if c.evidence or c.rationale or c.recommendation %}
+            <details><summary>Why this rating</summary>
               {% if c.evidence %}<div class="quote">“{{ c.evidence|pii }}”</div>{% endif %}
               <div class="small muted">{{ c.rationale }}</div>
+              {% if c.recommendation %}<div class="small" style="margin-top:4px"><b>Recommendation:</b> {{ c.recommendation }}</div>{% endif %}
             </details>
+            {% endif %}
           </div>
-          {% endwith %}
           {% endfor %}
         </div>
       </div>
@@ -131,10 +141,29 @@
       </div>
     </div>
 
-    {% if call.coaching_tips %}
+    {% if call.coaching %}
     <div class="card">
-      <div class="card-h"><h2>Coaching</h2></div>
-      <div class="card-b"><ul style="margin:0;padding-left:18px">{% for t in call.coaching_tips %}<li>{{ t }}</li>{% endfor %}</ul></div>
+      <div class="card-h"><h2>Coaching recommendations</h2></div>
+      <div class="card-b">
+        {% for r in call.coaching %}
+        <div class="coach"><div class="crit-top"><span>{{ r.title }}</span><span class="prio {{ r.priority|lower }}">{{ r.priority }}</span></div>
+          <div class="small muted">{{ r.detail }}</div></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if call.speech_metrics %}
+    <div class="card">
+      <div class="card-h"><h2>Measured from the recording</h2></div>
+      <div class="card-b small">
+        <dl class="kv">
+          <dt>Agent pace</dt><dd>{{ call.speech_metrics.agent_wpm|default:"–" }} words/min</dd>
+          <dt>Agent talk time</dt><dd>{{ call.speech_metrics.agent_talk_pct|default:"–" }}%</dd>
+          <dt>Dead air</dt><dd>{{ call.speech_metrics.dead_air_count }} silence{{ call.speech_metrics.dead_air_count|pluralize }} of 10 s+{% if call.speech_metrics.dead_air_count %} (longest {{ call.speech_metrics.longest_silence_s }} s){% endif %}</dd>
+          <dt>Talk-overs</dt><dd>{{ call.speech_metrics.overlaps }} ({{ call.speech_metrics.agent_interruptions }} by the agent)</dd>
+        </dl>
+      </div>
     </div>
     {% endif %}
 

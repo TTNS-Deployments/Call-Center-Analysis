@@ -79,7 +79,7 @@ def time_script(script: list[dict]) -> list[dict]:
             "text": line["text"],
             "confidence": round(0.88 + (hash_int(line["text"]) % 10) / 100, 3),
         })
-        offset += duration + 350 + (hash_int(f"{i}{line['text']}") % 900)
+        offset += duration + 350 + (hash_int(f"{i}{line['text']}") % 900) + int(1000 * line.get("pause_after_s", 0))
     return phrases
 
 
@@ -130,7 +130,9 @@ def demo_script(call_id: str) -> list[dict] | None:
         return None
     for call in yaml.safe_load(path.read_text(encoding="utf-8")).get("calls", []):
         if call["id"] == call_id:
-            return [{"speaker": speaker, "text": text} for speaker, text in call["lines"]]
+            return [{"speaker": line[0], "text": line[1],
+                     **({"pause_after_s": line[2].get("pause_after_s", 0)} if len(line) > 2 else {})}
+                    for line in call["lines"]]
     return None
 
 

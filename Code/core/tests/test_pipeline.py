@@ -36,7 +36,7 @@ def test_end_to_end_local_pipeline():
 
     table = pq.read_table(io.BytesIO(get_blob_store().get_bytes(
         s.container_insights, next(n for n in get_blob_store().list(s.container_insights, "curated/qa_scores/")))))
-    assert {"criterion_id", "score", "max_points"} <= set(table.column_names)
+    assert {"criterion_id", "rating", "score", "credit", "applicable"} <= set(table.column_names)
 
     summaries = get_call_store().list_summaries()
     assert len(summaries) == len(calls) and "transcript" not in summaries[0]
@@ -85,3 +85,37 @@ def test_timestamps_normalized_to_utc(value, expected):
 def test_parse_event_grid_message():
     msg = '{"subject": "/blobServices/default/containers/recordings/blobs/2026/10/CALL-1.wav", "data": {}}'
     assert pipeline.parse_queue_message(msg) == ("recordings", "2026/10/CALL-1.wav")
+
+
+def test_qa_scoring_excludes_not_applicable_and_weights():
+    from callcenter.rules import load_rules
+
+    r = load_rules()
+    ids = [c["id"] for c in r.criteria]
+    ratings = [{"id": i, "rating": "not_applicable", "evidence": "", "rationale": "", "recommendation": ""} for i in ids]
+    ratings[0]["rating"] = "met"                                        # weight 1, credit 1
+    ratings[1]["rating"] = "partial"                                    # weight 1, credit 0.5
+    acc = ids.index("accurate_information")
+    ratings[acc]["rating"] = "not_met"                                  # weight 2, credit 0
+    qa = pipeline.score_qa(ratings, r)
+    assert qa["applicable"] == 3 and qa["counts"]["not_applicable"] == 17
+    assert qa["percent"] == round(100 * (1 + 0.5 + 0) / (1 + 1 + 2), 1)  # 37.5
+    assert qa["avg_score"] == round((5 + 3 + 0) / 3, 2)
+    assert not qa["passed"]
+
+    all_na = pipeline.score_qa([{**x, "rating": "not_applicable"} for x in ratings], r)
+    assert all_na["percent"] is None and not all_na["passed"]
+
+
+def test_speech_metrics_detect_dead_air_and_overlaps():
+    from callcenter.metrics import speech_metrics
+
+    phrases = [
+        {"speaker": "agent", "offset_ms": 0, "duration_ms": 6000, "text": "one two three four five six seven eight nine ten eleven twelve"},
+        {"speaker": "customer", "offset_ms": 5000, "duration_ms": 3000, "text": "hello there"},        # overlaps agent
+        {"speaker": "agent", "offset_ms": 20000, "duration_ms": 4000, "text": "sorry for the wait thank you"},  # 12 s silence
+    ]
+    m = speech_metrics(phrases)
+    assert m["dead_air_count"] == 1 and m["longest_silence_s"] == 12.0
+    assert m["overlaps"] == 1 and m["agent_interruptions"] == 0
+    assert m["agent_wpm"] == round(18 / (10000 / 60000))  # 12 + 6 agent words over 10 s

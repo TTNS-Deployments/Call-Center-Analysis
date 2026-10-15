@@ -25,7 +25,7 @@ SUMMARY_FIELDS = (
     "id", "call_id", "status", "stage", "attempts", "error", "audio_blob", "agent_id", "agent_name",
     "agent_email", "team", "customer_id", "direction", "started_at", "call_date", "duration_sec",
     "summary", "call_reason", "call_reason_name", "call_reason_detail", "root_cause", "resolution", "sentiment", "emotion",
-    "qa", "compliance", "flags", "flag_list", "pii", "topics", "sources", "transcript_blob", "created_at", "updated_at", "processed_at",
+    "qa", "compliance", "coaching", "flags", "flag_list", "pii", "topics", "sources", "transcript_blob", "created_at", "updated_at", "processed_at",
 )
 
 

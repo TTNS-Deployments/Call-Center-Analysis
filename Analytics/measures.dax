@@ -30,7 +30,19 @@ CALCULATE (
     FILTER ( calls, calls[flag_unhappy] || calls[flag_repeat_contact] || calls[flag_unresolved] || calls[flag_compliance_breach] )
 )
 
-Criterion Avg % = AVERAGE ( qa_scores[percent] )
+// % met per QA parameter: Fully met = 100, Partial = 50, Not met = 0; N/A rows are excluded.
+Parameter % Met = 100 * CALCULATE ( AVERAGE ( qa_scores[credit] ), qa_scores[applicable] = TRUE () )
+
+Parameter Avg Score = CALCULATE ( AVERAGE ( qa_scores[score] ), qa_scores[applicable] = TRUE () )
+
+Fully Met = CALCULATE ( COUNTROWS ( qa_scores ), qa_scores[rating] = "met" )
+Partially Met = CALCULATE ( COUNTROWS ( qa_scores ), qa_scores[rating] = "partial" )
+Not Met = CALCULATE ( COUNTROWS ( qa_scores ), qa_scores[rating] = "not_met" )
+Not Applicable = CALCULATE ( COUNTROWS ( qa_scores ), qa_scores[rating] = "not_applicable" )
+
+Parameter Verdict =
+VAR p = [Parameter % Met]
+RETURN SWITCH ( TRUE (), ISBLANK ( p ), "Not applicable", p >= 80, "Strength", p >= 50, "Inconsistent", "Needs improvement" )
 
 Check Pass Rate =
 DIVIDE (

@@ -5,9 +5,10 @@ Output (both implementations, validated by ``normalize``)::
 
     {"summary", "call_reason", "call_reason_detail", "root_cause", "resolution",
      "customer_emotion": {"start", "end", "dominant"}, "repeat_contact": bool,
-     "qa": [{"id", "score", "evidence", "rationale"}],
+     "qa": [{"id", "rating": "met|partial|not_met|not_applicable", "evidence", "rationale", "recommendation"}],
      "compliance": [{"id", "status": "pass|fail|not_applicable", "evidence"}],
-     "topics": [...], "follow_up_actions": [...], "coaching_tips": [...]}
+     "coaching": [{"title", "priority": "High|Medium|Low", "detail"}],
+     "topics": [...], "follow_up_actions": [...]}
 """
 
 from __future__ import annotations
@@ -16,10 +17,12 @@ import json
 from abc import ABC, abstractmethod
 from importlib import resources
 
+from . import metrics as speech
 from .config import Settings
-from .rules import Rules
+from .rules import RATINGS, Rules
 
-PROMPT_VERSION = "insights_v1"
+PROMPT_VERSION = "insights_v2"
+PRIORITIES = ["High", "Medium", "Low"]
 EMOTIONS = ["calm", "satisfied", "happy", "neutral", "confused", "anxious", "frustrated", "angry", "disappointed"]
 NEGATIVE_EMOTIONS = {"anxious", "frustrated", "angry", "disappointed", "confused"}
 RESOLUTIONS = ["resolved", "follow_up", "escalated", "unresolved"]
@@ -36,8 +39,9 @@ def format_transcript(phrases: list[dict]) -> str:
 def build_system_prompt(rules: Rules) -> str:
     template = resources.files("callcenter.prompts").joinpath(f"{PROMPT_VERSION}.md").read_text(encoding="utf-8")
     reasons = "\n".join(f"- {c['id']}: {c['name']}. {c['description']}" for c in rules.categories)
+    tags = {"audio_metrics": " [audio]", "crm": " [crm]"}
     criteria = "\n".join(
-        f"- {c['id']} ({c.get('type', 'objective')}, max_points={c['max_points']}): {c['name']}. "
+        f"- {c['id']} ({c.get('type', 'objective')}){tags.get(c.get('source', ''), '')}: {c['name']}. "
         f"{' '.join(str(c['description']).split())}"
         for c in rules.criteria
     )
@@ -73,18 +77,23 @@ def output_schema(rules: Rules) -> dict:
         "repeat_contact": {"type": "boolean"},
         "qa": {"type": "array", "items": strict_object({
             "id": {"type": "string", "enum": [c["id"] for c in rules.criteria]},
-            "score": {"type": "integer"},
+            "rating": {"type": "string", "enum": list(RATINGS)},
             "evidence": {"type": "string"},
             "rationale": {"type": "string"},
+            "recommendation": {"type": "string"},
         })},
         "compliance": {"type": "array", "items": strict_object({
             "id": {"type": "string", "enum": [c["id"] for c in rules.checks]},
             "status": {"type": "string", "enum": ["pass", "fail", "not_applicable"]},
             "evidence": {"type": "string"},
         })},
+        "coaching": {"type": "array", "items": strict_object({
+            "title": {"type": "string"},
+            "priority": {"type": "string", "enum": PRIORITIES},
+            "detail": {"type": "string"},
+        })},
         "topics": text_list,
         "follow_up_actions": text_list,
-        "coaching_tips": text_list,
     })
 
 
@@ -97,16 +106,13 @@ def normalize(raw: dict, rules: Rules) -> dict:
     qa = []
     for c in rules.criteria:
         q = qa_by_id.get(c["id"], {})
-        score = q.get("score", 0)
-        try:
-            score = int(round(float(score)))
-        except (TypeError, ValueError):
-            score = 0
+        rating = q.get("rating") if q.get("rating") in RATINGS else "not_applicable"  # missing -> not scored
         qa.append({
             "id": c["id"],
-            "score": max(0, min(int(c["max_points"]), score)),
+            "rating": rating,
             "evidence": str(q.get("evidence", ""))[:400],
             "rationale": str(q.get("rationale", "Not evaluated by the model" if not q else ""))[:600],
+            "recommendation": str(q.get("recommendation", ""))[:400] if rating in ("partial", "not_met") else "",
         })
 
     compliance = []
@@ -116,6 +122,16 @@ def normalize(raw: dict, rules: Rules) -> dict:
         if status not in ("pass", "fail", "not_applicable"):
             status = "fail" if c["kind"] == "required" and not c.get("applies_when") else "not_applicable"
         compliance.append({"id": c["id"], "status": status, "evidence": str(item.get("evidence", ""))[:400]})
+
+    coaching = []
+    for item in raw.get("coaching", []) if isinstance(raw.get("coaching"), list) else []:
+        if isinstance(item, dict) and str(item.get("title", "")).strip():
+            coaching.append({
+                "title": str(item["title"]).strip()[:120],
+                "priority": item.get("priority") if item.get("priority") in PRIORITIES else "Medium",
+                "detail": str(item.get("detail", "")).strip()[:500],
+            })
+    coaching.sort(key=lambda c: PRIORITIES.index(c["priority"]))
 
     emotion = raw.get("customer_emotion") or {}
     fix = lambda e: e if e in EMOTIONS else "neutral"  # noqa: E731
@@ -132,7 +148,7 @@ def normalize(raw: dict, rules: Rules) -> dict:
         "compliance": compliance,
         "topics": as_list(raw.get("topics")),
         "follow_up_actions": as_list(raw.get("follow_up_actions")),
-        "coaching_tips": as_list(raw.get("coaching_tips")),
+        "coaching": coaching[:6],
     }
 
 
@@ -180,6 +196,8 @@ class AzureOpenAIInsightsClient(InsightsClient):
     def _generate(self, phrases, metadata, rules):
         user = (
             f"Call ID: {metadata.get('call_id', '')}\nDirection: {metadata.get('direction', 'inbound')}\n\n"
+            f"Measured from the recording (use for [audio] parameters):\n"
+            f"{speech.describe(metadata.get('speech_metrics') or speech.speech_metrics(phrases))}\n\n"
             f"Transcript:\n{format_transcript(phrases)}"
         )
         response = self.client.chat.completions.create(
@@ -286,22 +304,33 @@ class MockInsightsClient(InsightsClient):
         emotions = [emotion_of(p) for p in customer]
         dominant = max(set(emotions), key=emotions.count) if emotions else "neutral"
 
-        # QA
+        # QA: keyword heuristics -> met / partial / not_met / not_applicable
+        m = metadata.get("speech_metrics") or speech.speech_metrics(phrases)
         qa = []
         for c in rules.criteria:
+            if c.get("mock_applies_keywords") and not self._has(all_text, c["mock_applies_keywords"]):
+                qa.append({"id": c["id"], "rating": "not_applicable", "evidence": "",
+                           "rationale": "The situation this parameter tests did not arise on the call.", "recommendation": ""})
+                continue
             window = c.get("mock_window", "any")
             pool = agent[:2] if window == "opening" else agent[-3:] if window == "closing" else agent
             hits = [p for p in pool if self._has(p["text"], c.get("mock_keywords"))]
-            max_points = int(c["max_points"])
-            if c.get("type") == "subjective":
-                fraction = 1.0 if len(hits) >= 2 else 0.7 if hits else 0.3
+            if c["id"] == "speech_clarity":
+                rate = m.get("agent_wpm") or 0
+                rating = "met" if 110 <= rate <= 170 else "partial" if 90 <= rate <= 190 else "not_met"
+                evidence = f"Measured agent pace: {rate} words per minute"
+            elif c["id"] == "hold_protocol" and not m.get("dead_air_count"):
+                rating, evidence = "not_applicable", ""
             else:
-                fraction = 1.0 if hits else 0.0
+                need = 2 if c.get("type") == "subjective" else 1
+                rating = "met" if len(hits) >= need else "partial" if hits else "not_met"
+                evidence = hits[0]["text"][:160] if hits else ""
             qa.append({
-                "id": c["id"],
-                "score": round(max_points * fraction),
-                "evidence": hits[0]["text"][:160] if hits else "",
-                "rationale": "Expected behaviour observed." if hits else "Expected behaviour not found in the transcript.",
+                "id": c["id"], "rating": rating, "evidence": evidence,
+                "rationale": "Expected behaviour observed." if rating == "met" else
+                             "Only partly observed." if rating == "partial" else
+                             "Expected behaviour not found in the transcript." if rating == "not_met" else "",
+                "recommendation": f"Work on: {c['name']}." if rating in ("partial", "not_met") else "",
             })
 
         # Compliance
@@ -327,7 +356,11 @@ class MockInsightsClient(InsightsClient):
             "unresolved": "The issue was not resolved on the call.",
         }[resolution]
         root = next((cause for key, cause in ROOT_CAUSES if key in all_text), "Not determined")
-        failed_qa = [c["name"] for c, q in zip(rules.criteria, qa) if q["score"] < int(c["max_points"]) * 0.7]
+        weak = [(c, q) for c, q in zip(rules.criteria, qa) if q["rating"] in ("not_met", "partial")]
+        weak.sort(key=lambda cq: (cq[1]["rating"] != "not_met", -float(cq[0].get("weight", 1))))
+        coaching = [{"title": c["name"], "priority": "High" if q["rating"] == "not_met" and float(c.get("weight", 1)) > 1
+                     else "Medium" if q["rating"] == "not_met" else "Low",
+                     "detail": q["recommendation"] or f"Improve {c['name'].lower()}."} for c, q in weak[:4]]
 
         return {
             "summary": f"The customer called regarding {reason_name.lower()}: \"{issue[:180]}\" {outcome}",
@@ -341,5 +374,5 @@ class MockInsightsClient(InsightsClient):
             "compliance": compliance,
             "topics": [reason_name, resolution.replace("_", " ")],
             "follow_up_actions": [] if resolution == "resolved" else ["Track the reference number until closure"],
-            "coaching_tips": [f"Improve: {name}" for name in failed_qa],
+            "coaching": coaching,
         }
