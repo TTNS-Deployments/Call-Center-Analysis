@@ -10,6 +10,22 @@
 | Tools | Azure CLI 2.60+ (`az login`), bash, `rsync`, `zip` and `python3` (Linux, macOS, WSL or Cloud Shell). |
 | Resource providers | `Microsoft.Web`, `Microsoft.CognitiveServices`, `Microsoft.DocumentDB`, `Microsoft.EventGrid`, `Microsoft.EventHub`, `Microsoft.KeyVault`, `Microsoft.OperationalInsights`, `Microsoft.Insights`, `Microsoft.Storage`. Register them with `az provider register -n <ns>`. |
 
+### If you only have Owner on one resource group
+
+That is enough to deploy, with these limits:
+
+| Needs subscription-level rights | What to do |
+|---|---|
+| Registering resource providers | `deploy.sh` warns if any are not registered; ask a subscription Owner/Contributor to run `az provider register -n <namespace>` once. |
+| Purging soft-deleted Key Vaults and AI accounts | After deleting the demo, either ask an admin to purge them or redeploy with a different `solutionPrefix` (names are derived from it). |
+| Checking Azure OpenAI quota (`az cognitiveservices usage list`) | May be refused; the deployment itself will report `InsufficientQuota` if quota is missing. |
+| Defender for Cloud plans | Subscription setting; ask an admin if needed. |
+
+Set `RESOURCE_GROUP` in `Deployment/environments/<env>.env` to your resource group. The script reuses it as it is
+(it only creates the group if it does not exist). Resources are created in `location` from the parameters file,
+which can differ from the resource group's own region. Creating the Entra ID app registration needs the tenant
+setting "Users can register applications" (on by default).
+
 ## 1. Choose SKUs
 
 Copy or edit `Deployment/ARM/parameters/<env>.parameters.json`. Every tier and size is set there; [Deployment/README.md](../Deployment/README.md) explains each parameter and its options. The values you are most likely to change are:
@@ -67,6 +83,25 @@ If you created the app registration yourself, enter its client ID and secret in 
 6. **CRM:** read the API key from Key Vault (`crm-api-keys`) and call `GET https://<web app>/api/calls` with the header `X-API-Key: <key>`. For push delivery, give the CRM integration *Azure Event Hubs Data Receiver* on the `call-insights` hub.
 7. **Power BI:** follow [Analytics/README.md](../Analytics/README.md), then set `powerBiWorkspaceId` and `powerBiReportId` in the parameters file and redeploy (or set the matching app settings).
 8. **Defender for Cloud:** this is a subscription-level setting and is not part of the resource group template. Enable the plans the TSD lists (App Service, Storage, Cosmos DB, AI services, Key Vault) in *Defender for Cloud → Environment settings*.
+
+## Secrets and configuration after deployment
+
+You do not edit app settings for secrets. The template wires everything:
+
+- **Azure service access has no keys at all.** The web app and the Functions use their managed identities for
+  Storage, Cosmos DB, Speech, Language, Azure OpenAI and Event Hubs. Endpoints are written into the app settings by the template.
+- **The three secrets live in Key Vault** (`django-secret-key`, `crm-api-keys`, `entra-client-secret`). The web app's
+  settings `DJANGO_SECRET_KEY`, `CRM_API_KEYS` and `ENTRA_CLIENT_SECRET` are *Key Vault references* without a version,
+  so they always resolve to the latest version of the secret.
+- **To change a secret**, add a new version in Key Vault (portal, or `az keyvault secret set --vault-name <kv> -n crm-api-keys --value <new>`).
+  App Service re-reads Key Vault references periodically (within 24 hours); restart the web app
+  (`az webapp restart -g <rg> -n <web app>`) to apply it immediately. `CRM_API_KEYS` accepts a comma-separated list,
+  so you can add the new key, update the CRM, then remove the old one.
+- **Values that are not secrets** (Power BI IDs, default role, time zone, Entra client ID) are parameters in
+  `Deployment/ARM/parameters/<env>.parameters.json`; change them there and redeploy, or edit the app setting directly
+  (a redeploy will overwrite direct edits).
+- Each deployment of the template writes a **new** Django key and CRM key (they default to new random values), which
+  signs users out and changes the CRM key. Pass fixed values with `--parameters crmApiKey=...` if that matters.
 
 ## Moving from local mode to Azure
 

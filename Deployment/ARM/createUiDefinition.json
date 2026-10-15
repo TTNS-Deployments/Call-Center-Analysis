@@ -412,7 +412,7 @@
             "name": "functionMaximumInstances",
             "type": "Microsoft.Common.Slider",
             "label": "Functions maximum instances (Flex Consumption)",
-            "min": 1,
+            "min": 40,
             "max": 1000,
             "defaultValue": 40,
             "showStepMarkers": false,

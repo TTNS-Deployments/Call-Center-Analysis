@@ -84,7 +84,7 @@
       "value": "FC1"
     },
     "functionMaximumInstances": {
-      "value": 10
+      "value": 40
     },
     "functionInstanceMemoryMB": {
       "value": 2048

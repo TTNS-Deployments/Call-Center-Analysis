@@ -210,10 +210,10 @@
     "functionMaximumInstances": {
       "type": "int",
       "defaultValue": 40,
-      "minValue": 1,
+      "minValue": 40,
       "maxValue": 1000,
       "metadata": {
-        "description": "Maximum Function instances (scale-out limit, also caps AI service concurrency)."
+        "description": "Maximum Function instances (Flex Consumption allows 40-1000). Billing is per execution, so a higher cap does not cost more by itself."
       }
     },
     "functionInstanceMemoryMB": {

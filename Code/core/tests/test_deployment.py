@@ -29,3 +29,14 @@ def test_queue_names_match_functions():
     source = (ARM.parents[1] / "Code" / "functions" / "function_app.py").read_text()
     for queue in TEMPLATE["variables"]["queues"]:
         assert f'queue_name="{queue}"' in source
+
+
+@pytest.mark.parametrize("path", PARAM_FILES, ids=lambda p: p.name)
+def test_parameter_values_within_template_limits(path):
+    values = json.loads(path.read_text())["parameters"]
+    for name, item in values.items():
+        spec = TEMPLATE["parameters"][name]
+        if "minValue" in spec:
+            assert item["value"] >= spec["minValue"], f"{name}={item['value']} < minValue {spec['minValue']}"
+        if "maxValue" in spec:
+            assert item["value"] <= spec["maxValue"], f"{name}={item['value']} > maxValue {spec['maxValue']}"

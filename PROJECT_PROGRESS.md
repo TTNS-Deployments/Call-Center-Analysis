@@ -52,7 +52,7 @@ Repository: https://github.com/TTNS-Deployments/Call-Center-Analysis (**public**
 ## Current task (2026-10-15): demo deployment
 
 User has Azure subscription access and wants a **demo deployment**, then to test every feature.
-- `Deployment/ARM/parameters/demo.parameters.json`: cheapest working SKUs (B1 web, Flex max 5, Speech S0,
+- `Deployment/ARM/parameters/demo.parameters.json`: cheapest working SKUs (B1 web, Flex max 40 (Flex minimum), Speech S0,
   Language S, gpt-4.1-mini GlobalStandard 20K TPM, Cosmos serverless, Event Hubs off, entraDefaultRole=Supervisor).
 - `Deployment/environments/demo.env`: RG `rg-callcenter-demo`, `centralindia`, SETUP_ENTRA=1, SEED=1.
   `deploy.sh -e demo` reads it (CLI options override; `--no-setup-entra` added). `demo` added to allowed env names.
@@ -63,7 +63,9 @@ User has Azure subscription access and wants a **demo deployment**, then to test
 - New CLI: `python -m callcenter upload [paths] [--agent-email X]` (default Data/demo_calls; local = process
   in-process; azure = upload only, Functions process). `deploy.sh --seed` now uploads the demo calls.
 - Mock speech returns the demo script for DEMO-* files; mock PII now catches digits read one by one.
-- Next: user runs `make setup`, `az login`, checks OpenAI quota/model in centralindia, then
+- User has **Owner on one resource group only** (not subscription). deploy.sh now reuses an existing RG and warns
+  about unregistered providers; deployment guide documents RG-only limits and how Key Vault secrets reach the app.
+- RESOURCE_GROUP set to "Vaibhav.Chaudhary" (centralindia) in demo.env. Next: user runs `make setup`, `az login`, checks OpenAI quota/model in centralindia, then
   `Deployment/scripts/deploy.sh -e demo`, then follows `Data/demo_calls/README.md`.
 
 ## Open items / ideas

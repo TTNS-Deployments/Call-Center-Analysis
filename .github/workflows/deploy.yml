@@ -11,8 +11,8 @@ on:
       environment:
         description: Environment (parameters file name)
         type: choice
-        options: [dev, prod]
-        default: dev
+        options: [demo, dev, prod]
+        default: demo
       scope:
         description: What to deploy
         type: choice

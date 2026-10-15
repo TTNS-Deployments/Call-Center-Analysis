@@ -75,9 +75,27 @@ fi
 
 DEPLOYMENT="callcenter-$ENV"
 if [[ $SKIP_INFRA -eq 0 ]]; then
-  echo "==> Resource group $RG ($LOCATION)"
-  az group create -n "$RG" -l "$LOCATION" -o none
-  echo "==> Deploying infrastructure with $(basename "$PARAMS") (takes ~10 minutes)"
+  # Reuse an existing resource group (e.g. one you were given Owner on); create it only if missing.
+  if [[ "$(az group exists -n "$RG")" == "true" ]]; then
+    echo "==> Using existing resource group $RG ($(az group show -n "$RG" --query location -o tsv))"
+  else
+    echo "==> Creating resource group $RG ($LOCATION)"
+    az group create -n "$RG" -l "$LOCATION" -o none
+  fi
+
+  # Resource providers must be registered at subscription level (needs subscription rights).
+  MISSING=""
+  for ns in Microsoft.Web Microsoft.CognitiveServices Microsoft.DocumentDB Microsoft.EventGrid Microsoft.EventHub \
+            Microsoft.KeyVault Microsoft.OperationalInsights Microsoft.Insights Microsoft.Storage; do
+    state="$(az provider show -n "$ns" --query registrationState -o tsv 2>/dev/null || echo unknown)"
+    [[ "$state" == "Registered" ]] || MISSING="$MISSING $ns($state)"
+  done
+  if [[ -n "$MISSING" ]]; then
+    echo "WARNING: these resource providers are not confirmed as registered:$MISSING" >&2
+    echo "         Ask a subscription Owner/Contributor to run: az provider register -n <namespace>" >&2
+  fi
+
+  echo "==> Deploying infrastructure with $(basename "$PARAMS")"
   az deployment group create -g "$RG" -n "$DEPLOYMENT" \
     --template-file "$ROOT/Deployment/ARM/azuredeploy.json" \
     --parameters @"$PARAMS" \

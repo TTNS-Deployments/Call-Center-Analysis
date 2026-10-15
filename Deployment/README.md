@@ -18,7 +18,7 @@ For a demo or proof of concept, use the `demo` files. They pick the cheapest set
 
 | File | Contents |
 |---|---|
-| `ARM/parameters/demo.parameters.json` | SKUs: web app B1; Functions Flex Consumption, max 5 instances; Speech S0 and Language S (pay per use, no fixed cost); Azure OpenAI `gpt-4.1-mini` GlobalStandard, 20K TPM; Cosmos DB serverless; Event Hubs off; LRS storage; recordings deleted after 30 days, raw transcripts after 7; logs capped at 1 GB/day; users without a role get **Supervisor** (sees all demo calls) |
+| `ARM/parameters/demo.parameters.json` | SKUs: web app B1; Functions Flex Consumption (max 40 instances, the lowest Flex allows; billed per execution); Speech S0 and Language S (pay per use, no fixed cost); Azure OpenAI `gpt-4.1-mini` GlobalStandard, 20K TPM; Cosmos DB serverless; Event Hubs off; LRS storage; recordings deleted after 30 days, raw transcripts after 7; logs capped at 1 GB/day; users without a role get **Supervisor** (sees all demo calls) |
 | `environments/demo.env` | Deployment variables: subscription, resource group (`rg-callcenter-demo`), region (`centralindia`), whether to set up Entra ID sign-in and whether to seed sample calls |
 
 ```bash
@@ -55,7 +55,7 @@ The values below are the defaults in the two parameter files. "Options" are the 
 | `webAppSku` | B1 | S1 | `B1`–`B3`, `S1`–`S3`, `P0v3`–`P3v3` |
 | `webAppInstanceCount` | 1 | 1 | 1–10 |
 | `functionPlanSku` | FC1 | FC1 | Flex Consumption (serverless) |
-| `functionMaximumInstances` | 10 | 40 | Scale-out cap. Also limits parallel calls to Speech, Language and OpenAI. |
+| `functionMaximumInstances` | 40 | 40 | Scale-out cap (Flex Consumption: 40-1000). Billed per execution, not per instance. |
 | `functionInstanceMemoryMB` | 2048 | 2048 | `512`, `2048`, `4096` |
 | **Messaging** | | | |
 | `deployEventHubs` | false | true | CRM event feed and real-time phase |
