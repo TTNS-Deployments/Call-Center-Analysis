@@ -70,6 +70,9 @@ p { margin: 0 0 8px; }
 /* ---------- layout ---------- */
 .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
 .sidebar { background: var(--side-bg); color: var(--side-text); padding: 18px 12px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; }
+.org-logo { background: #fff; border-radius: 8px; padding: 8px 12px; margin: 0 4px 16px; }
+.org-logo img { display: block; width: 100%; height: auto; max-height: 52px; object-fit: contain; }
+.auth-card .org-logo { margin: -6px auto 20px; max-width: 250px; padding: 0; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 20px; color: #fff; font-weight: 650; font-size: 15px; }
 .brand .logo { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #3b82f6, #7c3aed); display: grid; place-items: center; }
 .brand small { display: block; font-weight: 400; font-size: 11px; color: var(--side-text); }
@@ -270,6 +273,9 @@ label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; 
   .step:nth-child(3) { border-right: 0; }
 }
 @media (max-width: 860px) {
+  .sidebar .org-logo { margin: 0; padding: 4px 8px; }
+  .sidebar .org-logo img { height: 28px; width: auto; }
+  .sidebar .brand { display: none; }
   .app { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px 16px; gap: 6px; }
   .brand { padding: 0 8px 0 0; }
