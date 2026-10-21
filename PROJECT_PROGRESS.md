@@ -1,7 +1,7 @@
 # Project progress and context
 
 Read this first when continuing work in a new session. Keep it updated after each piece of work.
-Last updated: 2026-10-21 (demo deployment in progress; code upload blocked by Cloud Shell token issue).
+Last updated: 2026-10-21 (infra deployed; management-API-only code path added, user to run it in Cloud Shell).
 
 ## What this is
 
@@ -43,8 +43,9 @@ User works in a GitHub Codespace (`/workspaces/Call-Center-Analysis`) and deploy
 | `Config/*.yaml` | 20-parameter QA rubric, compliance checks, call reasons (incl. `sales_opportunity`) |
 | `Deployment/ARM/azuredeploy.json` | ARM template (47 entries; ~13 real resources for demo). Edit the JSON directly |
 | `Deployment/ARM/parameters/{demo,dev,prod}.parameters.json` | SKU files per environment |
-| `Deployment/environments/demo.env` | Demo deployment variables: RG `Vaibhav.Chaudhary`, `centralindia`, SETUP_ENTRA=1, SEED=1 |
-| `Deployment/scripts/` | `deploy.sh` (infra + code + Entra + seed; reads `environments/<env>.env`), `setup_entra.sh`, `package.sh` (tar, no rsync) |
+| `Deployment/environments/demo.env` | Demo deployment variables: RG `Vaibhav.Chaudhary`, `centralindia`, SETUP_ENTRA=0, SEED=1, CODE_VIA_ARM=1 |
+| `Deployment/scripts/` | `deploy.sh` (infra + code + Entra + seed; reads `environments/<env>.env`; `--code-via-arm`, `--param k=v`), `deploy_code_arm.sh` (management-API-only code + seed), `setup_entra.sh`, `package.sh` (tar; `--vendor` bundles deps + collectstatic) |
+| `Deployment/ARM/code-onedeploy.json` | `Microsoft.Web/sites/extensions` `onedeploy` (packageUri, remoteBuild false) for the Function app |
 | `Data/demo_calls/` | 4 demo recordings (Piper TTS) + JSON metadata + `scripts.yaml` + `generate_audio.py` + `README.md` test checklist |
 | `Analytics/` | Power BI model as text (Power Query, DAX incl. 20-parameter measures). No .pbix yet |
 | `Documents/` | architecture, technical spec, deployment guide, configuration, local development |
@@ -88,27 +89,23 @@ Tests: `make test` (core 36, webapp 8). CI on GitHub is green.
 4. **Blocked:** code upload `az functionapp deployment source config-zip` fails with
    "Timeout waiting for token from portal. Audience: https://appservice.azure.com". Not yet done after it:
    web app code upload, `setup_entra.sh` (needs Graph: likely same token problem), demo-call upload (SEED=1).
-5. Last thing asked of the user (no answer yet): run in Cloud Shell
-   `for aud in https://management.azure.com https://appservice.azure.com https://graph.microsoft.com https://storage.azure.com https://vault.azure.net; do printf "%-32s " "$aud"; az account get-access-token --resource "$aud" -o none 2>/dev/null && echo OK || echo FAILED; done`
-   and try `az login --scope "https://appservice.azure.com/.default"`; if that works, run
-   `Deployment/scripts/deploy.sh -e demo --skip-infra`.
+5. Token test in Cloud Shell: only `https://management.azure.com` works; appservice, graph, storage, vault FAILED.
+6. **Implemented (pushed) the management-only path:** `deploy.sh --code-via-arm` (on via `CODE_VIA_ARM=1` in demo.env)
+   -> `deploy_code_arm.sh`: `package.sh --vendor` (tested in Codespace: webapp.zip 96 MB with staticfiles,
+   functions.zip 84 MB with `.python_packages`), upload with storage account key to `code-packages`, 1-year read SAS,
+   Function app via ARM `code-onedeploy.json`, web app via `WEBSITE_RUN_FROM_PACKAGE` + `PYTHONPATH=/home/site/wwwroot/.packages`
+   + startup `python -m gunicorn ... config.wsgi`, demo calls (JSON then WAV) with the account key. Not yet verified on Azure.
+7. Entra: portal registration steps are in `Documents/deployment-guide.md` ("When only the management sign-in works");
+   client ID/secret passed with `deploy.sh -e demo --param entraClientId=... --param entraClientSecret='...'`.
 
-### Next steps if the App Service / Graph tokens keep failing (plan, not yet implemented)
+### Next steps
 
-- **Code upload via ARM only** (management audience): package the zips (pre-installing Python deps with
-  `pip install --target` in Cloud Shell, Python 3.12 / linux x64, if remote build is unavailable), upload them to the
-  deployment storage using the account key fetched via ARM (`az storage account keys list`, shared key is enabled)
-  and a SAS URL, then deploy with an ARM template containing `Microsoft.Web/sites/extensions` named `onedeploy`
-  (`packageUri`, type zip) for the Function app and the web app. Verify the onedeploy properties before relying on them.
-- **Entra app registration in the portal** instead of `setup_entra.sh`: create app "Call Center Analysis (demo)",
-  web redirect URI `https://<web app>/auth/callback`, ID tokens enabled, app roles Admin/Supervisor/QA/Agent
-  (values exactly), client secret -> Key Vault secret `entra-client-secret` (portal), then
-  `az webapp config appsettings set -g Vaibhav.Chaudhary -n ccai-demo-gqausd-web --settings ENTRA_CLIENT_ID=<appId>`,
-  put the client ID in `demo.parameters.json` (`entraClientId`), assign the user the Admin role (Enterprise apps).
-- **Demo calls**: `python -m callcenter upload` needs a storage-audience token; if that fails, upload the 4 WAV +
-  JSON files from `Data/demo_calls` to the `recordings` container (JSON first) in the portal, or with
-  `az storage blob upload --auth-mode key` using the account key.
-- After success: set `SETUP_ENTRA=0` in `demo.env`; follow `Data/demo_calls/README.md` checklist.
+- User runs in Cloud Shell: `cd ~/Call-Center-Analysis && git pull && Deployment/scripts/deploy.sh -e demo --skip-infra`
+  (code + seed). Then register the Entra app in the portal and run `deploy.sh -e demo --param entraClientId=... --param entraClientSecret='...'`
+  (full infra + code again; set `--no-seed`-like behaviour by passing nothing: SEED=1 re-uploads demo calls, harmless).
+- If onedeploy on Flex fails: alternative is uploading the zip into the Function app's deployment storage container.
+- If the web app fails to start: check Log stream; likely PYTHONPATH / startup command.
+- After success: put entraClientId into demo.parameters.json; follow `Data/demo_calls/README.md` checklist.
 
 ## Open items / ideas
 

@@ -52,6 +52,37 @@ The script:
 
 Re-running is safe. Use `--skip-infra` to deploy code only, `--skip-code` to deploy infrastructure only, and `--seed` to upload the 4 demo recordings in `Data/demo_calls` (see its README for the test checklist). `--seed` runs the `callcenter` package on your machine, so run `make setup` first (the script uses `.venv` automatically).
 
+### When only the management sign-in works (Cloud Shell, Conditional Access)
+
+Some tenants refuse tokens for App Service (`Timeout waiting for token from portal. Audience: https://appservice.azure.com`), Storage, Key Vault or Microsoft Graph, while Azure Resource Manager works. Check with:
+
+```bash
+for aud in https://management.azure.com https://appservice.azure.com https://graph.microsoft.com https://storage.azure.com https://vault.azure.net; do printf "%-32s " "$aud"; az account get-access-token --resource "$aud" -o none 2>/dev/null && echo OK || echo FAILED; done
+```
+
+If only `management` works, add `--code-via-arm` (or set `CODE_VIA_ARM=1` in the env file; `demo.env` does). The code step then runs `Deployment/scripts/deploy_code_arm.sh`, which uses only management calls:
+
+1. `package.sh --vendor` builds both zips with every Python library included (Linux, Python 3.12) and the web app's static files, so Azure runs no build step.
+2. The zips are uploaded to the storage account with the account key, read through the management API, into the `code-packages` container.
+3. The Function app gets its package through an ARM deployment of `ARM/code-onedeploy.json`, which is a `onedeploy` site extension.
+4. The web app runs from its package: `WEBSITE_RUN_FROM_PACKAGE` is set to a read-only SAS URL (valid 1 year) and the startup command to `python -m gunicorn ...`.
+5. With `--seed`, the demo calls are uploaded with the account key, JSON metadata first.
+
+An infrastructure deployment resets the web app settings, so `deploy.sh` always runs the code step after it. Do not run the infrastructure step on its own with `--skip-code`.
+
+`setup_entra.sh` needs Microsoft Graph, so with `--code-via-arm` you register the sign-in app in the portal:
+
+1. Go to **Microsoft Entra admin center → App registrations → New registration**. Name: `Call Center Analysis (<env>)`. Accounts: *this organizational directory only*. Redirect URI: platform **Web**, `https://<web app>.azurewebsites.net/auth/callback`. Get the exact value with `az deployment group show -g <rg> -n callcenter-<env> --query properties.outputs.entraRedirectUri.value -o tsv`.
+2. Go to **Authentication** and tick **ID tokens**.
+3. Go to **App roles** and create four roles. For each, choose *Allowed member types: Users/Groups* and use these values exactly: `Admin`, `Supervisor`, `QA` and `Agent`.
+4. Go to **Certificates & secrets → New client secret**. Copy the secret's **Value**.
+5. Redeploy with both values. The template stores the secret in Key Vault and sets `ENTRA_CLIENT_ID`:
+   ```bash
+   Deployment/scripts/deploy.sh -e <env> --param entraClientId=<Application (client) ID> --param entraClientSecret='<secret value>'
+   ```
+   Then put the client ID into `entraClientId` in the parameters file so that later deployments keep it. Pass the secret again on every infrastructure deployment; otherwise the Key Vault secret is left as it is.
+6. Go to **Enterprise applications → Call Center Analysis (<env>) → Users and groups** and assign yourself **Admin**.
+
 ## 2b. Deploy with the button
 
 The **Deploy to Azure** button in the README opens a portal form, built from `createUiDefinition.json`, with a dropdown for every SKU. It deploys the **infrastructure only**. Afterwards:

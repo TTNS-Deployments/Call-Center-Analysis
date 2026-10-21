@@ -14,6 +14,9 @@
 #       --seed             upload the 4 demo recordings (Data/demo_calls) after deployment (needs `make setup`)
 #       --skip-infra       only deploy code
 #       --skip-code        only deploy infrastructure
+#       --code-via-arm     deploy code and demo calls with management-API calls only (scripts/deploy_code_arm.sh);
+#                          for Cloud Shell / Conditional Access where App Service, Storage or Graph tokens fail
+#       --param name=value extra ARM parameter (repeatable), e.g. --param entraClientId=<id> --param entraClientSecret=<secret>
 #
 # Prerequisites: Azure CLI (az login), rsync, zip, python3. The signed-in identity needs
 # Owner (or Contributor + User Access Administrator) on the resource group.
@@ -21,7 +24,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCRIPTS="$ROOT/Deployment/scripts"
-RG="" ENV="" LOCATION="centralindia" LOCATION_SET=0 SUBSCRIPTION="" SETUP_ENTRA=0 NO_SETUP_ENTRA=0 SEED=0 SKIP_INFRA=0 SKIP_CODE=0
+RG="" ENV="" LOCATION="centralindia" LOCATION_SET=0 SUBSCRIPTION="" SETUP_ENTRA=0 NO_SETUP_ENTRA=0 SEED=0 SKIP_INFRA=0 SKIP_CODE=0 CODE_VIA_ARM=0
+EXTRA_PARAMS=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -34,7 +38,9 @@ while [[ $# -gt 0 ]]; do
     --seed) SEED=1; shift ;;
     --skip-infra) SKIP_INFRA=1; shift ;;
     --skip-code) SKIP_CODE=1; shift ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    --code-via-arm) CODE_VIA_ARM=1; shift ;;
+    --param) EXTRA_PARAMS+=("$2"); shift 2 ;;
+    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
     *) echo "Unknown option $1" >&2; exit 1 ;;
   esac
 done
@@ -44,14 +50,15 @@ done
 ENV_FILE="$ROOT/Deployment/environments/$ENV.env"
 if [[ -f "$ENV_FILE" ]]; then
   echo "Using variables from $(basename "$ENV_FILE")"
-  CLI_LOCATION="$LOCATION" CLI_SETUP_ENTRA="$SETUP_ENTRA" CLI_SEED="$SEED"
+  CLI_LOCATION="$LOCATION" CLI_SETUP_ENTRA="$SETUP_ENTRA" CLI_SEED="$SEED" CLI_CODE_VIA_ARM="$CODE_VIA_ARM"
   # shellcheck disable=SC1090
-  source "$ENV_FILE"   # may set RESOURCE_GROUP, LOCATION, AZURE_SUBSCRIPTION, SETUP_ENTRA, SEED
+  source "$ENV_FILE"   # may set RESOURCE_GROUP, LOCATION, AZURE_SUBSCRIPTION, SETUP_ENTRA, SEED, CODE_VIA_ARM
   [[ -z "$RG" ]] && RG="${RESOURCE_GROUP:-}"
   [[ "$LOCATION_SET" -eq 1 || -z "${LOCATION:-}" ]] && LOCATION="$CLI_LOCATION"
   [[ -z "$SUBSCRIPTION" ]] && SUBSCRIPTION="${AZURE_SUBSCRIPTION:-}"
   [[ "$CLI_SETUP_ENTRA" == "1" ]] && SETUP_ENTRA=1
   [[ "$CLI_SEED" == "1" ]] && SEED=1
+  [[ "$CLI_CODE_VIA_ARM" == "1" ]] && CODE_VIA_ARM=1
 fi
 [[ "$NO_SETUP_ENTRA" -eq 1 ]] && SETUP_ENTRA=0
 [[ -n "$RG" ]] || { echo "No resource group: pass -g or set RESOURCE_GROUP in $ENV_FILE" >&2; exit 1; }
@@ -115,6 +122,7 @@ if [[ $SKIP_INFRA -eq 0 ]]; then
     --template-file "$ROOT/Deployment/ARM/azuredeploy.json" \
     --parameters @"$PARAMS" \
     --parameters deployerPrincipalId="$DEPLOYER_ID" deployerPrincipalType="$DEPLOYER_TYPE" \
+    ${EXTRA_PARAMS[@]+--parameters "${EXTRA_PARAMS[@]}"} \
     -o none
 fi
 
@@ -122,6 +130,17 @@ out() { az deployment group show -g "$RG" -n "$DEPLOYMENT" --query "properties.o
 WEB_APP="$(out webAppName)"
 FUNC_APP="$(out functionAppName)"
 WEB_URL="$(out webAppUrl)"
+
+if [[ $CODE_VIA_ARM -eq 1 ]]; then
+  # Code (and demo calls) through the management API only; the Entra app is registered in the portal.
+  ARM_ARGS=(-g "$RG" -e "$ENV")
+  [[ $SEED -eq 1 ]] && ARM_ARGS+=(--seed)
+  [[ $SKIP_CODE -eq 1 ]] && ARM_ARGS+=(--seed-only)
+  if [[ $SKIP_CODE -eq 0 || $SEED -eq 1 ]]; then "$SCRIPTS/deploy_code_arm.sh" "${ARM_ARGS[@]}"; fi
+  SKIP_CODE=1 SEED=0
+  [[ $SETUP_ENTRA -eq 1 ]] && echo "Skipping setup_entra.sh (--code-via-arm): register the app in the portal, see Documents/deployment-guide.md"
+  SETUP_ENTRA=0
+fi
 
 if [[ $SKIP_CODE -eq 0 ]]; then
   echo "==> Packaging"

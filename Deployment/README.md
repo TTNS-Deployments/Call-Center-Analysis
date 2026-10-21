@@ -8,7 +8,9 @@
 | `environments/<env>.env` | Optional deployment variables per environment (subscription, resource group, region, setup flags) read by `deploy.sh` |
 | `scripts/deploy.sh` | Infrastructure + code in one command (`-e <env> [-g <rg>] [--setup-entra] [--seed]`) |
 | `scripts/setup_entra.sh` | Entra ID app registration, app roles, client secret in Key Vault |
-| `scripts/package.sh` | Builds `build/webapp.zip` and `build/functions.zip` |
+| `scripts/package.sh` | Builds `build/webapp.zip` and `build/functions.zip` (`--vendor`: all Python libraries included) |
+| `scripts/deploy_code_arm.sh` | Code + demo calls through the management API only (`deploy.sh --code-via-arm`), for Cloud Shell / Conditional Access |
+| `ARM/code-onedeploy.json` | Small template that deploys a zip to the Function app (`onedeploy`), used by `deploy_code_arm.sh` |
 
 Step-by-step instructions are in [Documents/deployment-guide.md](../Documents/deployment-guide.md).
 
@@ -19,14 +21,14 @@ For a demo or proof of concept, use the `demo` files. They pick the cheapest set
 | File | Contents |
 |---|---|
 | `ARM/parameters/demo.parameters.json` | SKUs: web app B1; Functions Flex Consumption (max 40 instances, the lowest Flex allows; billed per execution); Speech S0 and Language S (pay per use, no fixed cost); Azure OpenAI `gpt-5-mini` GlobalStandard, 20K TPM, reasoning effort low; Cosmos DB serverless; Event Hubs off; LRS storage; recordings deleted after 30 days, raw transcripts after 7; logs capped at 1 GB/day; users without a role get **Supervisor** (sees all demo calls) |
-| `environments/demo.env` | Deployment variables: subscription, resource group (`rg-callcenter-demo`), region (`centralindia`), whether to set up Entra ID sign-in and whether to seed sample calls |
+| `environments/demo.env` | Deployment variables: subscription, resource group (`Vaibhav.Chaudhary`), region (`centralindia`), Entra setup off (app registered in the portal), seed sample calls, `CODE_VIA_ARM=1` (management-API-only code deployment) |
 
 ```bash
 az login
 Deployment/scripts/deploy.sh -e demo        # everything comes from the two demo files
 ```
 
-After the first run, set `SETUP_ENTRA=0` in `demo.env` (each setup run adds a new client secret). Remove the demo with `az group delete -n rg-callcenter-demo`.
+Sign-in: register the app in the portal and pass its ID and secret with `--param` (see [the deployment guide](../Documents/deployment-guide.md#when-only-the-management-sign-in-works-cloud-shell-conditional-access)). If your tenant allows Microsoft Graph and App Service tokens, you can instead set `SETUP_ENTRA=1` and `CODE_VIA_ARM=0`. Remove the demo by deleting the resources in the resource group.
 
 ## SKU and sizing parameters
 
