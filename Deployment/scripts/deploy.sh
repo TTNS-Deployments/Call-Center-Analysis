@@ -62,6 +62,16 @@ PARAMS="$ROOT/Deployment/ARM/parameters/$ENV.parameters.json"
 [[ -n "$SUBSCRIPTION" ]] && az account set --subscription "$SUBSCRIPTION"
 echo "Subscription: $(az account show --query name -o tsv)"
 
+# Fallback when Microsoft Graph lookups are refused (e.g. Cloud Shell / Conditional Access):
+# read the object ID ("oid") from the Azure Resource Manager access token you already have.
+oid_from_token() {
+  az account get-access-token --query accessToken -o tsv 2>/dev/null | python3 -c '
+import base64, json, sys
+part = sys.stdin.read().strip().split(".")[1]
+part += "=" * (-len(part) % 4)
+print(json.loads(base64.urlsafe_b64decode(part)).get("oid", ""))' 2>/dev/null || true
+}
+
 # Identity running the deployment gets data access (Storage, Key Vault, AI) for setup and seeding.
 USER_TYPE="$(az account show --query user.type -o tsv)"
 if [[ "$USER_TYPE" == "servicePrincipal" ]]; then
@@ -71,7 +81,12 @@ else
   DEPLOYER_ID="$(az ad signed-in-user show --query id -o tsv 2>/dev/null || true)"
   DEPLOYER_TYPE="User"
 fi
-[[ -n "$DEPLOYER_ID" ]] || echo "Note: could not resolve the deploying identity; skipping its data-access role assignments."
+[[ -n "$DEPLOYER_ID" ]] || DEPLOYER_ID="$(oid_from_token)"
+if [[ -n "$DEPLOYER_ID" ]]; then
+  echo "Deploying identity: $DEPLOYER_ID ($DEPLOYER_TYPE)"
+else
+  echo "Note: could not resolve the deploying identity; skipping its data-access role assignments."
+fi
 
 DEPLOYMENT="callcenter-$ENV"
 if [[ $SKIP_INFRA -eq 0 ]]; then

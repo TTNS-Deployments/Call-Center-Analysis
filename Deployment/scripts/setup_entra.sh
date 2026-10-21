@@ -84,6 +84,13 @@ PY
 fi
 
 USER_ID="$(az ad signed-in-user show --query id -o tsv 2>/dev/null || true)"
+if [[ -z "$USER_ID" ]]; then  # Graph lookup refused: read the object ID from the ARM access token
+  USER_ID="$(az account get-access-token --query accessToken -o tsv 2>/dev/null | python3 -c '
+import base64, json, sys
+part = sys.stdin.read().strip().split(".")[1]
+part += "=" * (-len(part) % 4)
+print(json.loads(base64.urlsafe_b64decode(part)).get("oid", ""))' 2>/dev/null || true)"
+fi
 if [[ -n "$USER_ID" ]]; then
   echo "==> Assigning you the Admin role"
   az rest --method post --url "https://graph.microsoft.com/v1.0/servicePrincipals/$SP_ID/appRoleAssignedTo" \
