@@ -122,6 +122,14 @@ Tests: `make test` (core 36, webapp 8). CI on GitHub is green.
 - `Documents/user-guide.md` written (pages, roles, scoring, demo walkthrough script, customer FAQ, troubleshooting).
 - Next: user goes through `Data/demo_calls/README.md` checklist; fix whatever the real services get wrong.
 
+### Chatbot app (separate repo, separate Claude Code session)
+
+- `DEMO_DEPLOYMENT_HANDOFF.md` (repo root) is the playbook for the user's chatbot repo (same structure): remove Entra
+  sign-in (demo password), demo SKUs + demo.env, management-API-only deployment from Cloud Shell.
+- Decisions: the chatbot web app shares this demo's **B1 plan `ccai-demo-gqausd-web-plan`** (separate web app); the
+  chatbot gets **its own Azure OpenAI resource in southindia** with `gpt-5-mini` (shared 500K TPM quota; this demo uses 20K).
+  Do not change the plan's SKU here without considering the chatbot.
+
 ## Open items / ideas
 
 - Power BI report not built (option: generate a PBIP project). Embedding needs Fabric/Embedded capacity (not in TSD estimate).
