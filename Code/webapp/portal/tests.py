@@ -115,3 +115,29 @@ class PortalTests(SimpleTestCase):
         from callcenter.factory import get_call_store
 
         self.assertEqual(get_call_store().get("UPLOAD-TEST-1")["status"], "completed")
+
+
+@override_settings(ALLOWED_HOSTS=["testserver"], AUTH_MODE="password", DEMO_PASSWORD="s3cret-demo")
+class DemoPasswordTests(SimpleTestCase):
+    def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()
+
+    def test_wrong_password_refused_then_locked(self):
+        for _ in range(5):
+            self.assertEqual(self.client.post("/auth/login", {"user": "dev-admin", "password": "nope"}).status_code, 403)
+        response = self.client.post("/auth/login", {"user": "dev-admin", "password": "s3cret-demo"})
+        self.assertEqual(response.status_code, 429)
+
+    def test_right_password_signs_in(self):
+        response = self.client.post("/auth/login", {"user": "dev-qa", "password": "s3cret-demo"})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.get("/").status_code, 200)
+
+    @override_settings(DEMO_PASSWORD="")
+    def test_no_password_configured_refuses_sign_in(self):
+        self.assertContains(self.client.get("/auth/login"), "DEMO_PASSWORD is empty")
+        response = self.client.post("/auth/login", {"user": "dev-admin", "password": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.get("/").status_code, 302)

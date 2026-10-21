@@ -70,7 +70,17 @@ If only `management` works, add `--code-via-arm` (or set `CODE_VIA_ARM=1` in the
 
 An infrastructure deployment resets the web app settings, so `deploy.sh` always runs the code step after it. Do not run the infrastructure step on its own with `--skip-code`.
 
-`setup_entra.sh` needs Microsoft Graph, so with `--code-via-arm` you register the sign-in app in the portal:
+`setup_entra.sh` needs Microsoft Graph. With `--code-via-arm`, sign-in therefore works in one of two ways.
+
+**Demo password (no app registration).** `demo.parameters.json` sets `authMode` to `password`. The sign-in page then asks for one shared password and offers demo users: Admin, Supervisor, QA and one user per agent in the processed calls. After 5 wrong passwords, a client address is locked for 15 minutes. Set the password once, on an infrastructure deployment; it is stored in Key Vault as `demo-password`:
+
+```bash
+Deployment/scripts/deploy.sh -e demo --param demoPassword='<choose a long password>'
+```
+
+Later deployments keep the stored password unless you pass it again. Use this only for demos with sample data. Anyone with the password can choose any role.
+
+**Microsoft Entra ID (`authMode` set to `entra`, the default).** Register the sign-in app in the portal:
 
 1. Go to **Microsoft Entra admin center → App registrations → New registration**. Name: `Call Center Analysis (<env>)`. Accounts: *this organizational directory only*. Redirect URI: platform **Web**, `https://<web app>.azurewebsites.net/auth/callback`. Get the exact value with `az deployment group show -g <rg> -n callcenter-<env> --query properties.outputs.entraRedirectUri.value -o tsv`.
 2. Go to **Authentication** and tick **ID tokens**.

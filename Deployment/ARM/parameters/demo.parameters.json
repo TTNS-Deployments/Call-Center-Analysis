@@ -113,6 +113,9 @@
         "project": "call-center-analysis",
         "purpose": "demo"
       }
+    },
+    "authMode": {
+      "value": "password"
     }
   }
 }

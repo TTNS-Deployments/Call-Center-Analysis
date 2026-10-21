@@ -156,7 +156,7 @@ table.data tr.clickable { cursor: pointer; }
 .btn.danger { color: var(--bad); }
 .btn.sm { height: 28px; padding: 0 10px; font-size: 12.5px; }
 .btn svg { width: 16px; height: 16px; }
-input[type=text], input[type=search], input[type=number], input[type=email], input[type=date], input[type=datetime-local], select, textarea {
+input[type=text], input[type=search], input[type=number], input[type=email], input[type=password], input[type=date], input[type=datetime-local], select, textarea {
   height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: 13.5px var(--font); min-width: 0; }
 textarea { height: auto; padding: 10px; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; width: 100%; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand-soft); border-color: var(--brand); }

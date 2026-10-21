@@ -107,6 +107,14 @@ Tests: `make test` (core 36, webapp 8). CI on GitHub is green.
 - If the web app fails to start: check Log stream; likely PYTHONPATH / startup command.
 - After success: put entraClientId into demo.parameters.json; follow `Data/demo_calls/README.md` checklist.
 
+### Demo sign-in without Entra (added after the user said they lack app-registration rights)
+
+- New `AUTH_MODE=password` (`Code/webapp/accounts/views.py`): demo personas (Admin/Supervisor/QA + one per agent found
+  in Cosmos) and a shared `DEMO_PASSWORD`. Wrong password 5x locks the client IP for 15 minutes (per-worker LocMem cache).
+- ARM: params `authMode` (entra|password, default entra) and `demoPassword` (Key Vault secret `demo-password`,
+  created only when non-empty); `demo.parameters.json` sets `authMode=password`.
+- User runs: `Deployment/scripts/deploy.sh -e demo --param demoPassword='<password>'` (infra + code + seed).
+
 ## Open items / ideas
 
 - Power BI report not built (option: generate a PBIP project). Embedding needs Fabric/Embedded capacity (not in TSD estimate).

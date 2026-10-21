@@ -1,8 +1,10 @@
+import hmac
 import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.cache import cache
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -42,7 +44,29 @@ def dev_users() -> list[User]:
             users.append(User(id=f"dev-{a['id']}", name=a["name"], email=a["email"], roles=[AGENT], agent_id=a["id"]))
     except Exception:  # noqa: BLE001 - sample data is optional
         pass
+    if len(users) == 3:  # no sample data (Azure): one persona per agent found in the processed calls
+        users.extend(_agents_from_calls())
     return users
+
+
+def _agents_from_calls() -> list[User]:
+    try:
+        from callcenter.factory import get_call_store
+
+        agents = {}
+        for c in get_call_store().list_summaries():
+            if c.get("agent_id") and c["agent_id"] not in agents:
+                agents[c["agent_id"]] = User(id=f"dev-{c['agent_id']}", name=c.get("agent_name") or c["agent_id"],
+                                             email=c.get("agent_email", ""), roles=[AGENT], agent_id=c["agent_id"])
+        return sorted(agents.values(), key=lambda u: u.name)
+    except Exception:  # noqa: BLE001 - the store may be empty or unreachable; staff personas still work
+        log.warning("Could not list agents for the demo personas", exc_info=True)
+        return []
+
+
+def _client_ip(request) -> str:
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")  # App Service front end
+    return (forwarded.split(",")[0].split(":")[0].strip() if forwarded else "") or request.META.get("REMOTE_ADDR", "")
 
 
 @require_http_methods(["GET", "POST"])
@@ -52,13 +76,32 @@ def login(request):
         return render(request, "accounts/login.html", {"mode": "entra", "next": next_url,
                                                        "configured": bool(settings.ENTRA_CLIENT_ID)})
 
+    mode = settings.AUTH_MODE  # "dev" or "password"
+    context = {"mode": mode, "next": next_url, "configured": mode == "dev" or bool(settings.DEMO_PASSWORD)}
+    if not context["configured"]:
+        return render(request, "accounts/login.html", context)
+
     users = dev_users()
+    context["users"] = users
     if request.method == "POST":
         chosen = next((u for u in users if u.id == request.POST.get("user")), None)
         if not chosen:
             return HttpResponseBadRequest("Unknown user")
+        if mode == "password":
+            key = f"demo-login-failures:{_client_ip(request)}"
+            failures = cache.get(key, 0)
+            if failures >= settings.DEMO_PASSWORD_MAX_FAILURES:
+                messages.error(request, "Too many wrong passwords. Try again in 15 minutes.")
+                return render(request, "accounts/login.html", context, status=429)
+            given = request.POST.get("password", "")
+            if not hmac.compare_digest(given.encode(), settings.DEMO_PASSWORD.encode()):
+                cache.set(key, failures + 1, 15 * 60)
+                log.warning("Wrong demo password from %s", _client_ip(request))
+                messages.error(request, "Wrong password.")
+                return render(request, "accounts/login.html", context, status=403)
+            cache.delete(key)
         return _sign_in(request, chosen, next_url)
-    return render(request, "accounts/login.html", {"mode": "dev", "users": users, "next": next_url})
+    return render(request, "accounts/login.html", context)
 
 
 # ---------------------------------------------------------------------------- Entra ID

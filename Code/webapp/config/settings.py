@@ -118,11 +118,17 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 # ---- Authentication -------------------------------------------------------------------
-# dev   : pick a demo user on the sign-in page (local mode only; refused otherwise)
-# entra : Microsoft Entra ID sign-in (OpenID Connect, auth code flow via MSAL)
+# dev      : pick a demo user on the sign-in page (local mode only; refused otherwise)
+# password : pick a demo user AND enter the shared DEMO_PASSWORD (demo environments without an
+#            Entra app registration; sign-in is refused while DEMO_PASSWORD is empty)
+# entra    : Microsoft Entra ID sign-in (OpenID Connect, auth code flow via MSAL)
 AUTH_MODE = env("AUTH_MODE", "dev" if IS_LOCAL else "entra").lower()
 if AUTH_MODE == "dev" and not IS_LOCAL:
     raise RuntimeError("AUTH_MODE=dev is only allowed when CC_MODE=local")
+if AUTH_MODE not in {"dev", "password", "entra"}:
+    raise RuntimeError(f"Unknown AUTH_MODE {AUTH_MODE!r} (dev, password or entra)")
+DEMO_PASSWORD = env("DEMO_PASSWORD")
+DEMO_PASSWORD_MAX_FAILURES = 5  # per client address, then locked for 15 minutes
 
 ENTRA_TENANT_ID = env("ENTRA_TENANT_ID")
 ENTRA_CLIENT_ID = env("ENTRA_CLIENT_ID")

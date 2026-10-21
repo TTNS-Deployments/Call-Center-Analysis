@@ -337,6 +337,24 @@
         "description": "Role for signed-in users without an app role assignment. Empty = deny."
       }
     },
+    "authMode": {
+      "type": "string",
+      "defaultValue": "entra",
+      "allowedValues": [
+        "entra",
+        "password"
+      ],
+      "metadata": {
+        "description": "Web app sign-in: entra = Microsoft Entra ID (app registration needed); password = demo users protected by one shared password (demo environments only)."
+      }
+    },
+    "demoPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Shared password for authMode=password (stored in Key Vault as demo-password). Leave empty to keep the stored one."
+      }
+    },
     "crmApiKey": {
       "type": "securestring",
       "defaultValue": "[newGuid()]",
@@ -771,6 +789,18 @@
       "condition": "[not(empty(parameters('entraClientSecret')))]"
     },
     {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/demo-password', variables('keyVaultName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "value": "[parameters('demoPassword')]"
+      },
+      "condition": "[not(empty(parameters('demoPassword')))]"
+    },
+    {
       "type": "Microsoft.CognitiveServices/accounts",
       "apiVersion": "2024-10-01",
       "name": "[variables('speechName')]",
@@ -1179,7 +1209,11 @@
             },
             {
               "name": "AUTH_MODE",
-              "value": "entra"
+              "value": "[parameters('authMode')]"
+            },
+            {
+              "name": "DEMO_PASSWORD",
+              "value": "[format('@Microsoft.KeyVault(VaultName={0};SecretName=demo-password)', variables('keyVaultName'))]"
             },
             {
               "name": "DJANGO_SECRET_KEY",

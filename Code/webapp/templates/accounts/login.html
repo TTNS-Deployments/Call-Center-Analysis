@@ -22,11 +22,21 @@
       {% else %}
         <div class="msg error">Microsoft Entra ID sign-in is not configured. Set ENTRA_TENANT_ID, ENTRA_CLIENT_ID and ENTRA_CLIENT_SECRET (see Documents/deployment-guide.md).</div>
       {% endif %}
+    {% elif not configured %}
+      <h1>Sign in</h1>
+      <div class="msg error">Demo sign-in is not configured: DEMO_PASSWORD is empty (see Documents/deployment-guide.md).</div>
     {% else %}
       <h1>Choose a demo user</h1>
+      {% if mode == "password" %}
+      <p class="muted" style="margin:6px 0 14px">Demo environment: enter the demo password, then pick a user. Each role sees a different view.</p>
+      {% else %}
       <p class="muted" style="margin:6px 0 18px">Local mode uses demo users instead of Entra ID. Each role sees a different view.</p>
+      {% endif %}
       <form method="post">{% csrf_token %}
         <input type="hidden" name="next" value="{{ next|default:'' }}">
+        {% if mode == "password" %}
+        <input type="password" name="password" placeholder="Demo password" autocomplete="current-password" required style="width:100%;margin-bottom:14px">
+        {% endif %}
         {% for u in users %}
         <button class="persona" name="user" value="{{ u.id }}">
           <span class="avatar">{{ u.initials }}</span>

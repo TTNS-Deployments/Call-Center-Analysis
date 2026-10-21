@@ -28,7 +28,7 @@ az login
 Deployment/scripts/deploy.sh -e demo        # everything comes from the two demo files
 ```
 
-Sign-in: register the app in the portal and pass its ID and secret with `--param` (see [the deployment guide](../Documents/deployment-guide.md#when-only-the-management-sign-in-works-cloud-shell-conditional-access)). If your tenant allows Microsoft Graph and App Service tokens, you can instead set `SETUP_ENTRA=1` and `CODE_VIA_ARM=0`. Remove the demo by deleting the resources in the resource group.
+Sign-in: the demo uses a shared demo password (`authMode=password`), set once with `deploy.sh -e demo --param demoPassword='...'`. No Entra app registration is needed. To use Entra ID instead, set `authMode` to `entra`, register the app in the portal and pass its ID and secret with `--param` (see [the deployment guide](../Documents/deployment-guide.md#when-only-the-management-sign-in-works-cloud-shell-conditional-access)). If your tenant allows Microsoft Graph and App Service tokens, you can instead set `SETUP_ENTRA=1` and `CODE_VIA_ARM=0`. Remove the demo by deleting the resources in the resource group.
 
 ## SKU and sizing parameters
 
@@ -71,6 +71,7 @@ The values below are the defaults in the two parameter files. "Options" are the 
 | **Application** | | | |
 | `entraClientId` | (set by `setup_entra.sh`) | | App registration client ID |
 | `entraDefaultRole` | Agent | Agent | Role for users without an assignment; `""` = deny |
+| `authMode` | entra | entra | `entra`; `password` (demo users plus one shared password `demoPassword`, kept in Key Vault). `demo` uses `password`. |
 | `powerBiWorkspaceId` / `powerBiReportId` | "" | "" | Enables the embedded report |
 | `displayTimeZone` | Asia/Kolkata | Asia/Kolkata | |
 | `tags` | owner, project | | Added to every resource |
