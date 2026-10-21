@@ -56,7 +56,7 @@ call-center demo, plus likely chatbot services:
 
 | Service | Demo choice | Notes |
 |---|---|---|
-| App Service plan (web app) | **B1** Linux, 1 instance | Lowest tier that runs a real web app with Key Vault references. You could reuse the existing call-center B1 plan, but a separate plan keeps the two demos independent |
+| App Service plan (web app) | **No new plan: reuse the call-center B1 plan** (user's decision, see section 3a) | Billing is per plan, not per web app |
 | Azure Functions | **Flex Consumption FC1**, `maximumInstanceCount` **40**, 2048 MB | **40 is the minimum Flex accepts**; lower values fail validation. Billed per execution |
 | Azure OpenAI | `gpt-5-mini` 2025-08-07 GlobalStandard, **capacity 20** (20K TPM), in `southindia` | Pay per token |
 | Embeddings (if RAG) | Smallest available embedding model in South India, about 10–20K TPM | Check availability and quota first (section 2) |
@@ -67,6 +67,30 @@ call-center demo, plus likely chatbot services:
 | Event Hubs | Off (`deploy...=false`) | |
 | Log Analytics | 30 days retention, 1 GB/day cap | |
 | Key Vault | standard | |
+
+## 3a. Share the existing App Service plan (user's decision)
+
+The user wants the chatbot's web app on the **same App Service plan** as the call-center demo, so they pay for one
+B1 instead of two.
+
+- Existing plan: **`ccai-demo-gqausd-web-plan`**, Linux (`reserved: true`), **B1**, `centralindia`, resource group
+  `Vaibhav.Chaudhary`. Resource ID:
+  `az appservice plan show -g Vaibhav.Chaudhary -n ccai-demo-gqausd-web-plan --query id -o tsv`.
+- In the chatbot template, add a parameter such as `existingAppServicePlanId` (string, default `""`). When it is
+  set, **skip creating the plan** (`"condition": "[empty(parameters('existingAppServicePlanId'))]"` on the
+  serverfarm) and use it as the web app's `serverFarmId`. Remove the plan from the web app's `dependsOn` in that
+  case, or use a variable that resolves to either ID. Keep creating a plan for other environments. Put the ID in
+  `demo.parameters.json`.
+- It must be a **separate web app** (its own name, settings, managed identity, startup command and logs) on the
+  same plan. Do not merge the two apps into one web app.
+- The web app must be **Linux** (`kind: app,linux`, `linuxFxVersion` such as `PYTHON|3.12` or `NODE|20-lts`) and in
+  the **same region** (`centralindia`) as the plan. The resource group is the same too.
+- **Never modify the shared plan** from the chatbot template, neither its SKU nor its instance count. It belongs to
+  the call-center deployment `callcenter-demo`, and its next infra run would set the plan back anyway.
+- B1 has 1 vCPU and 1.75 GB RAM shared by both apps. Keep the chatbot light: about 2 gunicorn workers, no large
+  in-process models. Both apps start slowly after a restart.
+- The Function app (if the chatbot has one) is on its own Flex Consumption plan anyway. Flex plans are billed per
+  execution, so a separate one costs nothing when idle.
 
 ## 4. `demo.env` and `deploy.sh` patterns
 
@@ -191,7 +215,7 @@ Kudu/SCM zip deployment is impossible from Cloud Shell (no `appservice` token), 
 3. Switch models to GPT-5 if needed: `gpt-5-mini` in `southindia`, reasoning effort, no temperature, API version
    `2025-04-01-preview`. Check embeddings.
 4. Add password demo sign-in (section 5) with tests.
-5. Add `demo.parameters.json` (section 3) and `demo.env` (section 4).
+5. Add `demo.parameters.json` (section 3, with `existingAppServicePlanId` for the shared plan from section 3a) and `demo.env` (section 4).
 6. Add `--code-via-arm` and `--param` to `deploy.sh`, plus `deploy_code_arm.sh`, `package.sh --vendor` and
    `code-onedeploy.json` (section 6). Test the packaging locally (`package.sh --vendor` works in the Codespace too).
 7. Update the docs (Deployment README, deployment guide), push, and give the user one Cloud Shell command:
