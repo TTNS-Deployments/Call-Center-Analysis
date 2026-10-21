@@ -115,6 +115,13 @@ Tests: `make test` (core 36, webapp 8). CI on GitHub is green.
   created only when non-empty); `demo.parameters.json` sets `authMode=password`.
 - User runs: `Deployment/scripts/deploy.sh -e demo --param demoPassword='<password>'` (infra + code + seed).
 
+### Demo is live (2026-10-21)
+
+- `deploy.sh -e demo --param demoPassword=...` succeeded: code on both apps, 4 demo calls uploaded, password sign-in works
+  (user signed in as Admin). Web app: https://ccai-demo-gqausd-web.azurewebsites.net
+- `Documents/user-guide.md` written (pages, roles, scoring, demo walkthrough script, customer FAQ, troubleshooting).
+- Next: user goes through `Data/demo_calls/README.md` checklist; fix whatever the real services get wrong.
+
 ## Open items / ideas
 
 - Power BI report not built (option: generate a PBIP project). Embedding needs Fabric/Embedded capacity (not in TSD estimate).

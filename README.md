@@ -32,7 +32,7 @@ The solution is a deployable template. You choose the tier (SKU) of every Azure 
 
 Orchestration: an Event Grid `BlobCreated` event feeds a Storage queue, which feeds a queue-triggered Azure Function on the **Flex Consumption** plan. Each stage retries on its own, and calls that keep failing appear on the Pipeline page with a Retry button. All service-to-service access uses **managed identities**, and the only secrets live in Key Vault.
 
-More detail: [Architecture](Documents/architecture.md) · [Technical specification](Documents/technical-specification.md)
+How to use the web app: [User guide](Documents/user-guide.md) · More detail: [Architecture](Documents/architecture.md) · [Technical specification](Documents/technical-specification.md)
 
 <br/>
 
