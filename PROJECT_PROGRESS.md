@@ -83,6 +83,17 @@ User has Azure subscription access and wants a **demo deployment**, then to test
   added DEMO-0004 outbound B2B sales call (3 min stereo, 12 s hold) so all 20 parameters are exercised;
   added call reason `sales_opportunity`; identity compliance check now applies only when account details are discussed.
 
+- **Deployment must run from Azure Cloud Shell**: the user's tenant blocks device-code sign-in from this Codespace
+  (Conditional Access: "does not meet the criteria"). Az CLI is installed here but not signed in. Flow: user runs the
+  read-only checks in Cloud Shell, pastes output; we adjust model/version if needed and push; user runs
+  `make setup` + `Deployment/scripts/deploy.sh -e demo` in Cloud Shell and pastes errors if any.
+
+- **Model/region confirmed from the user's subscription (2026-10-21):** Central India has NO GPT-5 models.
+  Only quota available: `gpt-5-mini` 2025-08-07 GlobalStandard = 500K TPM (southindia/eastus2/swedencentral/uaenorth);
+  all other GPT-5 GlobalStandard quotas are 0. `gpt-5.1-mini` does not exist. `openAiLocation` set to `southindia`
+  in all parameter files (everything else stays centralindia). Resource providers registered; user has subscription
+  Contributor; Cloud Shell has Python 3.12.15, make, zip.
+
 ## Open items / ideas
 
 - Power BI report not built (option: generate a PBIP project). Embedding needs Fabric/Embedded capacity (not in TSD estimate).

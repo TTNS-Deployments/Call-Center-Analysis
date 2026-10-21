@@ -121,8 +121,8 @@
                 "name": "openAiLocation",
                 "type": "Microsoft.Common.DropDown",
                 "label": "Azure OpenAI region",
-                "defaultValue": "Central India",
-                "toolTip": "Must offer the chosen model and deployment type. Check model availability before changing.",
+                "defaultValue": "South India",
+                "toolTip": "Must offer the chosen model and deployment type, and your subscription needs quota there. Central India offers no GPT-5 models; South India does.",
                 "constraints": {
                   "required": true,
                   "allowedValues": [

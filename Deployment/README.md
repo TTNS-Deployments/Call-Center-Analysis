@@ -43,7 +43,7 @@ The values below are the defaults in the two parameter files. "Options" are the 
 | **AI services** | | | |
 | `speechSku` | S0 | S0 | `S0`, `F0` (free: 5 audio h/month, one per subscription) |
 | `languageSku` | S | S | `S`, `F0` (free: 5k records/month, one per subscription) |
-| `openAiLocation` | centralindia | centralindia | Region of the Azure OpenAI resource; must offer the model |
+| `openAiLocation` | southindia | southindia | Region of the Azure OpenAI resource; must offer the model and have quota. Central India offers no GPT-5 models (checked October 2026) |
 | `openAiModelName` / `openAiModelVersion` | gpt-5-mini / 2025-08-07 | same | A GPT-5 family chat model offered in the region (check with `az cognitiveservices model list -l <region>`) |
 | `openAiApiVersion` | 2025-04-01-preview | same | API version the Functions use; must support the model |
 | `openAiReasoningEffort` | low | low | `minimal`, `low`, `medium`, `high`; `none` for a non-reasoning model |
