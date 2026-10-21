@@ -58,7 +58,7 @@ call-center demo, plus likely chatbot services:
 |---|---|---|
 | App Service plan (web app) | **No new plan: reuse the call-center B1 plan** (user's decision, see section 3a) | Billing is per plan, not per web app |
 | Azure Functions | **Flex Consumption FC1**, `maximumInstanceCount` **40**, 2048 MB | **40 is the minimum Flex accepts**; lower values fail validation. Billed per execution |
-| Azure OpenAI | `gpt-5-mini` 2025-08-07 GlobalStandard, **capacity 20** (20K TPM), in `southindia` | Pay per token |
+| Azure OpenAI | **The chatbot's own** Azure OpenAI resource in **`southindia`**, deployment `gpt-5-mini` 2025-08-07 GlobalStandard, **capacity 20** (20K TPM) | Pay per token. Never reuse the call-center OpenAI resource (section 3b) |
 | Embeddings (if RAG) | Smallest available embedding model in South India, about 10–20K TPM | Check availability and quota first (section 2) |
 | Azure AI Search (if used) | **Free** tier if the subscription has no free search service yet (only one per subscription); otherwise **Basic** | Free has no semantic ranker and no private endpoints, and is limited to 50 MB / 3 indexes |
 | Cosmos DB | **Serverless** | No minimum RU cost |
@@ -91,6 +91,32 @@ B1 instead of two.
   in-process models. Both apps start slowly after a restart.
 - The Function app (if the chatbot has one) is on its own Flex Consumption plan anyway. Flex plans are billed per
   execution, so a separate one costs nothing when idle.
+
+## 3b. Azure OpenAI: South India only, and a separate resource for the chatbot (user's decision)
+
+- **Region: `southindia` only** for Azure OpenAI. Central India (the region of everything else) has no GPT-5 models.
+  This cost time in the call-center deployment. Give the OpenAI resource its own location parameter
+  (`openAiLocation`, default `southindia`), separate from `location`. Cross-region calls from Central India
+  services work fine.
+- **Model: `gpt-5-mini`, version `2025-08-07`, SKU `GlobalStandard`.** The user may call it "5.1 mini", but
+  `gpt-5.1-mini` does **not** exist in South India, and `gpt-5-mini` is the only GPT-5 model with quota in this
+  subscription. Confirm before deploying:
+  `az cognitiveservices model list -l southindia --query "[?starts_with(model.name,'gpt-5')].{n:model.name,v:model.version}" -o table`
+  and `az cognitiveservices usage list -l southindia -o table`.
+- **Separate per app:** the chatbot gets **its own Azure OpenAI resource** (its own name, for example
+  `<prefix>-demo-<suffix>-openai`) with **its own deployment**. Do not point the chatbot at the call-center
+  resource or its deployment. That keeps usage, cost, rate limits, keys, RBAC and content filtering separate,
+  and either demo can be deleted without breaking the other.
+- **Quota is shared:** both deployments draw on the same subscription quota for `gpt-5-mini` GlobalStandard in South
+  India, 500K TPM in total. The call-center demo takes 20K, so give the chatbot 20–50K. If the deployment fails
+  with `InsufficientQuota`, lower the capacity.
+- Calls: it is a reasoning model, so send `reasoning_effort` (`low` for a responsive chatbot; `minimal` is fastest)
+  and **no `temperature` or `top_p`**. Use `max_completion_tokens` instead of `max_tokens`. API version
+  `2025-04-01-preview`. Streaming works.
+- Embeddings (if the chatbot does RAG) go in the same South India resource, if a model with quota is available there.
+  Check first (section 2).
+- Give the web app's (or Function's) managed identity **Cognitive Services OpenAI User** on the chatbot's
+  OpenAI resource through ARM, rather than using API keys.
 
 ## 4. `demo.env` and `deploy.sh` patterns
 
@@ -212,8 +238,8 @@ Kudu/SCM zip deployment is impossible from Cloud Shell (no `appservice` token), 
 
 1. Read the chatbot repo: template parameters and resources, scripts, app framework, auth flow, model names, tests.
 2. Create `PROJECT_PROGRESS.md` there with the findings.
-3. Switch models to GPT-5 if needed: `gpt-5-mini` in `southindia`, reasoning effort, no temperature, API version
-   `2025-04-01-preview`. Check embeddings.
+3. Give the chatbot its own Azure OpenAI resource in `southindia` with a `gpt-5-mini` deployment (section 3b):
+   reasoning effort, no temperature, API version `2025-04-01-preview`. Check embeddings.
 4. Add password demo sign-in (section 5) with tests.
 5. Add `demo.parameters.json` (section 3, with `existingAppServicePlanId` for the shared plan from section 3a) and `demo.env` (section 4).
 6. Add `--code-via-arm` and `--param` to `deploy.sh`, plus `deploy_code_arm.sh`, `package.sh --vendor` and
