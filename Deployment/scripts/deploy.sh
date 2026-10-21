@@ -172,4 +172,9 @@ fi
 
 echo
 echo "Done. Web app: $WEB_URL"
-[[ $SETUP_ENTRA -eq 1 ]] || echo "Sign-in is not configured yet if this is the first deployment: re-run with --setup-entra --skip-infra --skip-code"
+AUTH_MODE_PARAM="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["parameters"].get("authMode",{}).get("value","entra"))' "$PARAMS")"
+if [[ "$AUTH_MODE_PARAM" == "password" ]]; then
+  echo "Sign-in: demo password (set it once with --param demoPassword='...')"
+elif [[ $SETUP_ENTRA -eq 0 ]]; then
+  echo "Sign-in: Entra ID. If not configured yet, run --setup-entra --skip-infra --skip-code, or register the app in the portal (deployment guide)"
+fi
