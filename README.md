@@ -15,6 +15,28 @@ The solution is a deployable template. You choose the tier (SKU) of every Azure 
 
 > The button deploys the infrastructure. The application code is deployed by `Deployment/scripts/deploy.sh` or the *Deploy* GitHub workflow (see [Deployment guide](Documents/deployment-guide.md)). The button only works if this repository is public, or if the template URLs point to a location the portal can read.
 
+### Overview
+
+Every Azure resource is defined in a single ARM template, `azuredeploy.json`. SKUs shown are the dev defaults; the demo and prod values are in the [SKU reference](Deployment/README.md).
+
+| # | Name | Description | Service | Template |
+|---|------|-------------|---------|----------|
+| 1 | Key Vault | Holds every secret the stack generates | Key Vault (standard, RBAC) | azuredeploy.json |
+| 2 | Data lake | Recordings, raw transcripts, insights, config and app packages | Storage (ADLS Gen2, Standard_LRS) | azuredeploy.json |
+| 3 | Eventing | Queues each new recording or transcript with retries and poison handling | Event Grid + Storage queues | azuredeploy.json |
+| 4 | Monitoring | Logs and application telemetry | Log Analytics, Application Insights | azuredeploy.json |
+| 5 | Pipeline compute | Runs the `transcribe` and `enrich` stages and the poison handlers | Azure Functions (Flex Consumption FC1, max 40 instances) | azuredeploy.json |
+| 6 | Speech to text | Transcribes calls with speaker separation | Azure AI Speech (S0) | azuredeploy.json |
+| 7 | PII and sentiment | Redacts PII and scores sentiment per utterance | Azure AI Language (S) | azuredeploy.json |
+| 8 | LLM insights | Summary, reason, root cause, QA scorecard and compliance as strict JSON | Azure OpenAI `gpt-5-mini` (GlobalStandard, 30K TPM, South India) | azuredeploy.json |
+| 9 | Database | One document per call for the web app and CRM API | Cosmos DB for NoSQL (Serverless) | azuredeploy.json |
+| 10 | Analytics store | Parquet tables read by Power BI | Parquet files in the data lake | azuredeploy.json |
+| 11 | Web app | Django UI, CRM REST API, Power BI embed tokens | App Service (B1, Linux) | azuredeploy.json |
+| 12 | Event feed | One event per analysed call for the CRM (optional) | Event Hubs (Basic, 1 TU; on in prod) | azuredeploy.json |
+| 13 | Identity | Sign-in and roles: Admin, Supervisor, QA, Agent | Entra ID app registration | setup_entra.sh |
+
+Defender for Cloud (a subscription-level plan) and Power BI licensing are not deployed by the template.
+
 <br/>
 
 ## Architecture
@@ -98,10 +120,10 @@ Docker alternative: `make docker-up` runs the web app with the Azurite storage e
 
 1. **Choose SKUs.** Edit [`Deployment/ARM/parameters/dev.parameters.json`](Deployment/ARM/parameters/dev.parameters.json) or `prod.parameters.json`. Every tier and size is a parameter; see the [SKU reference](Deployment/README.md).
 2. **Deploy** infrastructure and code, and create the Entra ID app registration with roles:
-   ```bash
+```bash
    az login
    Deployment/scripts/deploy.sh -g rg-callcenter-dev -e dev --setup-entra
-   ```
+```
 3. Open the web app URL printed at the end and sign in. You are assigned the Admin role. Assign other users to roles in *Entra admin center → Enterprise applications*.
 4. Point the telephony server at the `recordings` container (see the [telephony contract](Documents/technical-specification.md#1-recording-ingestion)).
 5. Optional: publish the Power BI report ([Analytics/README.md](Analytics/README.md)).
