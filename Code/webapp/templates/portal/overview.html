@@ -83,7 +83,7 @@
       <li>
         <div class="grow">
           <a class="cell-title" href="{% url 'portal:call_detail' c.call_id %}">{{ c.call_reason_name|default:c.call_id }}</a>
-          <div class="cell-sub">{{ c.agent_name }} · {{ c.started_at|dt:"d M, H:i" }}</div>
+          <div class="cell-sub">{{ c.agent_name|default:"–" }} · {{ c.started_at|dt:"d M, H:i" }}</div>
           <div style="margin-top:4px">{% for f in c.flag_list %}<span class="flag {{ f }}">{{ flag_labels|get:f }}</span>{% endfor %}</div>
         </div>
         <span class="score {{ c.qa.percent|score_class }}">{{ c.qa.percent|pct }}</span>

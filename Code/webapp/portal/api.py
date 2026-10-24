@@ -35,6 +35,12 @@ def calls(request):
     ok, user = _authorize(request)
     if not ok:
         return _unauthorized()
+    try:
+        limit = int(request.GET.get("limit") or 100)
+    except ValueError:
+        limit = 0
+    if not 1 <= limit <= 1000:
+        return JsonResponse({"error": "limit must be a whole number from 1 to 1000"}, status=400)
     rng = date_range(request) if (request.GET.get("from") or request.GET.get("to") or request.GET.get("range")) else None
     items = get_call_store().list_summaries(rng.date_from if rng else None, rng.date_to if rng else None)
     if user is not None:
@@ -43,7 +49,6 @@ def calls(request):
     if customer:
         items = [c for c in items if c.get("customer_id") == customer]
     items = analytics.filter_calls(items, {k: request.GET.get(k, "") for k in ("agent", "team", "reason", "status", "flag")})
-    limit = min(int(request.GET.get("limit", 100) or 100), 1000)
     return JsonResponse({"count": len(items), "items": items[:limit]})
 
 

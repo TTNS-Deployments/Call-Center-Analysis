@@ -31,6 +31,17 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return value.lower() in {"1", "true", "yes", "on"}
 
 
+def _env_int(name: str, default: int) -> int:
+    value = _env(name) or str(default)
+    try:
+        return int(value)
+    except ValueError:
+        raise ValueError(f"{name} must be a whole number, got {value!r}") from None
+
+
+MODES = ("local", "azure")
+
+
 def find_repo_dir(name: str) -> Path | None:
     """Walk up from this package looking for a sibling folder (``Config``, ``Data``).
 
@@ -112,6 +123,8 @@ class Settings:
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     mode = _env("CC_MODE", "local").lower()
+    if mode not in MODES:
+        raise ValueError(f"Unknown CC_MODE {mode!r} (local or azure)")
     azure = mode == "azure"
 
     config_dir = _env("CC_CONFIG_DIR")
@@ -141,7 +154,7 @@ def get_settings() -> Settings:
         speech_key=_env("SPEECH_KEY"),
         speech_locale=_env("SPEECH_LOCALE", "en-US"),
         speech_api_version=_env("SPEECH_API_VERSION", "2024-11-15"),
-        agent_channel=int(_env("AGENT_CHANNEL", "0") or 0),
+        agent_channel=_env_int("AGENT_CHANNEL", 0),
         language_backend=_env("LANGUAGE_BACKEND", "azure" if azure else "mock").lower(),
         language_endpoint=_env("LANGUAGE_ENDPOINT").rstrip("/"),
         language_key=_env("LANGUAGE_KEY"),

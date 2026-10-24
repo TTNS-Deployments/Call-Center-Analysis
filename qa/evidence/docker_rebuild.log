@@ -1,0 +1,133 @@
+ Image qa-cc-smoke-web Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 512B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 718B 0.0s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 ...
+
+#4 [auth] library/python:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 1.7s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 112B done
+#5 DONE 0.0s
+
+#6 [ 1/11] FROM docker.io/library/python:3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704
+#6 resolve docker.io/library/python:3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e89e19dfb86704 0.0s done
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 649.12kB 0.1s done
+#7 DONE 0.1s
+
+#8 [ 2/11] WORKDIR /app
+#8 CACHED
+
+#9 [ 3/11] COPY Code/webapp/requirements.txt /tmp/webapp-requirements.txt
+#9 CACHED
+
+#10 [ 4/11] RUN pip install -r /tmp/webapp-requirements.txt
+#10 CACHED
+
+#11 [ 5/11] COPY Code/core /app/Code/core
+#11 DONE 0.2s
+
+#12 [ 6/11] RUN pip install -e "/app/Code/core[azure]"
+#12 3.554 Obtaining file:///app/Code/core
+#12 3.556   Installing build dependencies: started
+#12 7.826   Installing build dependencies: finished with status 'done'
+#12 7.826   Checking if build backend supports build_editable: started
+#12 8.971   Checking if build backend supports build_editable: finished with status 'done'
+#12 8.973   Getting requirements to build editable: started
+#12 9.993   Getting requirements to build editable: finished with status 'done'
+#12 9.996   Preparing editable metadata (pyproject.toml): started
+#12 11.03   Preparing editable metadata (pyproject.toml): finished with status 'done'
+#12 11.05 Requirement already satisfied: pyyaml>=6.0 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (6.0.3)
+#12 11.05 Requirement already satisfied: pyarrow>=16.0 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (26.0.0)
+#12 11.05 Requirement already satisfied: requests>=2.31 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (2.34.2)
+#12 11.05 Requirement already satisfied: azure-identity>=1.17 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (1.26.0)
+#12 11.05 Requirement already satisfied: azure-storage-blob>=12.20 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (12.31.0)
+#12 11.06 Requirement already satisfied: azure-storage-queue>=12.10 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (12.18.0)
+#12 11.06 Requirement already satisfied: azure-cosmos>=4.7 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (4.17.1)
+#12 11.06 Requirement already satisfied: azure-ai-textanalytics>=5.3 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (5.4.0)
+#12 11.06 Requirement already satisfied: azure-eventhub>=5.12 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (5.15.1)
+#12 11.06 Requirement already satisfied: openai>=1.40 in /usr/local/lib/python3.12/site-packages (from callcenter-core==0.1.0) (3.37.0)
+#12 11.06 Requirement already satisfied: azure-core>=1.27.0 in /usr/local/lib/python3.12/site-packages (from azure-ai-textanalytics>=5.3->callcenter-core==0.1.0) (1.41.0)
+#12 11.07 Requirement already satisfied: azure-common>=1.1 in /usr/local/lib/python3.12/site-packages (from azure-ai-textanalytics>=5.3->callcenter-core==0.1.0) (1.1.28)
+#12 11.07 Requirement already satisfied: isodate>=0.6.1 in /usr/local/lib/python3.12/site-packages (from azure-ai-textanalytics>=5.3->callcenter-core==0.1.0) (0.7.2)
+#12 11.07 Requirement already satisfied: typing-extensions>=4.0.1 in /usr/local/lib/python3.12/site-packages (from azure-ai-textanalytics>=5.3->callcenter-core==0.1.0) (4.16.0)
+#12 11.08 Requirement already satisfied: cryptography>=2.5 in /usr/local/lib/python3.12/site-packages (from azure-identity>=1.17->callcenter-core==0.1.0) (50.0.2)
+#12 11.08 Requirement already satisfied: msal>=1.39.0 in /usr/local/lib/python3.12/site-packages (from azure-identity>=1.17->callcenter-core==0.1.0) (1.39.0)
+#12 11.08 Requirement already satisfied: msal-extensions>=1.2.0 in /usr/local/lib/python3.12/site-packages (from azure-identity>=1.17->callcenter-core==0.1.0) (1.3.1)
+#12 11.09 Requirement already satisfied: anyio<5,>=4.10.0 in /usr/local/lib/python3.12/site-packages (from openai>=1.40->callcenter-core==0.1.0) (4.15.1)
+#12 11.10 Requirement already satisfied: httpx2<3,>=2.12.0 in /usr/local/lib/python3.12/site-packages (from openai>=1.40->callcenter-core==0.1.0) (2.16.0)
+#12 11.10 Requirement already satisfied: jiter<1,>=0.16.0 in /usr/local/lib/python3.12/site-packages (from openai>=1.40->callcenter-core==0.1.0) (0.17.0)
+#12 11.10 Requirement already satisfied: pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,<3,>=1.10.13 in /usr/local/lib/python3.12/site-packages (from openai>=1.40->callcenter-core==0.1.0) (2.14.1)
+#12 11.10 Requirement already satisfied: sniffio in /usr/local/lib/python3.12/site-packages (from openai>=1.40->callcenter-core==0.1.0) (1.3.1)
+#12 11.11 Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.12/site-packages (from requests>=2.31->callcenter-core==0.1.0) (3.5.2)
+#12 11.11 Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.12/site-packages (from requests>=2.31->callcenter-core==0.1.0) (3.20)
+#12 11.11 Requirement already satisfied: urllib3<3,>=1.26 in /usr/local/lib/python3.12/site-packages (from requests>=2.31->callcenter-core==0.1.0) (2.8.0)
+#12 11.11 Requirement already satisfied: certifi>=2023.5.7 in /usr/local/lib/python3.12/site-packages (from requests>=2.31->callcenter-core==0.1.0) (2026.10.19)
+#12 11.13 Requirement already satisfied: cffi>=2.0.0 in /usr/local/lib/python3.12/site-packages (from cryptography>=2.5->azure-identity>=1.17->callcenter-core==0.1.0) (2.1.1)
+#12 11.14 Requirement already satisfied: httpcore2==2.16.0 in /usr/local/lib/python3.12/site-packages (from httpx2<3,>=2.12.0->openai>=1.40->callcenter-core==0.1.0) (2.16.0)
+#12 11.15 Requirement already satisfied: truststore>=0.10 in /usr/local/lib/python3.12/site-packages (from httpx2<3,>=2.12.0->openai>=1.40->callcenter-core==0.1.0) (0.10.5)
+#12 11.15 Requirement already satisfied: h11>=0.16 in /usr/local/lib/python3.12/site-packages (from httpcore2==2.16.0->httpx2<3,>=2.12.0->openai>=1.40->callcenter-core==0.1.0) (0.16.0)
+#12 11.17 Requirement already satisfied: PyJWT<3,>=1.0.0 in /usr/local/lib/python3.12/site-packages (from PyJWT[crypto]<3,>=1.0.0->msal>=1.39.0->azure-identity>=1.17->callcenter-core==0.1.0) (2.15.1)
+#12 11.18 Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.12/site-packages (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,<3,>=1.10.13->openai>=1.40->callcenter-core==0.1.0) (0.8.0)
+#12 11.18 Requirement already satisfied: pydantic-core==2.50.1 in /usr/local/lib/python3.12/site-packages (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,<3,>=1.10.13->openai>=1.40->callcenter-core==0.1.0) (2.50.1)
+#12 11.18 Requirement already satisfied: typing-inspection>=0.4.4 in /usr/local/lib/python3.12/site-packages (from pydantic!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,<3,>=1.10.13->openai>=1.40->callcenter-core==0.1.0) (0.4.4)
+#12 11.19 Requirement already satisfied: pycparser in /usr/local/lib/python3.12/site-packages (from cffi>=2.0.0->cryptography>=2.5->azure-identity>=1.17->callcenter-core==0.1.0) (3.12)
+#12 11.21 Building wheels for collected packages: callcenter-core
+#12 11.21   Building editable for callcenter-core (pyproject.toml): started
+#12 12.26   Building editable for callcenter-core (pyproject.toml): finished with status 'done'
+#12 12.26   Created wheel for callcenter-core: filename=callcenter_core-0.1.0-0.editable-py3-none-any.whl size=3232 sha256=972c3051d12cf85e785805652022bb2c9669286ed1a80e88d2f72780f5fc15d2
+#12 12.26   Stored in directory: /tmp/pip-ephem-wheel-cache-_84twz2c/wheels/5f/7a/d5/5a45061df632892f2a576de23d969fe4ddcd2175e8f75ef0e0
+#12 12.27 Successfully built callcenter-core
+#12 12.31 Installing collected packages: callcenter-core
+#12 12.45 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+#12 12.45 Successfully installed callcenter-core-0.1.0
+#12 DONE 17.9s
+
+#13 [ 7/11] COPY Code/webapp /app/Code/webapp
+#13 DONE 0.1s
+
+#14 [ 8/11] COPY Config /app/Config
+#14 DONE 0.1s
+
+#15 [ 9/11] COPY Data /app/Data
+#15 DONE 1.0s
+
+#16 [10/11] WORKDIR /app/Code/webapp
+#16 DONE 0.0s
+
+#17 [11/11] RUN CC_MODE=local DJANGO_DEBUG=false python manage.py collectstatic --noinput
+#17 2.138 
+#17 2.138 7 static files copied to '/app/Code/webapp/staticfiles', 19 post-processed.
+#17 DONE 2.3s
+
+#18 exporting to image
+#18 exporting layers
+#18 exporting layers 1.5s done
+#18 exporting manifest sha256:345f5580c3b4b3df4eb6d91ec69cbb062d41262f254e6c57c1cb1403ef0e9793
+#18 exporting manifest sha256:345f5580c3b4b3df4eb6d91ec69cbb062d41262f254e6c57c1cb1403ef0e9793 0.0s done
+#18 exporting config sha256:113b7a8699884786cadf8b51bd442ec7f685b9cabc8968f640270591c1c21825 0.0s done
+#18 exporting attestation manifest sha256:6b581009e1fd3a3eb3202d9318c19e2bb868a3afdacef60987d4965a79c9dfcf 0.0s done
+#18 exporting manifest list sha256:767e2cf294af600988a1bba38b31c641e484062441f681863acb60a5190535e2 0.0s done
+#18 naming to docker.io/library/qa-cc-smoke-web:latest
+#18 naming to docker.io/library/qa-cc-smoke-web:latest done
+#18 unpacking to docker.io/library/qa-cc-smoke-web:latest
+#18 unpacking to docker.io/library/qa-cc-smoke-web:latest 0.7s done
+#18 DONE 2.3s
+
+#19 resolving provenance for metadata file
+#19 DONE 0.0s
+ Image qa-cc-smoke-web Built 
+build exit=0

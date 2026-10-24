@@ -32,6 +32,7 @@ LABELS = {
     "INPermanentAccount": "PAN",
     "INUniqueIdentificationNumber": "AADHAAR",
     "IPAddress": "IP",
+    "Credential": "CREDENTIAL",
 }
 
 YEAR = re.compile(r"\b(19|20)\d{2}\b")
@@ -97,7 +98,23 @@ PII_PATTERNS: list[tuple[str, re.Pattern]] = [
 SPOKEN_DIGITS = re.compile(r"\b\d(?:[ ,\-]{1,3}\d){9,18}\b")
 NAME_INTRO = re.compile(
     r"(?i:my name is|this is|I'm|I am|name is)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)|\b([A-Z][a-z]+) speaking\b"
+    r"|\b(?:Mister|Mr\.?|Mrs\.?|Ms\.?|Miss|Madam|Dr\.?)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)"
 )
+# Spoken forms that speech-to-text produces: "rohan dot das at example dot com",
+# "the twelfth of March, nineteen ninety".
+SPOKEN_EMAIL = re.compile(r"(?i)\b[a-z0-9]+(?:\s(?:dot|underscore)\s[a-z0-9]+)*\sat\s[a-z0-9-]+(?:\sdot\s[a-z]{2,})+\b")
+_ORDINALS = ("first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|"
+             "fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|thirtieth|"
+             r"twenty[\s-](?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth)|thirty[\s-]first|\d{1,2}(?:st|nd|rd|th)?")
+_NUMBER_WORDS = ("one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|"
+                 "seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and|oh")
+SPOKEN_DATE = re.compile(
+    rf"(?i)\b(?:the\s+)?(?:{_ORDINALS})\s+(?:of\s+)?(?:{_MONTHS}),?\s+"
+    rf"(?:(?:19|20)\d{{2}}|(?:nineteen|twenty|two\sthousand)(?:[\s-](?:{_NUMBER_WORDS}))*)\b"
+)
+# Card CVV / one-time passwords / PINs: short digit runs said right after the code is named or asked for.
+CREDENTIAL_WORDS = re.compile(r"(?i)\b(?:c\s?v\s?v|o\s?t\s?p|p\s?i\s?n|one[\s-]time password|security code)\b")
+SHORT_DIGITS = re.compile(r"\b\d(?:[ ,\-]{1,3}\d){2,8}\b|\b\d{3,8}\b")
 NOT_NAMES = {"Northwind", "Services", "Thank", "Okay", "Sure", "Hello", "Hi", "Yes", "No"}
 
 POSITIVE = ["thank", "great", "good", "excellent", "relief", "happy", "helpful", "easy", "appreciate",
@@ -128,18 +145,21 @@ class MockLanguageClient(LanguageClient):
             names.update(full.split(" "))
         return names
 
-    def _pii(self, text: str) -> list[dict]:
+    def _pii(self, text: str, credential_context: bool = False) -> list[dict]:
         found = []
-        for category, pattern in PII_PATTERNS:
+        for category, pattern in PII_PATTERNS + [("Email", SPOKEN_EMAIL), ("DateTime", SPOKEN_DATE)]:
             for m in pattern.finditer(text):
                 found.append({"category": category, "offset": m.start(), "length": m.end() - m.start()})
+        if credential_context or CREDENTIAL_WORDS.search(text):
+            for m in SHORT_DIGITS.finditer(text):
+                found.append({"category": "Credential", "offset": m.start(), "length": m.end() - m.start()})
         for m in SPOKEN_DIGITS.finditer(text):  # digits read out one by one: "4 1 1 1, 2 2 2 2, ..."
             digits = re.sub(r"\D", "", m.group(0))
             category = ("CreditCardNumber" if len(digits) in (15, 16) else
                         "PhoneNumber" if len(digits) == 10 and digits[0] in "6789" else "BankAccountNumber")
             found.append({"category": category, "offset": m.start(), "length": m.end() - m.start()})
         for m in NAME_INTRO.finditer(text):
-            group = 1 if m.group(1) else 2
+            group = next(g for g in (1, 2, 3) if m.group(g))
             name = m.group(group)
             if name.split(" ")[0] not in NOT_NAMES:
                 found.append({"category": "Person", "offset": m.start(group), "length": len(name)})
@@ -168,8 +188,12 @@ class MockLanguageClient(LanguageClient):
 
     def analyze(self, phrases):
         out = []
+        asked_for_credential = False
         for p in phrases:
-            entities = self._pii(p["text"])
+            # "Read me the OTP" -> the customer's next reply "It says 5 8 2 9 1 4" is a credential.
+            entities = self._pii(p["text"], credential_context=asked_for_credential and p["speaker"] == "customer")
+            if p["speaker"] == "agent":
+                asked_for_credential = bool(CREDENTIAL_WORDS.search(p["text"]))
             label, scores = self._sentiment(p["text"])
             out.append({**p, "text": redact(p["text"], entities), "pii": entities,
                         "sentiment": label, "scores": scores})

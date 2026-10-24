@@ -15,6 +15,7 @@ FLAG_LABELS = {
     "unresolved": "Unresolved",
     "compliance_breach": "Compliance breach",
     "low_qa": "Low QA score",
+    "no_speech": "No speech",
 }
 FLAG_WEIGHT = {"compliance_breach": 4, "unhappy_customer": 3, "repeat_contact": 3, "unresolved": 2, "low_qa": 1}
 
@@ -61,8 +62,18 @@ def _pct(part, whole):
     return round(100 * part / whole, 1) if whole else None
 
 
+def _number(value) -> float | None:
+    """A filter bound from the query string; anything that is not a number is ignored."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number == number else None  # NaN
+
+
 def filter_calls(items: list[dict], f: dict) -> list[dict]:
     q = (f.get("q") or "").strip().lower()
+    qa_min, qa_max = _number(f.get("qa_min")), _number(f.get("qa_max"))
     out = []
     for c in items:
         if q and not any(q in str(c.get(k) or "").lower()
@@ -83,9 +94,9 @@ def filter_calls(items: list[dict], f: dict) -> list[dict]:
         if f.get("flag") and f["flag"] not in (c.get("flag_list") or []):
             continue
         qa = (c.get("qa") or {}).get("percent")
-        if f.get("qa_min") not in (None, "") and (qa is None or qa < float(f["qa_min"])):
+        if qa_min is not None and (qa is None or qa < qa_min):
             continue
-        if f.get("qa_max") not in (None, "") and (qa is None or qa > float(f["qa_max"])):
+        if qa_max is not None and (qa is None or qa > qa_max):
             continue
         out.append(c)
     return out

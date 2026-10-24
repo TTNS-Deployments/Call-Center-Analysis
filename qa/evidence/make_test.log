@@ -1,0 +1,19 @@
+.venv/bin/python -m pytest Code/core -q
+..........................................                               [100%]
+42 passed in 2.03s
+cd Code/webapp && ../../.venv/bin/python manage.py test
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /workspaces/Call-Center-Analysis/.venv, got /workspaces/Call-Center-Analysis/Code/webapp/../../.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /workspaces/Call-Center-Analysis/.venv, got /workspaces/Call-Center-Analysis/Code/webapp/../../.venv
+..Wrong demo password from 127.0.0.1
+Wrong demo password from 127.0.0.1
+Wrong demo password from 127.0.0.1
+Wrong demo password from 127.0.0.1
+Wrong demo password from 127.0.0.1
+.............
+----------------------------------------------------------------------
+Ran 15 tests in 2.654s
+
+OK
+Found 15 test(s).
+System check identified no issues (0 silenced).
+exit=0

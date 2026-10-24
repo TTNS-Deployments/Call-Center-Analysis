@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import uuid
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -56,7 +57,8 @@ class LocalBlobStore(BlobStore):
     def put_bytes(self, container, name, data, content_type=None):
         path = self._path(container, name)
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + ".tmp")
+        # Unique temp name: two writers of the same blob (e.g. a double retry) must not share it.
+        tmp = path.with_name(f"{path.name}.{uuid.uuid4().hex[:8]}.tmp")
         tmp.write_bytes(data)
         tmp.replace(path)
 

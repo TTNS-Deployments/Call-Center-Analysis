@@ -1,0 +1,17 @@
+B-46 Docker local stack smoke test (2026-10-23T10:10Z)
+Commands (project name isolated from any user stack):
+  docker compose -p qa-cc-smoke up --build -d      -> exit 0 (see docker_up.log)
+  docker compose -p qa-cc-smoke run --rm seed      -> exit 1
+  curl http://127.0.0.1:8000/...                   (from the host)
+Observed:
+  - Image built from Dockerfile; collectstatic: "3 static files copied to '/app/Code/webapp/staticfiles', 7 post-processed."
+  - Containers azurite + web started. Host -> Azurite (published port 10000) reachable.
+  - GET /healthz -> 200 ; GET /auth/login -> 200 ; hashed CSS /static/css/app.46f2f7805c64.css -> 200 (whitenoise manifest)
+  - Seed: azure.core.exceptions.ServiceRequestTimeoutError: Connection to azurite timed out (connect timeout=20).
+  - Diagnosis: from inside web and seed containers, 'azurite' resolves (172.18.0.2) but TCP to :10000 times out;
+    container-to-container traffic on the compose bridge network is blocked in this Codespace (environment), so the
+    Blob-SDK-against-Azurite path could not be exercised. Not an application fault.
+  - Torn down afterwards with: docker compose -p qa-cc-smoke down -v --rmi local
+Re-test after fixes: docker compose -p qa-cc-smoke build web -> exit 0; collectstatic "7 static files copied ..., 19 post-processed" (vendored scripts included); image removed afterwards.
+RESULT: Blocked
+ACTUAL: Image builds (collectstatic OK, also re-checked after the fixes) and web serves /healthz 200, /auth/login 200, hashed static 200 from the container; seeding through Azurite is blocked because container-to-container networking times out in this Codespace (environment issue, not the app).

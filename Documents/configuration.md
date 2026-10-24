@@ -15,7 +15,7 @@ All runtime settings are environment variables:
 
 | Variable | Default (local / azure) | Description |
 |---|---|---|
-| `CC_MODE` | `local` | `local` or `azure`. Sets the default for every backend below. |
+| `CC_MODE` | `local` | `local` or `azure` (anything else stops the app with an error). Sets the default for every backend below. |
 | `STORAGE_BACKEND` | `local` / `azure` | `local` = folder under `LOCAL_DATA_DIR/storage`; `azure` = Blob Storage (or Azurite). |
 | `AZURE_STORAGE_ACCOUNT_URL` | – | `https://<account>.blob.core.windows.net/`, used with a managed identity or `az login`. |
 | `AZURE_STORAGE_CONNECTION_STRING` | – | Alternative to the account URL (keys, Azurite: `UseDevelopmentStorage=true`). |
@@ -57,7 +57,7 @@ Queue names are fixed in `function_app.py` (`recordings-events`, `transcripts-ev
 | Variable | Default | Description |
 |---|---|---|
 | `DJANGO_SECRET_KEY` | dev key in local mode | **Required in Azure** (Key Vault reference). |
-| `DJANGO_DEBUG` | `true` local / `false` azure | |
+| `DJANGO_DEBUG` | `false` | Set `true` on a developer machine for Django's debug error pages. Never in a shared environment. |
 | `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` | localhost | The App Service host name is added automatically. |
 | `AUTH_MODE` | `dev` local / `entra` azure | `dev` is refused unless `CC_MODE=local`. |
 | `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | – | App registration for sign-in. |
@@ -68,6 +68,7 @@ Queue names are fixed in `function_app.py` (`recordings-events`, `transcripts-ev
 | `POWERBI_TENANT_ID`, `POWERBI_CLIENT_ID`, `POWERBI_CLIENT_SECRET` | the `ENTRA_*` values | Service principal for embed tokens. |
 | `DISPLAY_TIME_ZONE` | `Asia/Kolkata` | Time zone used to display dates. |
 | `MAX_UPLOAD_MB` | `200` | Upload limit for the test upload form. |
+| `CONTENT_SECURITY_POLICY` | built in (`settings.py`) | Overrides the Content-Security-Policy header. Scripts are served from the app itself (`static/vendor`). |
 | `LOG_LEVEL` | `INFO` | |
 
 Key Vault references that cannot be resolved (for example a secret that has not been created yet) are treated as empty values, never as literal strings.

@@ -34,3 +34,23 @@ def test_sentiment_labels():
 def test_digits_read_out_one_by_one_are_redacted():
     p = analyze("It's 4 1 1 1, 2 2 2 2, 3 3 3 3, 4 4 4 4 and my number is 9 8 7 6 5, 4 3 2 1 0.")
     assert "[CARD]" in p["text"] and "[PHONE]" in p["text"] and "4 1 1 1" not in p["text"]
+
+
+def test_spoken_forms_are_redacted():
+    p = analyze("It's rohan dot das at example dot com, born the twelfth of March, nineteen ninety.")
+    assert "rohan" not in p["text"] and "nineteen ninety" not in p["text"]
+    assert "[EMAIL]" in p["text"] and "[DATE]" in p["text"]
+    assert analyze("Hello, am I speaking with Mister Rajesh Kumar?")["text"] == "Hello, am I speaking with Mister [NAME]?"
+
+
+def test_cvv_and_otp_digits_are_redacted():
+    client = MockLanguageClient(get_settings())
+    phrases = [
+        {"speaker": "customer", "offset_ms": 0, "duration_ms": 1, "text": "The C V V is 1 2 3."},
+        {"speaker": "agent", "offset_ms": 1, "duration_ms": 1, "text": "And read me the O T P you just received."},
+        {"speaker": "customer", "offset_ms": 2, "duration_ms": 1, "text": "It says 5 8 2 9 1 4. Is that safe?"},
+        {"speaker": "agent", "offset_ms": 3, "duration_ms": 1, "text": "Your reference is C R N 7 7 3 1 0 4 2."},
+    ]
+    out = [p["text"] for p in client.analyze(phrases)["phrases"]]
+    assert out[0] == "The C V V is [CREDENTIAL]." and out[2] == "It says [CREDENTIAL]. Is that safe?"
+    assert "7 7 3 1 0 4 2" in out[3]  # reference numbers outside a credential context are kept

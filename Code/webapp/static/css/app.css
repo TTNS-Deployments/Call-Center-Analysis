@@ -93,9 +93,12 @@ p { margin: 0 0 8px; }
 .main { min-width: 0; padding: 24px 28px 48px; }
 .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
 .page-header .sub { color: var(--text-2); margin-top: 4px; }
+.page-header > * { min-width: 0; max-width: 100%; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.toolbar > *, select { max-width: 100%; }  /* a long option (e.g. team name) must not widen the page */
 
 .grid { display: grid; gap: 16px; }
+.grid > * { min-width: 0; }  /* let wide tables scroll inside their card instead of stretching the page */
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-main { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
@@ -126,7 +129,7 @@ p { margin: 0 0 8px; }
 .badge.follow_up, .badge.transcribing, .badge.enriching, .badge.transcribed, .badge.uploaded { background: var(--info-soft); color: var(--info); }
 .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .flag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 4px; background: var(--bad-soft); color: var(--bad); margin: 1px 2px 1px 0; white-space: nowrap; }
-.flag.low_qa, .flag.unresolved { background: var(--ok-soft); color: var(--ok); }
+.flag.low_qa, .flag.unresolved, .flag.no_speech { background: var(--ok-soft); color: var(--ok); }
 .score { font-weight: 650; }
 .score.good { color: var(--good); } .score.ok { color: var(--ok); } .score.bad { color: var(--bad); } .score.muted { color: var(--text-3); }
 .pii { display: inline-block; font: 600 10.5px/1 var(--mono); letter-spacing: .03em; padding: 3px 6px; border-radius: 4px; background: var(--neutral-soft); color: var(--text-2); border: 1px dashed var(--text-3); vertical-align: 1px; }
@@ -290,7 +293,8 @@ label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; 
   .sidebar .org-logo { margin: 0; padding: 4px 8px; }
   .sidebar .org-logo img { height: 28px; width: auto; }
   .sidebar .brand { display: none; }
-  .app { grid-template-columns: 1fr; }
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .sidebar, .main { min-width: 0; }
   .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px 16px; gap: 6px; }
   .brand { padding: 0 8px 0 0; }
   .brand small, .sidebar .spacer, .mode-pill { display: none; }

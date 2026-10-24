@@ -119,3 +119,42 @@ def test_speech_metrics_detect_dead_air_and_overlaps():
     assert m["dead_air_count"] == 1 and m["longest_silence_s"] == 12.0
     assert m["overlaps"] == 1 and m["agent_interruptions"] == 0
     assert m["agent_wpm"] == round(18 / (10000 / 60000))  # 12 + 6 agent words over 10 s
+
+
+def test_silent_recording_is_not_scored(monkeypatch):
+    s = get_settings()
+    get_blob_store().put_bytes(s.container_recordings, "SILENT-1.wav", samples.make_wav(1000))
+
+    class Silent:
+        def transcribe(self, audio, filename, metadata):
+            return {"source": "test", "locale": "en-US", "duration_ms": 1000, "phrases": []}
+
+    class MustNotBeCalled:
+        def generate(self, *a, **k):
+            raise AssertionError("no LLM call for a silent recording")
+
+    monkeypatch.setattr(pipeline, "get_speech_client", lambda: Silent())
+    monkeypatch.setattr(pipeline, "get_insights_client", lambda: MustNotBeCalled())
+    doc = pipeline.process_recording("SILENT-1.wav")
+    assert doc["status"] == "completed" and doc["flag_list"] == ["no_speech"]
+    assert doc["qa"]["percent"] is None and doc["compliance"]["passed"]
+
+
+def test_non_numeric_qa_filters_are_ignored():
+    items = [{"qa": {"percent": 40}}, {"qa": {"percent": 90}}]
+    assert analytics.filter_calls(items, {"qa_min": "abc", "qa_max": "<script>"}) == items
+    assert analytics.filter_calls(items, {"qa_min": "50"}) == items[1:]
+
+
+@pytest.mark.parametrize("env, message", [
+    ({"CC_MODE": "prodution"}, "Unknown CC_MODE"),
+    ({"AGENT_CHANNEL": "left"}, "AGENT_CHANNEL must be a whole number"),
+])
+def test_invalid_settings_are_reported_clearly(monkeypatch, env, message):
+    from callcenter.config import reset_settings_cache
+
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    reset_settings_cache()
+    with pytest.raises(ValueError, match=message):
+        get_settings()

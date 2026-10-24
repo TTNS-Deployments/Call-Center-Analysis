@@ -1,0 +1,761 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.2, pytest-9.1.1, pluggy-1.6.0 -- /workspaces/Call-Center-Analysis/.venv/bin/python
+rootdir: /workspaces/Call-Center-Analysis
+plugins: anyio-4.15.1
+collecting ... collected 154 items
+
+qa/tests/test_backend_config_api_security.py::test_B28_local_defaults_and_django_check PASSED [  0%]
+qa/tests/test_backend_config_api_security.py::test_B29_invalid_webapp_config_clear_error[auth-mode-bogus] PASSED [  1%]
+qa/tests/test_backend_config_api_security.py::test_B29_invalid_webapp_config_clear_error[dev-auth-in-azure] PASSED [  1%]
+qa/tests/test_backend_config_api_security.py::test_B29_invalid_webapp_config_clear_error[no-secret-in-azure] PASSED [  2%]
+qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[storage] PASSED [  3%]
+qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[store] PASSED [  3%]
+qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[llm] PASSED [  4%]
+qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[llm-azure-no-endpoint] PASSED [  5%]
+qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[speech-azure-no-endpoint] PASSED [  5%]
+qa/tests/test_backend_config_api_security.py::test_B31_non_numeric_setting_error_names_variable[AGENT_CHANNEL] PASSED [  6%]
+qa/tests/test_backend_config_api_security.py::test_B31_non_numeric_setting_error_names_variable[MAX_UPLOAD_MB] PASSED [  7%]
+qa/tests/test_backend_config_api_security.py::test_B32_unknown_cc_mode_rejected PASSED [  7%]
+qa/tests/test_backend_config_api_security.py::test_B33_invalid_rules_override_marks_call_failed PASSED [  8%]
+qa/tests/test_backend_config_api_security.py::test_B34_rules_validation_messages[compliance_checks.yaml-checks:\n  - {id: a, name: A, kind: maybe, description: x}-required or prohibited] PASSED [  9%]
+qa/tests/test_backend_config_api_security.py::test_B34_rules_validation_messages[call_reasons.yaml-categories:\n  - {id: a, name: A}-missing: description] PASSED [  9%]
+qa/tests/test_backend_config_api_security.py::test_B34_rules_validation_messages[qa_rubric.yaml-- just\n- a list-mapping] PASSED [ 10%]
+qa/tests/test_backend_config_api_security.py::test_B35_api_valid_key_list_and_detail PASSED [ 11%]
+qa/tests/test_backend_config_api_security.py::test_B36_api_filters PASSED [ 11%]
+qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[missing] PASSED [ 12%]
+qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[wrong] PASSED [ 12%]
+qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[empty] PASSED [ 13%]
+qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[bearer-instead-of-header] PASSED [ 14%]
+qa/tests/test_backend_config_api_security.py::test_B38_api_unknown_call_404 PASSED [ 14%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[limit=abc] PASSED [ 15%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[limit=-5] PASSED [ 16%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[limit=1e3] PASSED [ 16%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[from=not-a-date] PASSED [ 17%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[from=2026-13-45&to=x] PASSED [ 18%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[range=999] PASSED [ 18%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[status=%00] PASSED [ 19%]
+qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[agent=' OR 1=1 --] PASSED [ 20%]
+qa/tests/test_backend_config_api_security.py::test_B40_api_responses_contain_no_pii PASSED [ 20%]
+qa/tests/test_backend_config_api_security.py::test_B41_api_session_respects_roles PASSED [ 21%]
+qa/tests/test_backend_config_api_security.py::test_B42_event_payload PASSED [ 22%]
+qa/tests/test_backend_config_api_security.py::test_B43_no_hardcoded_secrets PASSED [ 22%]
+qa/tests/test_backend_config_api_security.py::test_B44_env_file_ignored_and_never_committed PASSED [ 23%]
+qa/tests/test_backend_config_api_security.py::test_B45_no_transcript_text_in_log_statements PASSED [ 24%]
+qa/tests/test_backend_pipeline.py::test_B03_make_seed_populates_store PASSED [ 24%]
+qa/tests/test_backend_pipeline.py::test_B04_transcript_well_formed PASSED [ 25%]
+qa/tests/test_backend_pipeline.py::test_B05_pii_redacted_in_all_outputs_sample_calls PASSED [ 25%]
+qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0001] PASSED [ 26%]
+qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0002] PASSED [ 27%]
+qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0003] PASSED [ 27%]
+qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0004] PASSED [ 28%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Email me at sneha.k99@example.com please-must_not_contain0-[EMAIL]] PASSED [ 29%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Call me on +91 98765 43210-must_not_contain1-[PHONE]] PASSED [ 29%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[My card is 4111-2222-3333-4444-must_not_contain2-[CARD]] PASSED [ 30%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Card 4111222233334444 expired-must_not_contain3-[CARD]] PASSED [ 31%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Account number 1234 5678 9012-must_not_contain4-[ACCOUNT]] PASSED [ 31%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[My PAN is ABCDE1234F-must_not_contain5-[PAN]] PASSED [ 32%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[My name is Zoya Khan-must_not_contain6-[NAME]] PASSED [ 33%]
+qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[I live at Flat 402, Lake View Apartments, Bengaluru 560034-must_not_contain7-[ADDRESS]] PASSED [ 33%]
+qa/tests/test_backend_pipeline.py::test_B08_pii_absent_from_logs PASSED  [ 34%]
+qa/tests/test_backend_pipeline.py::test_B09_sentiment_structure_and_direction PASSED [ 35%]
+qa/tests/test_backend_pipeline.py::test_B10_emotion_structure_and_direction PASSED [ 35%]
+qa/tests/test_backend_pipeline.py::test_B11_qa_structure_and_direction PASSED [ 36%]
+qa/tests/test_backend_pipeline.py::test_B12_compliance_structure_and_direction PASSED [ 37%]
+qa/tests/test_backend_pipeline.py::test_B13_summary_reason_root_cause PASSED [ 37%]
+qa/tests/test_backend_pipeline.py::test_B14_end_to_end_one_call PASSED   [ 38%]
+qa/tests/test_backend_pipeline.py::test_B15_empty_or_silent_audio_mock_mode PASSED [ 38%]
+qa/tests/test_backend_pipeline.py::test_B16_silent_audio_empty_transcript PASSED [ 39%]
+qa/tests/test_backend_pipeline.py::test_B17_unsupported_file_ignored PASSED [ 40%]
+qa/tests/test_backend_pipeline.py::test_B18_corrupt_audio_azure_speech_error PASSED [ 40%]
+qa/tests/test_backend_pipeline.py::test_B19_very_long_transcript PASSED  [ 41%]
+qa/tests/test_backend_pipeline.py::test_B20_missing_metadata PASSED      [ 42%]
+qa/tests/test_backend_pipeline.py::test_B21_llm_output_missing_fields PASSED [ 42%]
+qa/tests/test_backend_pipeline.py::test_B22_duplicate_call_skipped PASSED [ 43%]
+qa/tests/test_backend_pipeline.py::test_B23_transcribe_failure_then_retry PASSED [ 44%]
+qa/tests/test_backend_pipeline.py::test_B24_enrich_failure_then_retry_from_enrich PASSED [ 44%]
+qa/tests/test_backend_pipeline.py::test_B25_corrupt_transcript_json PASSED [ 45%]
+qa/tests/test_backend_pipeline.py::test_B26_cli_status_and_retry PASSED  [ 46%]
+qa/tests/test_backend_pipeline.py::test_B27_functions_queue_handlers PASSED [ 46%]
+qa/tests/test_frontend.py::test_F01_templates_no_missing_variables PASSED [ 47%]
+qa/tests/test_frontend.py::test_F02_static_files_served[debug-runserver] PASSED [ 48%]
+qa/tests/test_frontend.py::test_F02_static_files_served[prod-whitenoise] PASSED [ 48%]
+qa/tests/test_frontend.py::test_F03_no_console_errors_or_failed_requests PASSED [ 49%]
+qa/tests/test_frontend.py::test_F04_charts_render PASSED                 [ 50%]
+qa/tests/test_frontend.py::test_F05_live_search_htmx PASSED              [ 50%]
+qa/tests/test_frontend.py::test_F06_audio_player_loads PASSED            [ 51%]
+qa/tests/test_frontend.py::test_F07_browser_login_logout PASSED          [ 51%]
+qa/tests/test_frontend.py::test_F08_csrf_tokens_and_enforcement PASSED   [ 52%]
+qa/tests/test_frontend.py::test_F09_required_fields_and_error_messages PASSED [ 53%]
+qa/tests/test_frontend.py::test_F10_titles_alt_labels PASSED             [ 53%]
+qa/tests/test_frontend.py::test_F11_no_horizontal_scroll_on_mobile PASSED [ 54%]
+qa/tests/test_frontend.py::test_F12_security_headers_and_cookies[debug-runserver] PASSED [ 55%]
+qa/tests/test_frontend.py::test_F12_security_headers_and_cookies[prod-gunicorn] PASSED [ 55%]
+qa/tests/test_frontend.py::test_F13_content_security_policy_present PASSED [ 56%]
+qa/tests/test_frontend.py::test_F14_output_escaping_no_injection PASSED  [ 57%]
+qa/tests/test_frontend.py::test_F15_third_party_scripts_have_sri PASSED  [ 57%]
+qa/tests/test_frontend.py::test_F16_server_logs_have_no_pii PASSED       [ 58%]
+qa/tests/test_ui_web.py::test_U01_login_page_lists_demo_personas PASSED  [ 59%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-admin] PASSED   [ 59%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-supervisor] PASSED [ 60%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-qa] PASSED      [ 61%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1001] PASSED   [ 61%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1002] PASSED   [ 62%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1003] PASSED   [ 62%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1004] PASSED   [ 63%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1005] PASSED   [ 64%]
+qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1006] PASSED   [ 64%]
+qa/tests/test_ui_web.py::test_U03_invalid_login_rejected_generic PASSED  [ 65%]
+qa/tests/test_ui_web.py::test_U04_open_redirect_after_login_blocked PASSED [ 66%]
+qa/tests/test_ui_web.py::test_U05_logout PASSED                          [ 66%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/] PASSED [ 67%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/calls/] PASSED [ 68%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/calls/DEMO-0001/] PASSED [ 68%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/agents/] PASSED [ 69%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/agents/A1001/] PASSED [ 70%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/agents/me/] PASSED [ 70%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/insights/] PASSED [ 71%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/pipeline/] PASSED [ 72%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/settings/] PASSED [ 72%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/settings/?file=compliance_checks.yaml] PASSED [ 73%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/settings/?file=call_reasons.yaml] PASSED [ 74%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/calls/DEMO-0001/audio] PASSED [ 74%]
+qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/insights/powerbi-token] PASSED [ 75%]
+qa/tests/test_ui_web.py::test_U07_unauthenticated_post_endpoints_redirect PASSED [ 75%]
+qa/tests/test_ui_web.py::test_U08_role_access_matrix[admin] PASSED       [ 76%]
+qa/tests/test_ui_web.py::test_U08_role_access_matrix[supervisor] PASSED  [ 77%]
+qa/tests/test_ui_web.py::test_U08_role_access_matrix[qa] PASSED          [ 77%]
+qa/tests/test_ui_web.py::test_U08_role_access_matrix[agent] PASSED       [ 78%]
+qa/tests/test_ui_web.py::test_U09_navigation_per_role PASSED             [ 79%]
+qa/tests/test_ui_web.py::test_U10_agent_sees_only_own_calls_in_lists PASSED [ 79%]
+qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-admin] PASSED [ 80%]
+qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-supervisor] PASSED [ 81%]
+qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-qa] PASSED [ 81%]
+qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-A1001] PASSED [ 82%]
+qa/tests/test_ui_web.py::test_U12_call_list_columns PASSED               [ 83%]
+qa/tests/test_ui_web.py::test_U13_call_detail_shows_all_results PASSED   [ 83%]
+qa/tests/test_ui_web.py::test_U14_search_filter_sort PASSED              [ 84%]
+qa/tests/test_ui_web.py::test_U15_empty_state PASSED                     [ 85%]
+qa/tests/test_ui_web.py::test_U16_pagination PASSED                      [ 85%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[qa_min=abc] PASSED [ 86%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[qa_max=%3Cscript%3E] PASSED [ 87%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[sort=;drop] PASSED [ 87%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[range=bogus] PASSED [ 88%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[from=2026-99-99] PASSED [ 88%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[page=1e9] PASSED [ 89%]
+qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[team=%00] PASSED [ 90%]
+qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/calls/NO-SUCH-CALL/-404] PASSED [ 90%]
+qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/calls/NO-SUCH-CALL/audio-404] PASSED [ 91%]
+qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/settings/?file=../../.env-404] PASSED [ 92%]
+qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/nope/-404] PASSED [ 92%]
+qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/calls/DEMO-0001/retry-405] PASSED [ 93%]
+qa/tests/test_ui_web.py::test_U19_debug_false_hides_details_on_500 PASSED [ 94%]
+qa/tests/test_ui_web.py::test_U20_default_local_debug_pages PASSED       [ 94%]
+qa/tests/test_ui_web.py::test_U21_azure_mode_defaults_debug_off PASSED   [ 95%]
+qa/tests/test_ui_web.py::test_U22_upload_validation_and_success PASSED   [ 96%]
+qa/tests/test_ui_web.py::test_U23_retry_from_ui PASSED                   [ 96%]
+qa/tests/test_ui_web.py::test_U24_retry_next_param_open_redirect PASSED  [ 97%]
+qa/tests/test_ui_web.py::test_U25_settings_edit_validate_reset PASSED    [ 98%]
+qa/tests/test_ui_web.py::test_U26_htmx_partials PASSED                   [ 98%]
+qa/tests/test_ui_web.py::test_U27_audio_streaming PASSED                 [ 99%]
+qa/tests/test_ui_web.py::test_U28_edge_calls_render PASSED               [100%]
+
+==================================== PASSES ====================================
+___________________ test_B28_local_defaults_and_django_check ___________________
+----------------------------- Captured stdout call -----------------------------
+local local local mock mock mock none
+System check identified no issues (0 silenced). 0
+_________ test_B29_invalid_webapp_config_clear_error[auth-mode-bogus] __________
+----------------------------- Captured stdout call -----------------------------
+{'AUTH_MODE': 'bogus'} -> 1 RuntimeError: Unknown AUTH_MODE 'bogus' (dev, password or entra)
+________ test_B29_invalid_webapp_config_clear_error[dev-auth-in-azure] _________
+----------------------------- Captured stdout call -----------------------------
+{'CC_MODE': 'azure', 'AUTH_MODE': 'dev', 'DJANGO_SECRET_KEY': 'x'} -> 1 RuntimeError: AUTH_MODE=dev is only allowed when CC_MODE=local
+________ test_B29_invalid_webapp_config_clear_error[no-secret-in-azure] ________
+----------------------------- Captured stdout call -----------------------------
+{'CC_MODE': 'azure', 'AUTH_MODE': 'entra'} -> 1 RuntimeError: DJANGO_SECRET_KEY must be set outside local mode
+____________ test_B30_invalid_pipeline_config_clear_error[storage] _____________
+----------------------------- Captured stdout call -----------------------------
+{'STORAGE_BACKEND': 'foo'} -> 1 ValueError: Unknown storage backend 'foo'
+_____________ test_B30_invalid_pipeline_config_clear_error[store] ______________
+----------------------------- Captured stdout call -----------------------------
+{'STORE_BACKEND': 'foo'} -> 1 ValueError: Unknown store backend 'foo'
+______________ test_B30_invalid_pipeline_config_clear_error[llm] _______________
+----------------------------- Captured stdout call -----------------------------
+{'LLM_BACKEND': 'foo'} -> 1 ValueError: Unknown llm backend 'foo'
+_____ test_B30_invalid_pipeline_config_clear_error[llm-azure-no-endpoint] ______
+----------------------------- Captured stdout call -----------------------------
+{'LLM_BACKEND': 'azure'} -> 1 RuntimeError: Set AZURE_OPENAI_ENDPOINT
+____ test_B30_invalid_pipeline_config_clear_error[speech-azure-no-endpoint] ____
+----------------------------- Captured stdout call -----------------------------
+{'SPEECH_BACKEND': 'azure'} -> 1 RuntimeError: Set SPEECH_ENDPOINT (e.g. https://<name>.cognitiveservices.azure.com)
+_______ test_B31_non_numeric_setting_error_names_variable[AGENT_CHANNEL] _______
+----------------------------- Captured stdout call -----------------------------
+{'AGENT_CHANNEL': 'left'} -> 1 ValueError: AGENT_CHANNEL must be a whole number, got 'left'
+_______ test_B31_non_numeric_setting_error_names_variable[MAX_UPLOAD_MB] _______
+----------------------------- Captured stdout call -----------------------------
+{'MAX_UPLOAD_MB': 'lots'} -> 1 RuntimeError: MAX_UPLOAD_MB must be a whole number, got 'lots'
+______________________ test_B32_unknown_cc_mode_rejected _______________________
+----------------------------- Captured stdout call -----------------------------
+CC_MODE=prodution -> 1 ValueError: Unknown CC_MODE 'prodution' (local or azure)
+______________ test_B33_invalid_rules_override_marks_call_failed _______________
+---------------------------- Captured stdout setup -----------------------------
+Processed DEMO-0001.wav: QA 82.1%  resolved  flags=[]
+Processed DEMO-0002.wav: QA 42.9%  resolved  flags=['compliance_breach', 'low_qa']
+Processed DEMO-0003.wav: QA 81.2%  escalated  flags=['unhappy_customer', 'repeat_contact', 'unresolved']
+Processed DEMO-0004.wav: QA 100.0%  resolved  flags=[]
+----------------------------- Captured stdout call -----------------------------
+failed enrich ConfigError: 'criteria' must be a non-empty list
+____________________ test_B35_api_valid_key_list_and_detail ____________________
+----------------------------- Captured stdout call -----------------------------
+200 application/json count 35
+_____________________________ test_B36_api_filters _____________________________
+----------------------------- Captured stdout call -----------------------------
+filters OK; compliance_breach count 10
+______________ test_B37_api_rejects_missing_or_wrong_key[missing] ______________
+----------------------------- Captured stdout call -----------------------------
+{} -> 401
+_______________ test_B37_api_rejects_missing_or_wrong_key[wrong] _______________
+----------------------------- Captured stdout call -----------------------------
+{'HTTP_X_API_KEY': 'wrong-key'} -> 401
+_______________ test_B37_api_rejects_missing_or_wrong_key[empty] _______________
+----------------------------- Captured stdout call -----------------------------
+{'HTTP_X_API_KEY': ''} -> 401
+_____ test_B37_api_rejects_missing_or_wrong_key[bearer-instead-of-header] ______
+----------------------------- Captured stdout call -----------------------------
+{'HTTP_AUTHORIZATION': 'Bearer local-test-key'} -> 401
+________________________ test_B38_api_unknown_call_404 _________________________
+----------------------------- Captured stdout call -----------------------------
+404 b'{"error": "not found"}'
+_________ test_B39_api_malformed_input_clean_4xx_or_ignored[limit=abc] _________
+----------------------------- Captured stdout call -----------------------------
+limit=abc -> 400 application/json b'{"error": "limit must be a whole number from 1 to 1000"}'
+_________ test_B39_api_malformed_input_clean_4xx_or_ignored[limit=-5] __________
+----------------------------- Captured stdout call -----------------------------
+limit=-5 -> 400 application/json b'{"error": "limit must be a whole number from 1 to 1000"}'
+_________ test_B39_api_malformed_input_clean_4xx_or_ignored[limit=1e3] _________
+----------------------------- Captured stdout call -----------------------------
+limit=1e3 -> 400 application/json b'{"error": "limit must be a whole number from 1 to 1000"}'
+______ test_B39_api_malformed_input_clean_4xx_or_ignored[from=not-a-date] ______
+----------------------------- Captured stdout call -----------------------------
+from=not-a-date -> 200 application/json b'{"count": 35, "items": [{"id": "QA-BADRULES-0001", "call_id": "QA-BADRULES-0001", "created_at": "2026-10-23T10:41:57+00:'
+___ test_B39_api_malformed_input_clean_4xx_or_ignored[from=2026-13-45&to=x] ____
+----------------------------- Captured stdout call -----------------------------
+from=2026-13-45&to=x -> 200 application/json b'{"count": 35, "items": [{"id": "QA-BADRULES-0001", "call_id": "QA-BADRULES-0001", "created_at": "2026-10-23T10:41:57+00:'
+_________ test_B39_api_malformed_input_clean_4xx_or_ignored[range=999] _________
+----------------------------- Captured stdout call -----------------------------
+range=999 -> 200 application/json b'{"count": 35, "items": [{"id": "QA-BADRULES-0001", "call_id": "QA-BADRULES-0001", "created_at": "2026-10-23T10:41:57+00:'
+________ test_B39_api_malformed_input_clean_4xx_or_ignored[status=%00] _________
+----------------------------- Captured stdout call -----------------------------
+status=%00 -> 200 application/json b'{"count": 0, "items": []}'
+_____ test_B39_api_malformed_input_clean_4xx_or_ignored[agent=' OR 1=1 --] _____
+----------------------------- Captured stdout call -----------------------------
+agent=' OR 1=1 -- -> 200 application/json b'{"count": 0, "items": []}'
+____________________ test_B40_api_responses_contain_no_pii _____________________
+----------------------------- Captured stdout call -----------------------------
+30 calls checked; problems: []
+_____________________ test_B41_api_session_respects_roles ______________________
+----------------------------- Captured stdout call -----------------------------
+agent A1001 sees 6 calls via API, all own
+____________________________ test_B42_event_payload ____________________________
+----------------------------- Captured stdout call -----------------------------
+['agent_id', 'call_id', 'call_reason', 'compliance_passed', 'customer_id', 'duration_sec', 'flag_list', 'processed_at', 'qa_percent', 'resolution', 'root_cause', 'sentiment', 'started_at', 'summary', 'team', 'type']
+________________________ test_B43_no_hardcoded_secrets _________________________
+----------------------------- Captured stdout call -----------------------------
+hit: ('docker-compose.yml', 'azure_storage_key', 'AccountKey=Eby8vdM02xNOc…')
+________________ test_B44_env_file_ignored_and_never_committed _________________
+----------------------------- Captured stdout call -----------------------------
+ignored: True | tracked: '' | commits touching .env: ''
+________________ test_B45_no_transcript_text_in_log_statements _________________
+----------------------------- Captured stdout call -----------------------------
+no offending log statements
+______________________ test_B03_make_seed_populates_store ______________________
+----------------------------- Captured stdout call -----------------------------
+A  78.6%  neutral  resolved
+  [28/40] CALL-20260929-0028  QA  71.4%  positive resolved
+  [29/40] CALL-20261014-0029  QA  78.1%  negative escalated
+  [30/40] CALL-20261010-0030  QA  78.6%  neutral  resolved
+  [31/40] CALL-20261006-0031  QA  66.7%  neutral  follow_up
+  [32/40] CALL-20260925-0032  QA  57.1%  neutral  resolved
+  [33/40] CALL-20260928-0033  QA  85.7%  neutral  resolved
+  [34/40] CALL-20261013-0034  QA  81.2%  negative escalated
+  [35/40] CALL-20260930-0035  QA  81.2%  negative escalated
+  [36/40] CALL-20261014-0036  QA  71.4%  positive resolved
+  [37/40] CALL-20261017-0037  QA  57.1%  positive resolved
+  [38/40] CALL-20261015-0038  QA  81.2%  negative escalated
+  [39/40] CALL-20261017-0039  QA  75.0%  positive resolved
+  [40/40] CALL-20261009-0040  QA  57.1%  neutral  resolved
+ 
+______________ test_B05_pii_redacted_in_all_outputs_sample_calls _______________
+----------------------------- Captured stdout call -----------------------------
+checked 270 outputs; problems=0
+_________________ test_B06_pii_redacted_demo_calls[DEMO-0001] __________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0001 pii_summary: {'total': 7, 'categories': {'Person': 4, 'PhoneNumber': 1, 'DateTime': 1, 'Email': 1}} leaked: []
+_________________ test_B06_pii_redacted_demo_calls[DEMO-0002] __________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0002 pii_summary: {'total': 5, 'categories': {'Person': 2, 'CreditCardNumber': 1, 'Credential': 2}} leaked: []
+_________________ test_B06_pii_redacted_demo_calls[DEMO-0003] __________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0003 pii_summary: {'total': 4, 'categories': {'Person': 3, 'PhoneNumber': 1}} leaked: []
+_________________ test_B06_pii_redacted_demo_calls[DEMO-0004] __________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0004 pii_summary: {'total': 4, 'categories': {'Person': 4}} leaked: []
+_ test_B07_pii_patterns_mock_language[Email me at sneha.k99@example.com please-must_not_contain0-[EMAIL]] _
+----------------------------- Captured stdout call -----------------------------
+'Email me at sneha.k99@example.com please' -> 'Email me at [EMAIL] please'
+_ test_B07_pii_patterns_mock_language[Call me on +91 98765 43210-must_not_contain1-[PHONE]] _
+----------------------------- Captured stdout call -----------------------------
+'Call me on +91 98765 43210' -> 'Call me on [PHONE]'
+_ test_B07_pii_patterns_mock_language[My card is 4111-2222-3333-4444-must_not_contain2-[CARD]] _
+----------------------------- Captured stdout call -----------------------------
+'My card is 4111-2222-3333-4444' -> 'My card is [CARD]'
+_ test_B07_pii_patterns_mock_language[Card 4111222233334444 expired-must_not_contain3-[CARD]] _
+----------------------------- Captured stdout call -----------------------------
+'Card 4111222233334444 expired' -> 'Card [CARD] expired'
+_ test_B07_pii_patterns_mock_language[Account number 1234 5678 9012-must_not_contain4-[ACCOUNT]] _
+----------------------------- Captured stdout call -----------------------------
+'Account number 1234 5678 9012' -> 'Account number [ACCOUNT]'
+_ test_B07_pii_patterns_mock_language[My PAN is ABCDE1234F-must_not_contain5-[PAN]] _
+----------------------------- Captured stdout call -----------------------------
+'My PAN is ABCDE1234F' -> 'My PAN is [PAN]'
+_ test_B07_pii_patterns_mock_language[My name is Zoya Khan-must_not_contain6-[NAME]] _
+----------------------------- Captured stdout call -----------------------------
+'My name is Zoya Khan' -> 'My name is [NAME]'
+_ test_B07_pii_patterns_mock_language[I live at Flat 402, Lake View Apartments, Bengaluru 560034-must_not_contain7-[ADDRESS]] _
+----------------------------- Captured stdout call -----------------------------
+'I live at Flat 402, Lake View Apartments, Bengaluru 560034' -> 'I live at [ADDRESS]'
+________________________ test_B08_pii_absent_from_logs _________________________
+----------------------------- Captured stdout call -----------------------------
+0 log records captured
+__________________ test_B09_sentiment_structure_and_direction __________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0001 {'overall': 'positive', 'score': 0.328, 'customer': 'positive', 'customer_score': 0.268, 'agent_score': 0.365, 'customer_end_score': 0.447} 
+DEMO-0003 {'overall': 'negative', 'score': -0.25, 'customer': 'negative', 'customer_score': -0.333, 'agent_score': -0.167, 'customer_end_score': -0.333}
+___________________ test_B10_emotion_structure_and_direction ___________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0001 {'start': 'neutral', 'end': 'satisfied', 'dominant': 'neutral'} DEMO-0003 {'start': 'angry', 'end': 'disappointed', 'dominant': 'neutral'}
+_____________________ test_B11_qa_structure_and_direction ______________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0001 82.1 True {'met': 9, 'partial': 3, 'not_met': 1, 'not_applicable': 7} | DEMO-0002 42.9 False {'met': 5, 'partial': 0, 'not_met': 8, 'not_applicable': 7}
+_________________ test_B12_compliance_structure_and_direction __________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0001 {'recording_disclosure': 'pass', 'identity_before_account_details': 'pass', 'no_sensitive_credentials': 'pass', 'fee_disclosure': 'pass', 'escalation_offer': 'not_applicable'} 
+DEMO-0002 {'recording_disclosure': 'fail', 'identity_before_account_details': 'fail', 'no_sensitive_credentials': 'fail', 'fee_disclosure': 'not_applicable', 'escalation_offer': 'not_applicable'}
+______________________ test_B13_summary_reason_root_cause ______________________
+----------------------------- Captured stdout call -----------------------------
+DEMO-0001 plan_change resolved | root: Current plan does not match usage | flags: []
+DEMO-0002 card_services resolved | root: Suspected fraudulent card transaction | flags: ['compliance_breach', 'low_qa']
+DEMO-0003 technical_issue escalated | root: Network fault at the local exchange | flags: ['unhappy_customer', 'repeat_contact', 'unresolved']
+DEMO-0004 sales_opportunity resolved | root: Not determined | flags: []
+_________________________ test_B14_end_to_end_one_call _________________________
+----------------------------- Captured stdout call -----------------------------
+status transitions: ['transcribing', 'transcribed', 'enriching'] -> completed
+___________________ test_B15_empty_or_silent_audio_mock_mode ___________________
+----------------------------- Captured stdout call -----------------------------
+0-byte file -> completed 14 utterances (mock script)
+____________________ test_B16_silent_audio_empty_transcript ____________________
+----------------------------- Captured stdout call -----------------------------
+result: completed qa: None summary: 'No speech was detected in the recording, so the call was not scored.' reason: general_enquiry flags: ['no_speech']
+stored status: completed error: None
+__________________ test_B18_corrupt_audio_azure_speech_error ___________________
+----------------------------- Captured stdout call -----------------------------
+failed transcribe RuntimeError: Speech API error 400: {"code":"InvalidAudioFormat","message":"The audio is corrupt or unsupported."}
+________________________ test_B19_very_long_transcript _________________________
+----------------------------- Captured stdout call -----------------------------
+2000 phrases, duration 11989s, processed in 0.6s, status completed
+__________________________ test_B20_missing_metadata ___________________________
+----------------------------- Captured stdout call -----------------------------
+status completed agent_id None started_at 2026-10-23T10:42:05+00:00
+______________________ test_B21_llm_output_missing_fields ______________________
+----------------------------- Captured stdout call -----------------------------
+completed general_enquiry unresolved None 1
+_______________________ test_B22_duplicate_call_skipped ________________________
+----------------------------- Captured stderr call -----------------------------
+Skipping QA-DUP-0001.wav: already completed
+------------------------------ Captured log call -------------------------------
+INFO     callcenter.pipeline:pipeline.py:136 Skipping QA-DUP-0001.wav: already completed
+____________________ test_B23_transcribe_failure_then_retry ____________________
+----------------------------- Captured stdout call -----------------------------
+after failure: failed transcribe ConnectionError: speech service unreachable
+after retry: completed
+________________ test_B24_enrich_failure_then_retry_from_enrich ________________
+----------------------------- Captured stdout call -----------------------------
+after failure: failed enrich TimeoutError: language service timed out
+after retry: completed speech re-run: 0
+_______________________ test_B25_corrupt_transcript_json _______________________
+----------------------------- Captured stdout call -----------------------------
+failed enrich JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+________________________ test_B26_cli_status_and_retry _________________________
+----------------------------- Captured stdout call -----------------------------
+49 calls: completed=47, failed=2
+QA-NOMETA-0001: completed 0
+unknown id -> 1 KeyError: 'NO-SUCH-CALL'
+______________________ test_B27_functions_queue_handlers _______________________
+----------------------------- Captured stdout call -----------------------------
+poison -> failed RuntimeError: Processing failed after all retries
+----------------------------- Captured stderr call -----------------------------
+Transcribing QA-FUNC-0001.wav (dequeue 1)
+Enriching QA-FUNC-0001.json (dequeue 1)
+Ignoring event for container other
+Giving up on QA-FUNC-0001 at stage transcribe
+------------------------------ Captured log call -------------------------------
+INFO     root:function_app.py:38 Transcribing QA-FUNC-0001.wav (dequeue 1)
+INFO     root:function_app.py:47 Enriching QA-FUNC-0001.json (dequeue 1)
+WARNING  root:function_app.py:28 Ignoring event for container other
+ERROR    root:function_app.py:60 Giving up on QA-FUNC-0001 at stage transcribe
+___________________ test_F01_templates_no_missing_variables ____________________
+----------------------------- Captured stdout call -----------------------------
+strict unresolved variables: none
+literal None / template syntax in visible text: none
+________________ test_F02_static_files_served[debug-runserver] _________________
+----------------------------- Captured stdout call -----------------------------
+http://127.0.0.1:8765 /static/css/app.css (200, 'text/css', 'max-age=60, public')
+http://127.0.0.1:8765 /static/img/ttbs-logo.png (200, 'image/png', 'max-age=60, public')
+http://127.0.0.1:8765 /static/js/app.js (200, 'text/javascript', 'max-age=60, public')
+http://127.0.0.1:8765 /static/vendor/chart-4.4.1.umd.js (200, 'text/javascript', 'max-age=60, public')
+http://127.0.0.1:8765 /static/vendor/htmx-2.0.4.min.js (200, 'text/javascript', 'max-age=60, public')
+________________ test_F02_static_files_served[prod-whitenoise] _________________
+----------------------------- Captured stdout call -----------------------------
+http://127.0.0.1:8766 /static/css/app.d2b321fecae3.css (200, 'text/css', 'max-age=315360000, public, immutable')
+http://127.0.0.1:8766 /static/img/ttbs-logo.d8a9976f8af5.png (200, 'image/png', 'max-age=315360000, public, immutable')
+http://127.0.0.1:8766 /static/js/app.7968b125dbd5.js (200, 'text/javascript', 'max-age=315360000, public, immutable')
+http://127.0.0.1:8766 /static/vendor/chart-4.4.1.umd.dab9bbcbdda3.js (200, 'text/javascript', 'max-age=315360000, public, immutable')
+http://127.0.0.1:8766 /static/vendor/htmx-2.0.4.min.19a573773be4.js (200, 'text/javascript', 'max-age=315360000, public, immutable')
+________________ test_F03_no_console_errors_or_failed_requests _________________
+----------------------------- Captured stdout call -----------------------------
+visited: ['/', '/calls/', '/calls/DEMO-0001/', '/agents/', '/agents/A1001/', '/insights/', '/pipeline/', '/settings/', '/calls/DEMO-0004/', '/insights/?view=builtin'] 
+problems: none
+____________________________ test_F04_charts_render ____________________________
+----------------------------- Captured stdout call -----------------------------
+{'/': {'canvases': 3, 'charts': 3, 'chartjs': True, 'htmx': True}, '/insights/?view=builtin': {'canvases': 5, 'charts': 5, 'chartjs': True, 'htmx': True}, '/agents/': {'canvases': 1, 'charts': 1, 'chartjs': True, 'htmx': True}, '/agents/A1001/': {'canvases': 1, 'charts': 1, 'chartjs': True, 'htmx': True}}
+__________________________ test_F05_live_search_htmx ___________________________
+----------------------------- Captured stdout call -----------------------------
+rows before 25 after ['DEMO-0002'] url http://127.0.0.1:8765/calls/?range=all&q=DEMO-0002&agent=&team=&reason=&sentiment=&resolution=&flag=&qa_min=&qa_max=
+_________________________ test_F06_audio_player_loads __________________________
+----------------------------- Captured stdout call -----------------------------
+audio duration (s): 88.312313
+________________________ test_F07_browser_login_logout _________________________
+----------------------------- Captured stdout call -----------------------------
+after logout: http://127.0.0.1:8765/auth/login?next=/calls/
+_____________________ test_F08_csrf_tokens_and_enforcement _____________________
+----------------------------- Captured stdout call -----------------------------
+forms without CSRF token: none | POST /auth/login without token -> 403
+----------------------------- Captured stderr call -----------------------------
+Forbidden (CSRF cookie not set.): /auth/login
+------------------------------ Captured log call -------------------------------
+WARNING  django.security.csrf:log.py:283 Forbidden (CSRF cookie not set.): /auth/login
+_________________ test_F09_required_fields_and_error_messages __________________
+----------------------------- Captured stdout call -----------------------------
+audio required: True | blocked submit: True | settings error shown: True
+__________________________ test_F10_titles_alt_labels __________________________
+----------------------------- Captured stdout call -----------------------------
+titles: {'/': 'Overview · Call Center Analysis', '/calls/': 'Calls · Call Center Analysis', '/calls/DEMO-0001/': 'DEMO-0001 · Call Center Analysis', '/agents/': 'Agents · Call Center Analysis', '/agents/A1001/': "Eve<img src=x onerror=alert('xss1')><script>alert('xss2')</script> · Call Center Analysis", '/insights/': 'Insights · Call Center Analysis', '/pipeline/': 'Pipeline · Call Center Analysis', '/settings/': 'Settings · Call Center Analysis', '/auth/login': 'Sign in · Call Center Analysis'}
+issues: none
+___________________ test_F11_no_horizontal_scroll_on_mobile ____________________
+----------------------------- Captured stdout call -----------------------------
+horizontal overflow px at 375 wide: {'/': 0, '/calls/': 0, '/calls/DEMO-0001/': 0, '/agents/': 0, '/agents/A1001/': 0, '/insights/': 0, '/pipeline/': 0, '/settings/': 0, '/calls/DEMO-0004/': 0, '/auth/login': 0}
+____________ test_F12_security_headers_and_cookies[debug-runserver] ____________
+----------------------------- Captured stdout call -----------------------------
+http://127.0.0.1:8765 {'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin', 'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://api.powerbi.com https://*.powerbi.com https://*.analysis.windows.net; frame-src https://app.powerbi.com https://*.powerbi.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com", 'session HttpOnly': True, 'session SameSite': 'Lax', 'csrf SameSite': 'Lax', 'Server header': 'WSGIServer/0.2 CPython/3.14.2'}
+_____________ test_F12_security_headers_and_cookies[prod-gunicorn] _____________
+----------------------------- Captured stdout call -----------------------------
+http://127.0.0.1:8766 {'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin', 'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://api.powerbi.com https://*.powerbi.com https://*.analysis.windows.net; frame-src https://app.powerbi.com https://*.powerbi.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com", 'session HttpOnly': True, 'session SameSite': 'Lax', 'csrf SameSite': 'Lax', 'Server header': 'gunicorn'}
+___________________ test_F13_content_security_policy_present ___________________
+----------------------------- Captured stdout call -----------------------------
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://api.powerbi.com https://*.powerbi.com https://*.analysis.windows.net; frame-src https://app.powerbi.com https://*.powerbi.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com
+____________________ test_F14_output_escaping_no_injection _____________________
+----------------------------- Captured stdout call -----------------------------
+raw payload in HTML: none | alert dialogs: none | injected <img>: 0 | escaped form present: True
+____________________ test_F15_third_party_scripts_have_sri _____________________
+----------------------------- Captured stdout call -----------------------------
+external scripts: [] | without integrity: 0
+_______________________ test_F16_server_logs_have_no_pii _______________________
+----------------------------- Captured stdout call -----------------------------
+179 log lines scanned; PII found: none
+___________________ test_U01_login_page_lists_demo_personas ____________________
+----------------------------- Captured stdout call -----------------------------
+200 ['dev-admin', 'dev-supervisor', 'dev-qa', 'dev-A1001', 'dev-A1002', 'dev-A1003', 'dev-A1004', 'dev-A1005', 'dev-A1006']
+___________________ test_U03_invalid_login_rejected_generic ____________________
+----------------------------- Captured stdout call -----------------------------
+dev mode unknown persona -> 400 text/html; charset=utf-8 b'Unknown user'
+password mode wrong password -> 403 ['Wrong password.']
+password mode unknown user -> 400 b'Unknown user'
+----------------------------- Captured stderr call -----------------------------
+Wrong demo password from 127.0.0.1
+------------------------------ Captured log call -------------------------------
+WARNING  accounts.views:views.py:99 Wrong demo password from 127.0.0.1
+__________________ test_U04_open_redirect_after_login_blocked __________________
+----------------------------- Captured stdout call -----------------------------
+https://evil.example/ -> /
+//evil.example/x -> /
+/calls/ -> /calls/
+_______________________________ test_U05_logout ________________________________
+----------------------------- Captured stdout call -----------------------------
+after logout /calls/ -> 302 /auth/login?next=/calls/
+______________________ test_U08_role_access_matrix[admin] ______________________
+----------------------------- Captured stdout call -----------------------------
+admin mismatches: []
+___________________ test_U08_role_access_matrix[supervisor] ____________________
+----------------------------- Captured stdout call -----------------------------
+supervisor mismatches: []
+_______________________ test_U08_role_access_matrix[qa] ________________________
+----------------------------- Captured stdout call -----------------------------
+qa mismatches: []
+______________________ test_U08_role_access_matrix[agent] ______________________
+----------------------------- Captured stdout call -----------------------------
+agent mismatches: []
+_________________________ test_U09_navigation_per_role _________________________
+----------------------------- Captured stdout call -----------------------------
+{'admin': ['Overview', 'Calls', 'Agents', 'Insights', 'Pipeline', 'Settings'], 'supervisor': ['Overview', 'Calls', 'Agents', 'Insights', 'Pipeline'], 'qa': ['Overview', 'Calls', 'Agents', 'Insights'], 'agent': ['Overview', 'Calls', 'My scorecard']}
+_________________ test_U10_agent_sees_only_own_calls_in_lists __________________
+----------------------------- Captured stdout call -----------------------------
+agent A1001 list: {'QA-FAIL-T-0001': 'A1001', 'QA-BADJSON-0001': 'A1001', 'QA-DUP-0001': 'A1001', 'QA-SILENT-0001': 'A1001', 'CALL-20261004-0013': 'A1001', 'QA-XSS-0001': 'A1001', 'CALL-20261013-0012': 'A1001', 'CALL-20261016-0004': 'A1001', 'DEMO-0001': 'A1001', 'CALL-20261018-0008': 'A1001', 'CALL-20261004-0021': 'A1001'}
+________________ test_U11_pages_load_without_errors[dev-admin] _________________
+----------------------------- Captured stdout call -----------------------------
+dev-admin server/template errors: []
+______________ test_U11_pages_load_without_errors[dev-supervisor] ______________
+----------------------------- Captured stdout call -----------------------------
+dev-supervisor server/template errors: []
+__________________ test_U11_pages_load_without_errors[dev-qa] __________________
+----------------------------- Captured stdout call -----------------------------
+dev-qa server/template errors: []
+________________ test_U11_pages_load_without_errors[dev-A1001] _________________
+----------------------------- Captured stdout call -----------------------------
+dev-A1001 server/template errors: []
+__________________________ test_U12_call_list_columns __________________________
+----------------------------- Captured stdout call -----------------------------
+columns: ['Date ↓', 'Call', 'Agent', 'Summary', 'Sentiment', 'Resolution', 'QA', 'Duration']
+DEMO-0003 row shows: {'reason': True, 'sentiment': True, 'resolution': True, 'qa': True, 'flags': True}
+____________________ test_U13_call_detail_shows_all_results ____________________
+----------------------------- Captured stdout call -----------------------------
+{'transcript utterance': True, 'sentiment': True, 'emotion start/end': True, 'QA score': True, 'compliance checks': True, 'summary': True, 'call reason': True, 'root cause': True, 'redaction chip': True}
+_________________________ test_U14_search_filter_sort __________________________
+----------------------------- Captured stdout call -----------------------------
+qa asc first 5: [-1, -1, -1, -1, 21.4] desc first 5: [100.0, 93.3, 93.3, 85.7, 85.7]
+_____________________________ test_U15_empty_state _____________________________
+----------------------------- Captured stdout call -----------------------------
+empty-range errors: [] | agent me empty: 200
+_____________________________ test_U16_pagination ______________________________
+----------------------------- Captured stdout call -----------------------------
+total 51 page1 25 page2 25 | 'page 1 of' shown: True
+_________________ test_U17_bad_parameters_friendly[qa_min=abc] _________________
+----------------------------- Captured stdout call -----------------------------
+qa_min=abc -> 200
+____________ test_U17_bad_parameters_friendly[qa_max=%3Cscript%3E] _____________
+----------------------------- Captured stdout call -----------------------------
+qa_max=%3Cscript%3E -> 200
+_________________ test_U17_bad_parameters_friendly[sort=;drop] _________________
+----------------------------- Captured stdout call -----------------------------
+sort=;drop -> 200
+________________ test_U17_bad_parameters_friendly[range=bogus] _________________
+----------------------------- Captured stdout call -----------------------------
+range=bogus -> 200
+______________ test_U17_bad_parameters_friendly[from=2026-99-99] _______________
+----------------------------- Captured stdout call -----------------------------
+from=2026-99-99 -> 200
+__________________ test_U17_bad_parameters_friendly[page=1e9] __________________
+----------------------------- Captured stdout call -----------------------------
+page=1e9 -> 200
+__________________ test_U17_bad_parameters_friendly[team=%00] __________________
+----------------------------- Captured stdout call -----------------------------
+team=%00 -> 200
+________ test_U18_invalid_ids_friendly_error[/calls/NO-SUCH-CALL/-404] _________
+----------------------------- Captured stdout call -----------------------------
+/calls/NO-SUCH-CALL/ -> 404 ['Not found']
+______ test_U18_invalid_ids_friendly_error[/calls/NO-SUCH-CALL/audio-404] ______
+----------------------------- Captured stdout call -----------------------------
+/calls/NO-SUCH-CALL/audio -> 404 ['Not found']
+_____ test_U18_invalid_ids_friendly_error[/settings/?file=../../.env-404] ______
+----------------------------- Captured stdout call -----------------------------
+/settings/?file=../../.env -> 404 ['Not found']
+_______________ test_U18_invalid_ids_friendly_error[/nope/-404] ________________
+----------------------------- Captured stdout call -----------------------------
+/nope/ -> 404 ['Not found']
+_______ test_U18_invalid_ids_friendly_error[/calls/DEMO-0001/retry-405] ________
+----------------------------- Captured stdout call -----------------------------
+/calls/DEMO-0001/retry -> 405 []
+__________________ test_U19_debug_false_hides_details_on_500 ___________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG=False 500 body: <!doctype html> <html lang="en"> <head>   <meta charset="utf-8">   <meta name="viewport" content="width=device-width, in
+______________________ test_U20_default_local_debug_pages ______________________
+----------------------------- Captured stdout call -----------------------------
+DEBUG = False | 404 shows debug info: False | 500 shows traceback: False
+____________________ test_U21_azure_mode_defaults_debug_off ____________________
+----------------------------- Captured stdout call -----------------------------
+azure defaults DEBUG, cookie secure, csrf secure, ssl redirect, hsts: False True True True 3600
+____________________ test_U22_upload_validation_and_success ____________________
+----------------------------- Captured stdout call -----------------------------
+no file: ['Choose an audio file to upload.'] | .txt: ['Unsupported file type .txt.'] | duplicate: ['A call with ID DEMO-0001 already exists.'] | too big: ['File is larger than 0 MB.'] | ok: ['Uploaded t.wav as QA-UP-..-..-x. Processing has started.']
+____________________________ test_U23_retry_from_ui ____________________________
+----------------------------- Captured stdout call -----------------------------
+retry -> 302 /pipeline/ | status now: completed
+___________________ test_U24_retry_next_param_open_redirect ____________________
+----------------------------- Captured stdout call -----------------------------
+retry next=https://evil.example -> 302 /calls/DEMO-0003/
+____________________ test_U25_settings_edit_validate_reset _____________________
+----------------------------- Captured stdout call -----------------------------
+settings invalid -> 'Not saved', valid -> 'Saved.', reset OK
+___________________________ test_U27_audio_streaming ___________________________
+----------------------------- Captured stdout call -----------------------------
+full 200 audio/x-wav 5652032 | range 206 bytes 100-199/5652032 | suffix 206 bytes 5652022-5652031/5652032 | unsatisfiable 416
+__________________________ test_U28_edge_calls_render __________________________
+----------------------------- Captured stdout call -----------------------------
+long transcript page: 200 696 KB in 0.12s {'/calls/?range=all': 200, '/calls/QA-NOMETA-UI/': 200, '/pipeline/': 200, '/': 200, '/agents/?range=all': 200}
+- generated xml file: /workspaces/Call-Center-Analysis/qa/evidence/qa_junit.xml -
+=========================== short test summary info ============================
+PASSED qa/tests/test_backend_config_api_security.py::test_B28_local_defaults_and_django_check
+PASSED qa/tests/test_backend_config_api_security.py::test_B29_invalid_webapp_config_clear_error[auth-mode-bogus]
+PASSED qa/tests/test_backend_config_api_security.py::test_B29_invalid_webapp_config_clear_error[dev-auth-in-azure]
+PASSED qa/tests/test_backend_config_api_security.py::test_B29_invalid_webapp_config_clear_error[no-secret-in-azure]
+PASSED qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[storage]
+PASSED qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[store]
+PASSED qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[llm]
+PASSED qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[llm-azure-no-endpoint]
+PASSED qa/tests/test_backend_config_api_security.py::test_B30_invalid_pipeline_config_clear_error[speech-azure-no-endpoint]
+PASSED qa/tests/test_backend_config_api_security.py::test_B31_non_numeric_setting_error_names_variable[AGENT_CHANNEL]
+PASSED qa/tests/test_backend_config_api_security.py::test_B31_non_numeric_setting_error_names_variable[MAX_UPLOAD_MB]
+PASSED qa/tests/test_backend_config_api_security.py::test_B32_unknown_cc_mode_rejected
+PASSED qa/tests/test_backend_config_api_security.py::test_B33_invalid_rules_override_marks_call_failed
+PASSED qa/tests/test_backend_config_api_security.py::test_B34_rules_validation_messages[compliance_checks.yaml-checks:\n  - {id: a, name: A, kind: maybe, description: x}-required or prohibited]
+PASSED qa/tests/test_backend_config_api_security.py::test_B34_rules_validation_messages[call_reasons.yaml-categories:\n  - {id: a, name: A}-missing: description]
+PASSED qa/tests/test_backend_config_api_security.py::test_B34_rules_validation_messages[qa_rubric.yaml-- just\n- a list-mapping]
+PASSED qa/tests/test_backend_config_api_security.py::test_B35_api_valid_key_list_and_detail
+PASSED qa/tests/test_backend_config_api_security.py::test_B36_api_filters
+PASSED qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[missing]
+PASSED qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[wrong]
+PASSED qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[empty]
+PASSED qa/tests/test_backend_config_api_security.py::test_B37_api_rejects_missing_or_wrong_key[bearer-instead-of-header]
+PASSED qa/tests/test_backend_config_api_security.py::test_B38_api_unknown_call_404
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[limit=abc]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[limit=-5]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[limit=1e3]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[from=not-a-date]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[from=2026-13-45&to=x]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[range=999]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[status=%00]
+PASSED qa/tests/test_backend_config_api_security.py::test_B39_api_malformed_input_clean_4xx_or_ignored[agent=' OR 1=1 --]
+PASSED qa/tests/test_backend_config_api_security.py::test_B40_api_responses_contain_no_pii
+PASSED qa/tests/test_backend_config_api_security.py::test_B41_api_session_respects_roles
+PASSED qa/tests/test_backend_config_api_security.py::test_B42_event_payload
+PASSED qa/tests/test_backend_config_api_security.py::test_B43_no_hardcoded_secrets
+PASSED qa/tests/test_backend_config_api_security.py::test_B44_env_file_ignored_and_never_committed
+PASSED qa/tests/test_backend_config_api_security.py::test_B45_no_transcript_text_in_log_statements
+PASSED qa/tests/test_backend_pipeline.py::test_B03_make_seed_populates_store
+PASSED qa/tests/test_backend_pipeline.py::test_B04_transcript_well_formed
+PASSED qa/tests/test_backend_pipeline.py::test_B05_pii_redacted_in_all_outputs_sample_calls
+PASSED qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0001]
+PASSED qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0002]
+PASSED qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0003]
+PASSED qa/tests/test_backend_pipeline.py::test_B06_pii_redacted_demo_calls[DEMO-0004]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Email me at sneha.k99@example.com please-must_not_contain0-[EMAIL]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Call me on +91 98765 43210-must_not_contain1-[PHONE]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[My card is 4111-2222-3333-4444-must_not_contain2-[CARD]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Card 4111222233334444 expired-must_not_contain3-[CARD]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[Account number 1234 5678 9012-must_not_contain4-[ACCOUNT]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[My PAN is ABCDE1234F-must_not_contain5-[PAN]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[My name is Zoya Khan-must_not_contain6-[NAME]]
+PASSED qa/tests/test_backend_pipeline.py::test_B07_pii_patterns_mock_language[I live at Flat 402, Lake View Apartments, Bengaluru 560034-must_not_contain7-[ADDRESS]]
+PASSED qa/tests/test_backend_pipeline.py::test_B08_pii_absent_from_logs
+PASSED qa/tests/test_backend_pipeline.py::test_B09_sentiment_structure_and_direction
+PASSED qa/tests/test_backend_pipeline.py::test_B10_emotion_structure_and_direction
+PASSED qa/tests/test_backend_pipeline.py::test_B11_qa_structure_and_direction
+PASSED qa/tests/test_backend_pipeline.py::test_B12_compliance_structure_and_direction
+PASSED qa/tests/test_backend_pipeline.py::test_B13_summary_reason_root_cause
+PASSED qa/tests/test_backend_pipeline.py::test_B14_end_to_end_one_call
+PASSED qa/tests/test_backend_pipeline.py::test_B15_empty_or_silent_audio_mock_mode
+PASSED qa/tests/test_backend_pipeline.py::test_B16_silent_audio_empty_transcript
+PASSED qa/tests/test_backend_pipeline.py::test_B17_unsupported_file_ignored
+PASSED qa/tests/test_backend_pipeline.py::test_B18_corrupt_audio_azure_speech_error
+PASSED qa/tests/test_backend_pipeline.py::test_B19_very_long_transcript
+PASSED qa/tests/test_backend_pipeline.py::test_B20_missing_metadata
+PASSED qa/tests/test_backend_pipeline.py::test_B21_llm_output_missing_fields
+PASSED qa/tests/test_backend_pipeline.py::test_B22_duplicate_call_skipped
+PASSED qa/tests/test_backend_pipeline.py::test_B23_transcribe_failure_then_retry
+PASSED qa/tests/test_backend_pipeline.py::test_B24_enrich_failure_then_retry_from_enrich
+PASSED qa/tests/test_backend_pipeline.py::test_B25_corrupt_transcript_json
+PASSED qa/tests/test_backend_pipeline.py::test_B26_cli_status_and_retry
+PASSED qa/tests/test_backend_pipeline.py::test_B27_functions_queue_handlers
+PASSED qa/tests/test_frontend.py::test_F01_templates_no_missing_variables
+PASSED qa/tests/test_frontend.py::test_F02_static_files_served[debug-runserver]
+PASSED qa/tests/test_frontend.py::test_F02_static_files_served[prod-whitenoise]
+PASSED qa/tests/test_frontend.py::test_F03_no_console_errors_or_failed_requests
+PASSED qa/tests/test_frontend.py::test_F04_charts_render
+PASSED qa/tests/test_frontend.py::test_F05_live_search_htmx
+PASSED qa/tests/test_frontend.py::test_F06_audio_player_loads
+PASSED qa/tests/test_frontend.py::test_F07_browser_login_logout
+PASSED qa/tests/test_frontend.py::test_F08_csrf_tokens_and_enforcement
+PASSED qa/tests/test_frontend.py::test_F09_required_fields_and_error_messages
+PASSED qa/tests/test_frontend.py::test_F10_titles_alt_labels
+PASSED qa/tests/test_frontend.py::test_F11_no_horizontal_scroll_on_mobile
+PASSED qa/tests/test_frontend.py::test_F12_security_headers_and_cookies[debug-runserver]
+PASSED qa/tests/test_frontend.py::test_F12_security_headers_and_cookies[prod-gunicorn]
+PASSED qa/tests/test_frontend.py::test_F13_content_security_policy_present
+PASSED qa/tests/test_frontend.py::test_F14_output_escaping_no_injection
+PASSED qa/tests/test_frontend.py::test_F15_third_party_scripts_have_sri
+PASSED qa/tests/test_frontend.py::test_F16_server_logs_have_no_pii
+PASSED qa/tests/test_ui_web.py::test_U01_login_page_lists_demo_personas
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-admin]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-supervisor]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-qa]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1001]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1002]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1003]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1004]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1005]
+PASSED qa/tests/test_ui_web.py::test_U02_login_each_persona[dev-A1006]
+PASSED qa/tests/test_ui_web.py::test_U03_invalid_login_rejected_generic
+PASSED qa/tests/test_ui_web.py::test_U04_open_redirect_after_login_blocked
+PASSED qa/tests/test_ui_web.py::test_U05_logout
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/calls/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/calls/DEMO-0001/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/agents/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/agents/A1001/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/agents/me/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/insights/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/pipeline/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/settings/]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/settings/?file=compliance_checks.yaml]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/settings/?file=call_reasons.yaml]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/calls/DEMO-0001/audio]
+PASSED qa/tests/test_ui_web.py::test_U06_unauthenticated_redirects_to_login[/insights/powerbi-token]
+PASSED qa/tests/test_ui_web.py::test_U07_unauthenticated_post_endpoints_redirect
+PASSED qa/tests/test_ui_web.py::test_U08_role_access_matrix[admin]
+PASSED qa/tests/test_ui_web.py::test_U08_role_access_matrix[supervisor]
+PASSED qa/tests/test_ui_web.py::test_U08_role_access_matrix[qa]
+PASSED qa/tests/test_ui_web.py::test_U08_role_access_matrix[agent]
+PASSED qa/tests/test_ui_web.py::test_U09_navigation_per_role
+PASSED qa/tests/test_ui_web.py::test_U10_agent_sees_only_own_calls_in_lists
+PASSED qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-admin]
+PASSED qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-supervisor]
+PASSED qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-qa]
+PASSED qa/tests/test_ui_web.py::test_U11_pages_load_without_errors[dev-A1001]
+PASSED qa/tests/test_ui_web.py::test_U12_call_list_columns
+PASSED qa/tests/test_ui_web.py::test_U13_call_detail_shows_all_results
+PASSED qa/tests/test_ui_web.py::test_U14_search_filter_sort
+PASSED qa/tests/test_ui_web.py::test_U15_empty_state
+PASSED qa/tests/test_ui_web.py::test_U16_pagination
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[qa_min=abc]
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[qa_max=%3Cscript%3E]
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[sort=;drop]
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[range=bogus]
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[from=2026-99-99]
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[page=1e9]
+PASSED qa/tests/test_ui_web.py::test_U17_bad_parameters_friendly[team=%00]
+PASSED qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/calls/NO-SUCH-CALL/-404]
+PASSED qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/calls/NO-SUCH-CALL/audio-404]
+PASSED qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/settings/?file=../../.env-404]
+PASSED qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/nope/-404]
+PASSED qa/tests/test_ui_web.py::test_U18_invalid_ids_friendly_error[/calls/DEMO-0001/retry-405]
+PASSED qa/tests/test_ui_web.py::test_U19_debug_false_hides_details_on_500
+PASSED qa/tests/test_ui_web.py::test_U20_default_local_debug_pages
+PASSED qa/tests/test_ui_web.py::test_U21_azure_mode_defaults_debug_off
+PASSED qa/tests/test_ui_web.py::test_U22_upload_validation_and_success
+PASSED qa/tests/test_ui_web.py::test_U23_retry_from_ui
+PASSED qa/tests/test_ui_web.py::test_U24_retry_next_param_open_redirect
+PASSED qa/tests/test_ui_web.py::test_U25_settings_edit_validate_reset
+PASSED qa/tests/test_ui_web.py::test_U26_htmx_partials
+PASSED qa/tests/test_ui_web.py::test_U27_audio_streaming
+PASSED qa/tests/test_ui_web.py::test_U28_edge_calls_render
+======================== 154 passed in 83.84s (0:01:23) ========================
+exit=0

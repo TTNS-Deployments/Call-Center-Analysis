@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import permission_required
@@ -159,7 +160,11 @@ def call_retry(request, call_id):
         raise Http404
     get_dispatcher().retry(call_id)
     messages.success(request, f"Retry queued for {call_id}.")
-    return redirect(request.POST.get("next") or reverse("portal:call_detail", args=[call_id]))
+    next_url = request.POST.get("next")
+    if not (next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()},
+                                                         require_https=request.is_secure())):
+        next_url = reverse("portal:call_detail", args=[call_id])
+    return redirect(next_url)
 
 
 # --------------------------------------------------------------------------- agents

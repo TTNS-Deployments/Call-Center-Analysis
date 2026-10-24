@@ -178,10 +178,14 @@ def enrich_transcript(transcript_blob: str) -> dict:
     try:
         transcript = blobs.get_json(s.container_transcripts, transcript_blob)
         rules = load_rules()
-        language = get_language_client().analyze(transcript["phrases"])
         measured = speech_metrics(transcript["phrases"])
-        metadata = {**transcript.get("metadata", {}), "call_id": call_id, "speech_metrics": measured}
-        insights = get_insights_client().generate(language["phrases"], metadata, rules)
+        if transcript["phrases"]:
+            language = get_language_client().analyze(transcript["phrases"])
+            metadata = {**transcript.get("metadata", {}), "call_id": call_id, "speech_metrics": measured}
+            insights = get_insights_client().generate(language["phrases"], metadata, rules)
+        else:  # silent or empty recording: nothing to score, and no reason to call the AI services
+            language = {"source": "none", "phrases": [], "pii_summary": {"total": 0, "categories": {}}}
+            insights = no_speech_insights(rules)
 
         doc = build_call_document(store.get(call_id) or {}, transcript, language, insights, rules)
         doc["speech_metrics"] = measured
@@ -194,6 +198,30 @@ def enrich_transcript(transcript_blob: str) -> dict:
 
     get_event_publisher().publish(doc)
     return doc
+
+
+NO_SPEECH_SUMMARY = "No speech was detected in the recording, so the call was not scored."
+
+
+def no_speech_insights(rules: Rules) -> dict:
+    """Insights for a recording without speech: every QA parameter and compliance check is N/A."""
+    return {
+        "summary": NO_SPEECH_SUMMARY,
+        "call_reason": rules.categories[-1]["id"],
+        "call_reason_detail": "",
+        "root_cause": "No speech detected",
+        "resolution": "unresolved",
+        "customer_emotion": {"start": "neutral", "end": "neutral", "dominant": "neutral"},
+        "repeat_contact": False,
+        "qa": [{"id": c["id"], "rating": "not_applicable", "evidence": "", "rationale": "No speech in the recording.",
+                "recommendation": ""} for c in rules.criteria],
+        "compliance": [{"id": c["id"], "status": "not_applicable", "evidence": ""} for c in rules.checks],
+        "topics": [],
+        "follow_up_actions": ["Check the recording: no speech was detected"],
+        "coaching": [],
+        "source": "none",
+        "no_speech": True,
+    }
 
 
 def score_qa(ratings: list[dict], rules: Rules) -> dict:
@@ -274,12 +302,14 @@ def build_call_document(existing: dict, transcript: dict, language: dict, insigh
     emotion = insights["customer_emotion"]
     from .llm import NEGATIVE_EMOTIONS
 
+    no_speech = bool(insights.get("no_speech"))
     flags = {
         "unhappy_customer": customer_score < -POSITIVE_THRESHOLD or emotion["end"] in NEGATIVE_EMOTIONS,
         "repeat_contact": insights["repeat_contact"],
-        "unresolved": insights["resolution"] in ("unresolved", "escalated"),
+        "unresolved": not no_speech and insights["resolution"] in ("unresolved", "escalated"),
         "compliance_breach": bool(failed_checks),
         "low_qa": qa_percent is not None and qa_percent < rules.pass_threshold,
+        "no_speech": no_speech,
     }
 
     started_at = normalize_timestamp(meta.get("started_at") or existing.get("started_at"))

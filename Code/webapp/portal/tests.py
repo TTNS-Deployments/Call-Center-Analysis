@@ -99,6 +99,35 @@ class PortalTests(SimpleTestCase):
         self.assertIn("transcript", detail)
         self.assertNotIn("history", detail)
 
+    def test_bad_numbers_do_not_cause_server_errors(self):
+        self.login("dev-admin")
+        self.assertEqual(self.client.get("/calls/?qa_min=abc&qa_max=%3Cx%3E").status_code, 200)
+        for limit in ("abc", "1e3", "0", "-5", "5000"):
+            response = self.client.get(f"/api/calls?limit={limit}", HTTP_X_API_KEY="test-key")
+            self.assertEqual(response.status_code, 400, limit)
+            self.assertIn("limit", response.json()["error"])
+        self.assertEqual(self.client.get("/api/calls?limit=2", HTTP_X_API_KEY="test-key").status_code, 200)
+
+    def test_retry_redirect_stays_on_site(self):
+        self.login("dev-supervisor")
+        call_id = self.calls[1][0]
+        response = self.client.post(f"/calls/{call_id}/retry", {"next": "https://evil.example/phish"})
+        self.assertEqual(response["Location"], f"/calls/{call_id}/")
+        response = self.client.post(f"/calls/{call_id}/retry", {"next": "/pipeline/"})
+        self.assertEqual(response["Location"], "/pipeline/")
+        from callcenter.factory import get_dispatcher
+
+        get_dispatcher().pool.shutdown(wait=True)
+        from concurrent.futures import ThreadPoolExecutor
+
+        get_dispatcher().pool = ThreadPoolExecutor(max_workers=2)
+
+    def test_csp_header_and_no_third_party_scripts(self):
+        self.login("dev-admin")
+        response = self.client.get("/")
+        self.assertIn("script-src 'self'", response["Content-Security-Policy"])
+        self.assertNotIn('src="http', response.content.decode())
+
     def test_upload_processes_file(self):
         self.login("dev-supervisor")
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -141,3 +170,21 @@ class DemoPasswordTests(SimpleTestCase):
         response = self.client.post("/auth/login", {"user": "dev-admin", "password": ""})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.client.get("/").status_code, 302)
+
+
+class StaticFilesTests(SimpleTestCase):
+    def test_collectstatic_with_production_storage(self):
+        """Production (App Service, Docker) runs collectstatic with the hashed manifest storage: it must succeed."""
+        from django.core.management import call_command
+
+        tmp = tempfile.mkdtemp()
+        try:
+            with override_settings(STATIC_ROOT=tmp, STORAGES={"staticfiles": {
+                    "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}}):
+                call_command("collectstatic", interactive=False, verbosity=0)
+                from django.contrib.staticfiles.storage import staticfiles_storage
+
+                for name in ("css/app.css", "js/app.js", "vendor/htmx-2.0.4.min.js", "vendor/chart-4.4.1.umd.js"):
+                    self.assertRegex(staticfiles_storage.url(name), r"\.[0-9a-f]{12}\.")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
