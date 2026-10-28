@@ -36,23 +36,44 @@
 
   const charts = {
     trend(el, rows) {
+      // Calls per day, split by how the customer felt: one axis, counts only.
+      // Negative sits on the baseline so its day-to-day change is easiest to compare.
+      const keys = [["negative", "Negative"], ["neutral", "Neutral"], ["positive", "Positive"]];
+      const surface = css("--surface");
       return make(el, {
         type: "bar",
         data: {
           labels: rows.map((r) => r.date.slice(5)),
-          datasets: [
-            { type: "bar", label: "Calls", data: rows.map((r) => r.calls), backgroundColor: css("--brand-soft"),
-              borderColor: css("--brand"), borderWidth: 1, borderRadius: 4, yAxisID: "y" },
-            { type: "line", label: "Avg customer sentiment", data: rows.map((r) => r.sentiment), borderColor: css("--customer"),
-              backgroundColor: css("--customer"), tension: .35, pointRadius: 2, yAxisID: "y1" },
-          ],
+          datasets: keys.map(([k, name]) => ({
+            label: name, data: rows.map((r) => r["sentiment_" + k] || 0), backgroundColor: SEMANTIC[k](),
+            borderColor: surface, borderWidth: { top: 2 }, borderSkipped: false,
+            // round only the top of each day's stack
+            borderRadius: (ctx) => (keys.slice(ctx.datasetIndex + 1).some(([k2]) => rows[ctx.dataIndex]?.["sentiment_" + k2])
+              ? 0 : { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 }),
+            maxBarThickness: 36, stack: "calls",
+          })),
         },
         options: baseOptions({
+          plugins: {
+            legend: { position: "top", align: "end", labels: { color: css("--text-2"), boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+            tooltip: {
+              padding: 10, cornerRadius: 6, itemSort: (a, b) => b.datasetIndex - a.datasetIndex,
+              filter: (item) => item.raw > 0,
+              callbacks: {
+                title: (items) => rows[items[0].dataIndex].date,
+                label: (item) => {
+                  const total = rows[item.dataIndex].calls || 0;
+                  const pct = total ? Math.round((item.raw / total) * 100) : 0;
+                  return ` ${item.dataset.label}: ${item.raw} (${pct}%)`;
+                },
+                footer: (items) => `Total: ${rows[items[0].dataIndex].calls} calls`,
+              },
+            },
+          },
           scales: {
-            x: baseOptions().scales.x,
-            y: Object.assign(baseOptions().scales.y, { beginAtZero: true, ticks: { color: css("--text-2"), precision: 0 }, title: { display: true, text: "Calls", color: css("--text-3") } }),
-            y1: { position: "right", min: -1, max: 1, grid: { display: false }, ticks: { color: css("--text-2") },
-                  title: { display: true, text: "Sentiment", color: css("--text-3") } },
+            x: Object.assign(baseOptions().scales.x, { stacked: true }),
+            y: Object.assign(baseOptions().scales.y, { stacked: true, beginAtZero: true,
+              ticks: { color: css("--text-2"), precision: 0 }, title: { display: true, text: "Calls", color: css("--text-3") } }),
           },
         }),
       });

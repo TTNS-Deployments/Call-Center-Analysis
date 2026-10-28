@@ -144,6 +144,8 @@ def daily_trend(items: list[dict]) -> list[dict]:
         "calls": len(calls),
         "sentiment": _r(mean((c.get("sentiment") or {}).get("customer_score", 0) for c in calls), 2),
         "qa": _mean_qa(calls),
+        **{f"sentiment_{s}": sum(1 for c in calls if (c.get("sentiment") or {}).get("customer") == s)
+           for s in ("positive", "neutral", "negative")},
     } for day, calls in sorted(by_day.items())]
 
 

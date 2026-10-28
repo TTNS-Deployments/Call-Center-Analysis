@@ -82,7 +82,7 @@ The landing page: the state of the contact centre for the selected period.
 
 **Charts and lists**
 
-- **Call volume and customer sentiment:** calls per day, with the average customer sentiment line.
+- **Daily calls by customer sentiment:** one bar per day, split into positive, neutral and negative customers (negative at the bottom). Hover a bar for the counts, percentages and the day's total.
 - **Customer sentiment** and **Resolution** doughnuts: the mix of positive / neutral / negative calls, and of
   resolved / follow-up / escalated / unresolved calls.
 - **Top call reasons:** the most common reasons, with the share unresolved, the share negative and the average QA
