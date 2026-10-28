@@ -150,13 +150,26 @@ class PortalTests(SimpleTestCase):
         from django.core.files.uploadedfile import SimpleUploadedFile
 
         response = self.client.post("/pipeline/upload", {
-            "audio": SimpleUploadedFile("call.mp3", b"<!DOCTYPE html><html>download</html>", content_type="audio/mpeg"),
+            "audio": SimpleUploadedFile("call.mp3", b"<!DOCTYPE html><html>download</html>" + b" " * 4096, content_type="audio/mpeg"),
             "call_id": "UPLOAD-HTML-1",
         }, follow=True)
         self.assertContains(response, "is not an audio file the speech service can read")
         from callcenter.factory import get_call_store
 
         self.assertIsNone(get_call_store().get("UPLOAD-HTML-1"))
+
+    def test_upload_rejects_a_tiny_file(self):
+        self.login("dev-supervisor")
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        tiny = b"ID3\x03\x00\x00\x00\x00\x00\x00" + b"\xff\xfb\x90\x00" + b"\x00" * 240  # 261-byte "MP3"
+        response = self.client.post("/pipeline/upload", {
+            "audio": SimpleUploadedFile("wdawd.mp3", tiny, content_type="audio/mpeg"), "call_id": "UPLOAD-TINY-1",
+        }, follow=True)
+        self.assertContains(response, "too small to contain a recording")
+        from callcenter.factory import get_call_store
+
+        self.assertIsNone(get_call_store().get("UPLOAD-TINY-1"))
 
     def test_upload_stores_mislabelled_file_under_real_extension_with_language(self):
         self.login("dev-supervisor")
@@ -166,7 +179,7 @@ class PortalTests(SimpleTestCase):
         from callcenter.config import get_settings
         from callcenter.factory import get_blob_store
 
-        m4a = b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 64
+        m4a = b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 4096
         with mock.patch("portal.views.get_dispatcher"):  # keep the mock pipeline from running
             response = self.client.post("/pipeline/upload", {
                 "audio": SimpleUploadedFile("call.mp3", m4a, content_type="audio/mpeg"),

@@ -162,5 +162,8 @@ def api_error(response: requests.Response, filename: str, audio: bytes) -> str:
     inner = (error.get("innererror") or {}).get("code") or ""
     message = error.get("message") or response.text[:500]
     detected = audio_format.detect_format(audio[:65536])
+    if len(audio) < audio_format.MIN_AUDIO_BYTES:
+        message += (f" The file is only {len(audio):,} bytes, too small to contain a recording: it is probably empty "
+                    "or did not download/export completely.")
     return (f"Speech API error {response.status_code}{f' {code}' if code else ''}{f'/{inner}' if inner else ''}: "
             f"{message} (file {filename}, {len(audio):,} bytes, content looks like {audio_format.describe(detected)})")

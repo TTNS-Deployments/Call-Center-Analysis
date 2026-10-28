@@ -286,6 +286,10 @@ def upload(request):
         messages.error(request, f"File is larger than {settings.MAX_UPLOAD_MB} MB.")
         return redirect("portal:pipeline")
     data = audio.read()
+    if len(data) < audio_format.MIN_AUDIO_BYTES:
+        messages.error(request, f"{audio.name} is only {len(data):,} bytes, too small to contain a recording. "
+                                f"It is probably empty or did not download completely; check that it plays.")
+        return redirect("portal:pipeline")
     detected = audio_format.detect_format(data)
     if detected not in pipeline.AUDIO_EXTENSIONS:
         messages.error(request, f"{audio.name} is not an audio file the speech service can read "

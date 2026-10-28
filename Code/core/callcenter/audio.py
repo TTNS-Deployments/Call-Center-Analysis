@@ -15,6 +15,10 @@ SAME_FORMAT = {".opus": ".ogg"}
 
 _ID3 = b"ID3"
 
+# Smaller than this cannot hold a usable recording (about one second of low-bitrate MP3): usually an
+# empty, truncated or placeholder file. Azure Speech rejects such files as "audio format not supported".
+MIN_AUDIO_BYTES = 2048
+
 
 def _skip_id3(data: bytes) -> bytes:
     """Strip a leading ID3v2 tag (MP3 or AAC). Its size is 4 bytes of 7 bits each."""
