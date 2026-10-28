@@ -145,6 +145,44 @@ class PortalTests(SimpleTestCase):
 
         self.assertEqual(get_call_store().get("UPLOAD-TEST-1")["status"], "completed")
 
+    def test_upload_rejects_a_file_that_is_not_audio(self):
+        self.login("dev-supervisor")
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        response = self.client.post("/pipeline/upload", {
+            "audio": SimpleUploadedFile("call.mp3", b"<!DOCTYPE html><html>download</html>", content_type="audio/mpeg"),
+            "call_id": "UPLOAD-HTML-1",
+        }, follow=True)
+        self.assertContains(response, "is not an audio file the speech service can read")
+        from callcenter.factory import get_call_store
+
+        self.assertIsNone(get_call_store().get("UPLOAD-HTML-1"))
+
+    def test_upload_stores_mislabelled_file_under_real_extension_with_language(self):
+        self.login("dev-supervisor")
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from unittest import mock
+
+        from callcenter.config import get_settings
+        from callcenter.factory import get_blob_store
+
+        m4a = b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 64
+        with mock.patch("portal.views.get_dispatcher"):  # keep the mock pipeline from running
+            response = self.client.post("/pipeline/upload", {
+                "audio": SimpleUploadedFile("call.mp3", m4a, content_type="audio/mpeg"),
+                "call_id": "UPLOAD-M4A-1", "locale": "hi-IN",
+            }, follow=True)
+        self.assertContains(response, "stored as UPLOAD-M4A-1.m4a")
+        s, blobs = get_settings(), get_blob_store()
+        self.assertTrue(blobs.exists(s.container_recordings, "UPLOAD-M4A-1.m4a"))
+        self.assertEqual(blobs.get_json(s.container_recordings, "UPLOAD-M4A-1.json")["locale"], "hi-IN")
+
+    def test_pipeline_page_offers_hindi(self):
+        self.login("dev-supervisor")
+        response = self.client.get("/pipeline/")
+        self.assertContains(response, '<option value="hi-IN"')
+        self.assertContains(response, "Detect (English or Hindi)")
+
 
 @override_settings(ALLOWED_HOSTS=["testserver"], AUTH_MODE="password", DEMO_PASSWORD="s3cret-demo")
 class DemoPasswordTests(SimpleTestCase):

@@ -15,7 +15,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import permission_required
-from callcenter import analytics, pipeline, rules
+from callcenter import analytics, pipeline, rules, speech
+from callcenter import audio as audio_format
 from callcenter.config import get_settings
 from callcenter.factory import get_blob_store, get_call_store, get_dispatcher
 
@@ -103,6 +104,7 @@ def call_detail(request, call_id):
     return render(request, "portal/call_detail.html", {
         "call": call,
         "timeline": timeline,
+        "call_language": speech.language_name(call.get("locale") or "en-US"),
         "can_retry": request.user.can("manage_pipeline"),
     })
 
@@ -257,6 +259,8 @@ def pipeline_view(request):
         "success_rate": analytics.kpis(items)["success_rate"],
         "max_upload_mb": settings.MAX_UPLOAD_MB,
         "audio_ext": ", ".join(sorted(pipeline.AUDIO_EXTENSIONS)),
+        "languages": speech.LANGUAGES,
+        "default_locale": get_settings().speech_locale,
         "local": settings.CC_MODE == "local",
     }
     template = "portal/partials/pipeline_tables.html" if request.headers.get("HX-Request") else "portal/pipeline.html"
@@ -281,6 +285,19 @@ def upload(request):
     if audio.size > settings.MAX_UPLOAD_MB * 1024 * 1024:
         messages.error(request, f"File is larger than {settings.MAX_UPLOAD_MB} MB.")
         return redirect("portal:pipeline")
+    data = audio.read()
+    detected = audio_format.detect_format(data)
+    if detected not in pipeline.AUDIO_EXTENSIONS:
+        messages.error(request, f"{audio.name} is not an audio file the speech service can read "
+                                f"(its content is {audio_format.describe(detected)}). Check that it plays, "
+                                f"or convert it to MP3 or WAV.")
+        return redirect("portal:pipeline")
+    renamed = not audio_format.matches(suffix, detected)
+    if renamed:
+        suffix = detected  # e.g. an M4A recording named .mp3: store it under its real extension
+    locale = request.POST.get("locale", "")
+    if locale not in speech.LANGUAGES and locale != speech.AUTO:
+        locale = ""
 
     call_id = SAFE_NAME.sub("-", request.POST.get("call_id", "").strip()) or f"CALL-{uuid.uuid4().hex[:12].upper()}"
     blob_name = f"{call_id}{suffix}"
@@ -294,14 +311,17 @@ def upload(request):
                 ("agent_id", "agent_name", "agent_email", "team", "customer_id", "direction")}
     metadata = {k: v for k, v in metadata.items() if v}
     metadata["channels"] = 2 if request.POST.get("stereo") else 1
+    if locale:
+        metadata["locale"] = locale
     if request.POST.get("started_at"):
         metadata["started_at"] = pipeline.normalize_timestamp(request.POST["started_at"])
     # Sidecar first, so the pipeline sees metadata when the audio's BlobCreated event fires.
     store.put_json(s.container_recordings, f"{call_id}.json", metadata)
     pipeline.register_upload(blob_name, metadata)
-    store.put_bytes(s.container_recordings, blob_name, audio.read(), audio.content_type)
+    store.put_bytes(s.container_recordings, blob_name, data, audio.content_type)
     get_dispatcher().recording_uploaded(blob_name)
-    messages.success(request, f"Uploaded {audio.name} as {call_id}. Processing has started.")
+    note = f" The file is actually {audio_format.describe(detected)}, so it was stored as {blob_name}." if renamed else ""
+    messages.success(request, f"Uploaded {audio.name} as {call_id}. Processing has started.{note}")
     return redirect("portal:pipeline")
 
 

@@ -156,7 +156,7 @@ Full steps, CI/CD with GitHub Actions and troubleshooting are in the [Deployment
 | 1 | Post-call analysis: recording, transcription, PII redaction, sentiment, QA, compliance, insights, web app, Power BI, CRM API | Implemented (sample QA rubric and compliance scripts, to be replaced with the customer's) |
 | 2 | Real-time transcription and agent assist during the call | Planned: Event Hubs is provisioned when `deployEventHubs` is `true` (the prod parameters file); see [Architecture → Phase 2](Documents/architecture.md#phase-2-real-time) |
 
-The language is English only (`en-US`) for now. Other languages need code changes as well as `SPEECH_LOCALE`: PII redaction and sentiment are called with English, and the LLM prompt is written in English. Accuracy would also need re-validation.
+Calls can be in English (`en-US`) or Hindi (`hi-IN`), or set to auto-detect between the two (the Language field on the upload form, or `"locale"` in the sidecar JSON). PII redaction and sentiment run in the spoken language. Insights are always written in English, and evidence is quoted as spoken. Hindi accuracy has not been validated on real recordings yet, and local mode's mock services are English only.
 
 <br/>
 

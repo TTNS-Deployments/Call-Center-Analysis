@@ -15,7 +15,9 @@ same base name *before* the audio (``<call_id>.json``) carrying metadata::
 
     {"agent_id": "A1001", "agent_name": "...", "agent_email": "...", "team": "...",
      "customer_id": "...", "direction": "inbound", "started_at": "2026-10-01T10:15:00+00:00",
-     "channels": 2, "agent_channel": 0}
+     "channels": 2, "agent_channel": 0, "locale": "hi-IN"}
+
+``locale`` is the call language: "en-US", "hi-IN", or "auto" to let Speech identify it.
 
 The file name (without extension) becomes the call ID.
 """
@@ -44,7 +46,7 @@ from .store import utcnow
 
 log = logging.getLogger(__name__)
 
-AUDIO_EXTENSIONS = {".wav", ".mp3", ".ogg", ".opus", ".flac", ".m4a", ".webm", ".wma", ".aac"}
+AUDIO_EXTENSIONS = {".wav", ".mp3", ".ogg", ".opus", ".flac", ".m4a", ".webm", ".wma", ".aac", ".amr"}
 METADATA_FIELDS = ("agent_id", "agent_name", "agent_email", "team", "customer_id", "direction", "started_at")
 
 STATUS_UPLOADED = "uploaded"
@@ -181,7 +183,8 @@ def enrich_transcript(transcript_blob: str) -> dict:
         measured = speech_metrics(transcript["phrases"])
         if transcript["phrases"]:
             language = get_language_client().analyze(transcript["phrases"])
-            metadata = {**transcript.get("metadata", {}), "call_id": call_id, "speech_metrics": measured}
+            metadata = {**transcript.get("metadata", {}), "call_id": call_id, "speech_metrics": measured,
+                        "locale": transcript.get("locale")}
             insights = get_insights_client().generate(language["phrases"], metadata, rules)
         else:  # silent or empty recording: nothing to score, and no reason to call the AI services
             language = {"source": "none", "phrases": [], "pii_summary": {"total": 0, "categories": {}}}
@@ -328,6 +331,7 @@ def build_call_document(existing: dict, transcript: dict, language: dict, insigh
         "started_at": started_at,
         "call_date": started_at[:10],
         "duration_sec": round(transcript.get("duration_ms", 0) / 1000),
+        "locale": transcript.get("locale") or "en-US",
         "summary": insights["summary"],
         "call_reason": insights["call_reason"],
         "call_reason_name": rules.category_name(insights["call_reason"]),

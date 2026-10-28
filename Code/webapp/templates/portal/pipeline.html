@@ -30,6 +30,10 @@
           <label class="field">Team <input type="text" name="team"></label>
           <label class="field">Customer ID <input type="text" name="customer_id"></label>
           <label class="field">Direction <select name="direction"><option value="inbound">Inbound</option><option value="outbound">Outbound</option></select></label>
+          <label class="field">Language <select name="locale">
+            {% for code, name in languages.items %}<option value="{{ code }}"{% if code == default_locale %} selected{% endif %}>{{ name }}</option>{% endfor %}
+            <option value="auto"{% if default_locale == "auto" %} selected{% endif %}>Detect (English or Hindi)</option>
+          </select></label>
         </div>
         <div><label class="small"><input type="checkbox" name="stereo"> Stereo recording (agent and customer on separate channels)</label></div>
         <div><button class="btn primary" type="submit">Upload and analyse</button></div>

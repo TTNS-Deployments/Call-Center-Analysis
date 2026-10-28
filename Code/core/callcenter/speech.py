@@ -4,7 +4,10 @@ Output (both implementations)::
 
     {"source": "...", "locale": "en-US", "duration_ms": 123000,
      "phrases": [{"speaker": "agent"|"customer", "offset_ms": 0, "duration_ms": 0,
-                  "text": "...", "confidence": 0.93}]}
+                  "text": "...", "confidence": 0.93, "locale": "en-US"}]}
+
+The language comes from the recording's metadata (``"locale": "hi-IN"``, or ``"auto"`` to let
+Speech identify it among ``LANGUAGES``), falling back to ``SPEECH_LOCALE``.
 """
 
 from __future__ import annotations
@@ -15,6 +18,31 @@ from abc import ABC, abstractmethod
 import requests
 
 from .config import Settings
+
+# Call languages the analysis supports end to end (Speech, PII, sentiment, LLM).
+LANGUAGES = {"en-US": "English", "hi-IN": "Hindi"}
+AUTO = "auto"
+
+
+def requested_locales(metadata: dict, settings: Settings) -> list[str]:
+    """Candidate locales for a recording. More than one = Speech language identification."""
+    value = str(metadata.get("locale") or settings.speech_locale or "en-US").strip()
+    if value.lower() == AUTO:
+        return list(LANGUAGES)
+    return [loc.strip() for loc in value.split(",") if loc.strip()]
+
+
+def language_name(locale: str | None) -> str:
+    return LANGUAGES.get(locale or "", locale or "")
+
+
+def _main_locale(phrases: list[dict], fallback: str) -> str:
+    """The locale spoken the longest."""
+    totals: dict[str, int] = {}
+    for p in phrases:
+        loc = p.get("locale") or fallback
+        totals[loc] = totals.get(loc, 0) + int(p.get("duration_ms", 0))
+    return max(totals, key=totals.get) if totals else fallback
 
 
 class SpeechClient(ABC):
@@ -41,7 +69,10 @@ class MockSpeechClient(SpeechClient):
             script = samples.script_for_upload(filename, metadata)
         phrases = samples.time_script(script)
         duration = phrases[-1]["offset_ms"] + phrases[-1]["duration_ms"] + 800 if phrases else 0
-        return {"source": "mock", "locale": self.settings.speech_locale, "duration_ms": duration, "phrases": phrases}
+        # The sample scripts are English, so "auto" detects English.
+        locale = requested_locales(metadata, self.settings)[0]
+        phrases = [{**p, "locale": locale} for p in phrases]
+        return {"source": "mock", "locale": locale, "duration_ms": duration, "phrases": phrases}
 
 
 class AzureFastTranscriptionClient(SpeechClient):
@@ -61,7 +92,8 @@ class AzureFastTranscriptionClient(SpeechClient):
 
     def transcribe(self, audio, filename, metadata):
         stereo = int(metadata.get("channels") or 1) == 2
-        definition: dict = {"locales": [self.settings.speech_locale], "profanityFilterMode": "None"}
+        locales = requested_locales(metadata, self.settings)
+        definition: dict = {"locales": locales, "profanityFilterMode": "None"}
         if stereo:
             definition["channels"] = [0, 1]
         else:
@@ -81,16 +113,17 @@ class AzureFastTranscriptionClient(SpeechClient):
             timeout=600,
         )
         if response.status_code >= 400:
-            raise RuntimeError(f"Speech API error {response.status_code}: {response.text[:500]}")
+            raise RuntimeError(api_error(response, filename, audio))
         body = response.json()
+        phrases = self._map_speakers(body.get("phrases", []), stereo, metadata, locales[0])
         return {
             "source": "azure-fast-transcription",
-            "locale": self.settings.speech_locale,
+            "locale": _main_locale(phrases, locales[0]),
             "duration_ms": body.get("durationMilliseconds", 0),
-            "phrases": self._map_speakers(body.get("phrases", []), stereo, metadata),
+            "phrases": phrases,
         }
 
-    def _map_speakers(self, phrases: list[dict], stereo: bool, metadata: dict) -> list[dict]:
+    def _map_speakers(self, phrases: list[dict], stereo: bool, metadata: dict, locale: str) -> list[dict]:
         phrases = sorted(phrases, key=lambda p: p.get("offsetMilliseconds", 0))
         if stereo:
             agent_channel = int(metadata.get("agent_channel", self.settings.agent_channel))
@@ -109,7 +142,25 @@ class AzureFastTranscriptionClient(SpeechClient):
                 "duration_ms": int(p.get("durationMilliseconds", 0)),
                 "text": p.get("text", "").strip(),
                 "confidence": round(float(p.get("confidence", 0.0)), 3),
+                "locale": p.get("locale") or locale,
             }
             for p in phrases
             if p.get("text", "").strip()
         ]
+
+
+def api_error(response: requests.Response, filename: str, audio: bytes) -> str:
+    """A readable message from an Azure Speech error response, naming the file's real format."""
+    from . import audio as audio_format
+
+    try:
+        body = json.loads(response.text)
+        error = (body.get("error") or body) if isinstance(body, dict) else {}
+    except ValueError:
+        error = {}
+    code = error.get("code") or ""
+    inner = (error.get("innererror") or {}).get("code") or ""
+    message = error.get("message") or response.text[:500]
+    detected = audio_format.detect_format(audio[:65536])
+    return (f"Speech API error {response.status_code}{f' {code}' if code else ''}{f'/{inner}' if inner else ''}: "
+            f"{message} (file {filename}, {len(audio):,} bytes, content looks like {audio_format.describe(detected)})")

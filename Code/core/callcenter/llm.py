@@ -20,8 +20,9 @@ from importlib import resources
 from . import metrics as speech
 from .config import Settings
 from .rules import RATINGS, Rules
+from .speech import language_name
 
-PROMPT_VERSION = "insights_v2"
+PROMPT_VERSION = "insights_v3"
 PRIORITIES = ["High", "Medium", "Low"]
 EMOTIONS = ["calm", "satisfied", "happy", "neutral", "confused", "anxious", "frustrated", "angry", "disappointed"]
 NEGATIVE_EMOTIONS = {"anxious", "frustrated", "angry", "disappointed", "confused"}
@@ -195,7 +196,8 @@ class AzureOpenAIInsightsClient(InsightsClient):
 
     def _generate(self, phrases, metadata, rules):
         user = (
-            f"Call ID: {metadata.get('call_id', '')}\nDirection: {metadata.get('direction', 'inbound')}\n\n"
+            f"Call ID: {metadata.get('call_id', '')}\nDirection: {metadata.get('direction', 'inbound')}\n"
+            f"Language: {language_name(metadata.get('locale')) or 'English'}\n\n"
             f"Measured from the recording (use for [audio] parameters):\n"
             f"{speech.describe(metadata.get('speech_metrics') or speech.speech_metrics(phrases))}\n\n"
             f"Transcript:\n{format_transcript(phrases)}"

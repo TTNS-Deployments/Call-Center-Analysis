@@ -38,11 +38,11 @@ The metadata file has this shape. All fields are optional:
 ## 2. Transcription (`callcenter/speech.py`, Function `transcribe`)
 
 - **API:** `POST {SPEECH_ENDPOINT}/speechtotext/transcriptions:transcribe?api-version=2024-11-15` (fast transcription), sent as multipart audio plus a definition. The definition contains:
-  - `locales: [SPEECH_LOCALE]` (default `en-US`)
+  - `locales`: the call's `locale` from the metadata (`en-US` or `hi-IN`; `auto` sends both so Speech identifies the language), else `SPEECH_LOCALE` (default `en-US`)
   - for stereo audio, `channels: [0,1]`
   - otherwise `diarization: {enabled: true, maxSpeakers: 2}`
 - **Auth:** a managed identity bearer token. `SPEECH_KEY` is used instead if it is set.
-- **Output:** `transcripts/<call_id>.json` contains `phrases[{speaker, offset_ms, duration_ms, text, confidence}]`, `duration_ms`, `metadata` and `source`.
+- **Output:** `transcripts/<call_id>.json` contains `phrases[{speaker, offset_ms, duration_ms, text, confidence, locale}]`, `locale` (the language spoken longest), `duration_ms`, `metadata` and `source`.
 - **Mock:** in local mode the transcript comes from the sample script in the metadata, or is generated deterministically from the file name.
 
 ## 3. PII redaction and sentiment (`callcenter/language.py`)
@@ -82,7 +82,7 @@ The metadata file has this shape. All fields are optional:
   - `qa[{id, score, evidence, rationale}]` and `compliance[{id, status: pass|fail|not_applicable, evidence}]`
   - lists: `topics`, `follow_up_actions`, `coaching_tips`
 - **Validation (`normalize`):** scores are clamped to 0..`max_points`. Missing criteria or checks are added, with a score of 0 or a status of fail/n/a. Unknown enum values fall back to safe defaults.
-- **Versioning:** each document records `prompt_version`, `model` and `token_usage`. To change the prompt, add `insights_v2.md` and update `PROMPT_VERSION`, so results stay traceable.
+- **Versioning:** each document records `prompt_version`, `model` and `token_usage`. To change the prompt, add a new `insights_vN.md` (current: `insights_v3`, which handles Hindi calls) and update `PROMPT_VERSION`, so results stay traceable.
 
 ## 5. QA scoring and compliance
 

@@ -26,7 +26,7 @@ All runtime settings are environment variables:
 | `COSMOS_DATABASE`, `COSMOS_CONTAINER` | `callcenter`, `calls` | |
 | `SPEECH_BACKEND` | `mock` / `azure` | |
 | `SPEECH_ENDPOINT`, `SPEECH_KEY` | – | `https://<name>.cognitiveservices.azure.com`. |
-| `SPEECH_LOCALE` | `en-US` | Recognition language. |
+| `SPEECH_LOCALE` | `en-US` | Default call language when the upload or sidecar gives none: `en-US`, `hi-IN`, a comma list, or `auto` (identify English or Hindi). Per call: `"locale"` in the sidecar JSON, or the Language field on the upload form. |
 | `SPEECH_API_VERSION` | `2024-11-15` | Fast transcription API version. |
 | `AGENT_CHANNEL` | `0` | Agent channel for stereo recordings (can be overridden per call in the metadata). |
 | `LANGUAGE_BACKEND` | `mock` / `azure` | |

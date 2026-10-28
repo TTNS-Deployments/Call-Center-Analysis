@@ -172,6 +172,7 @@
       <div class="card-b small">
         <dl class="kv">
           <dt>Processed</dt><dd>{{ call.processed_at|dt }}</dd>
+          <dt>Call language</dt><dd>{{ call_language }}</dd>
           <dt>Speech</dt><dd>{{ call.sources.speech }}</dd>
           <dt>Language</dt><dd>{{ call.sources.language }}</dd>
           <dt>LLM</dt><dd>{{ call.model }} · {{ call.prompt_version }}</dd>

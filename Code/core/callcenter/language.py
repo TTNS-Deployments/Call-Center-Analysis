@@ -1,6 +1,7 @@
 """PII detection/redaction and sentiment, per transcript phrase.
 
-Runs BEFORE the LLM so Azure OpenAI only ever sees redacted text.
+Runs BEFORE the LLM so Azure OpenAI only ever sees redacted text. Each phrase is analysed in
+its own language (``phrase["locale"]`` from speech, e.g. "hi-IN" -> "hi"; English when absent).
 
 Output (both implementations)::
 
@@ -71,6 +72,10 @@ def _merge_overlaps(entities: list[dict]) -> list[dict]:
             continue
         result.append(e)
     return result
+
+
+def language_code(phrase: dict) -> str:
+    return str(phrase.get("locale") or "en").split("-")[0].lower() or "en"
 
 
 def summarize(phrases: list[dict]) -> dict:
@@ -235,11 +240,16 @@ class AzureLanguageClient(LanguageClient):
             return bool(YEAR.search(entity.text))
         return entity.category not in self.ignore and entity.confidence_score >= 0.5
 
+    @staticmethod
+    def _documents(texts: list[str], languages: list[str], start: int) -> list[dict]:
+        return [{"id": str(start + j), "text": t, "language": languages[start + j]} for j, t in enumerate(texts)]
+
     def analyze(self, phrases):
         texts = [p["text"] for p in phrases]
+        languages = [language_code(p) for p in phrases]
         entities: list[list[dict]] = [[] for _ in texts]
         for start, batch in self._batches(texts, self.PII_BATCH):
-            results = self.client.recognize_pii_entities(batch, language="en")
+            results = self.client.recognize_pii_entities(self._documents(batch, languages, start))
             for j, res in enumerate(results):
                 if res.is_error:
                     raise RuntimeError(f"PII recognition failed: {res.error}")
@@ -251,7 +261,7 @@ class AzureLanguageClient(LanguageClient):
         redacted = [redact(t, e) for t, e in zip(texts, entities)]
         sentiments: list[tuple[str, dict]] = [("neutral", {})] * len(texts)
         for start, batch in self._batches(redacted, self.SENTIMENT_BATCH):
-            results = self.client.analyze_sentiment(batch, language="en")
+            results = self.client.analyze_sentiment(self._documents(batch, languages, start))
             for j, res in enumerate(results):
                 if res.is_error:
                     raise RuntimeError(f"Sentiment analysis failed: {res.error}")

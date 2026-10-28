@@ -1,7 +1,7 @@
 # Project progress and context
 
 Read this first when continuing work in a new session. Keep it updated after each piece of work.
-Last updated: 2026-10-21 (infra deployed; management-API-only code path added, user to run it in Cloud Shell).
+Last updated: 2026-10-28 (Hindi call language; upload checks the file's real audio format).
 
 ## What this is
 
@@ -37,7 +37,7 @@ User works in a GitHub Codespace (`/workspaces/Call-Center-Analysis`) and deploy
 | Path | What |
 |---|---|
 | `Code/core/callcenter` | Pipeline (`pipeline.py`), clients (`speech.py`, `language.py`, `llm.py`), `metrics.py` (wpm, dead air, talk-overs), storage, Cosmos/SQLite store, Parquet, analytics, CLI (`python -m callcenter seed/upload/process/worker/retry/status/reset`) |
-| `Code/core/callcenter/prompts/insights_v2.md` | Current LLM prompt |
+| `Code/core/callcenter/prompts/insights_v3.md` | Current LLM prompt (v3 adds Hindi handling) |
 | `Code/functions` | Azure Functions (Flex Consumption): queue triggers `transcribe`, `enrich` + poison handlers |
 | `Code/webapp` | Django app (`accounts/` auth+roles, `portal/` views/API/Power BI embed, templates, static incl. `img/ttbs-logo.png`) |
 | `Config/*.yaml` | 20-parameter QA rubric, compliance checks, call reasons (incl. `sales_opportunity`) |
@@ -129,6 +129,17 @@ Tests: `make test` (core 36, webapp 8). CI on GitHub is green.
 - Decisions: the chatbot web app shares this demo's **B1 plan `ccai-demo-gqausd-web-plan`** (separate web app); the
   chatbot gets **its own Azure OpenAI resource in southindia** with `gpt-5-mini` (shared 500K TPM quota; this demo uses 20K).
   Do not change the plan's SKU here without considering the chatbot.
+
+### Hindi and upload format check (2026-10-28)
+
+- Calls can be English (`en-US`), Hindi (`hi-IN`) or `auto` (Speech language identification between the two):
+  upload form Language field / sidecar `"locale"` / `SPEECH_LOCALE` default. Each phrase carries its `locale`;
+  Azure Language PII and sentiment run per phrase in `hi`/`en`; prompt `insights_v3` writes output in English and
+  quotes evidence as spoken. The call document has `locale`, shown on the call page.
+- Demo issue (2026-10-27): an "MP3" upload failed with a Speech API "unsupported" error. Root cause not confirmed
+  (no Azure log access from the Codespace). Uploads now check the real format from the bytes (`callcenter/audio.py`):
+  non-audio is rejected with a clear message, a mislabelled file (e.g. M4A named .mp3) is stored under its real
+  extension, and Speech errors now show Azure's code/message plus the detected format. `.amr` is accepted.
 
 ## Open items / ideas
 
