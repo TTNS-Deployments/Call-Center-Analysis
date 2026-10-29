@@ -26,17 +26,23 @@
       <h1>Sign in</h1>
       <div class="msg error">Demo sign-in is not configured: DEMO_PASSWORD is empty (see Documents/deployment-guide.md).</div>
     {% else %}
-      <h1>Choose a demo user</h1>
       {% if mode == "password" %}
-      <p class="muted" style="margin:6px 0 14px">Demo environment: enter the demo password, then pick a user. Each role sees a different view.</p>
-      {% else %}
-      <p class="muted" style="margin:6px 0 18px">Local mode uses demo users instead of Entra ID. Each role sees a different view.</p>
-      {% endif %}
+      <h1>Administrator sign-in</h1>
+      <p class="muted" style="margin:6px 0 14px">This portal is for administrators. Enter the password to continue.</p>
       <form method="post">{% csrf_token %}
         <input type="hidden" name="next" value="{{ next|default:'' }}">
-        {% if mode == "password" %}
-        <input type="password" name="password" placeholder="Demo password" autocomplete="current-password" required style="width:100%;margin-bottom:14px">
-        {% endif %}
+        <div class="persona" style="cursor:default">
+          <span class="avatar">{% for w in admin_name.split|slice:":2" %}{{ w|first|upper }}{% endfor %}</span>
+          <span><b>{{ admin_name }}</b><br><span class="small muted">Admin</span></span>
+        </div>
+        <input type="password" name="password" placeholder="Password" autocomplete="current-password" required autofocus style="width:100%;margin:6px 0 14px">
+        <button class="btn primary" type="submit" style="width:100%;justify-content:center">Sign in</button>
+      </form>
+      {% else %}
+      <h1>Choose a demo user</h1>
+      <p class="muted" style="margin:6px 0 18px">Local mode uses demo users instead of Entra ID. Each role sees a different view.</p>
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ next|default:'' }}">
         {% for u in users %}
         <button class="persona" name="user" value="{{ u.id }}">
           <span class="avatar">{{ u.initials }}</span>
@@ -44,6 +50,7 @@
         </button>
         {% endfor %}
       </form>
+      {% endif %}
     {% endif %}
   </div>
 </div>

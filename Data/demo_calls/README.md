@@ -88,11 +88,8 @@ Sign in to the web app (you have the **Admin** role after `setup_entra.sh`). Tic
 - [ ] Validation: replace the rubric text with `criteria: []` → *Validate and save* → it is refused with an explanation.
 
 **Access control**
-- [ ] Sign out. A colleague with **no** role signs in → gets the demo default role (**Supervisor**): sees all calls and the Pipeline page, but no Settings.
-- [ ] Agent view: assign a colleague the **Agent** role (Entra admin center → Enterprise applications → *Call Center Analysis (demo)* → Users and groups),
-      run `python -m callcenter upload Data/demo_calls/DEMO-0001.wav --agent-email <their email>` (this updates the call details),
-      then open `DEMO-0001` in the web app and click **Re-analyse** so the new agent email is applied. Have them sign in:
-      they see only that call and **My scorecard**, and get *Access denied* on Agents, Insights, Pipeline and Settings.
+- [ ] Sign out. The sign-in page offers only **Vaibhav Chaudhary (Admin)**. A wrong password is refused, and after 5 wrong attempts sign-in is blocked for 15 minutes.
+- [ ] **Agents** → open an agent → **Download PDF report**: the PDF has the KPIs, assessment, coaching, the 20-parameter evaluation, compliance and a call-by-call review. This is how agents get their results; they do not sign in.
 
 **Integrations**
 - [ ] **CRM API:**

@@ -141,6 +141,19 @@ Tests: `make test` (core 36, webapp 8). CI on GitHub is green.
   non-audio is rejected with a clear message, a mislabelled file (e.g. M4A named .mp3) is stored under its real
   extension, and Speech errors now show Azure's code/message plus the detected format. `.amr` is accepted.
 
+### 2026-10-29: agent PDF reports and admin-only sign-in
+
+- Agent scorecard has **Download PDF report** (`Code/webapp/portal/report.py`, ReportLab): KPIs, assessment,
+  QA-per-call chart, coaching, 20-parameter table with team average, compliance, call list, call-by-call review.
+- **Agents do not use the portal** (user's decision): password mode = one Admin account, `DEMO_ADMIN_NAME`
+  (default "Vaibhav Chaudhary"); Entra mode refuses users whose only role is Agent unless `ALLOW_AGENT_SIGNIN=1`.
+  Local dev mode still offers all personas for testing.
+- Overview trend chart is now daily calls stacked by customer sentiment (no dual axis).
+- Upload rejects files < 2 KB (a 261-byte "MP3" failed in Speech).
+- **Blocked:** code deploy failed with AuthorizationFailed on `Microsoft.Resources/deployments/validate/action` for RG
+  Vaibhav.Chaudhary: the user's Contributor/Owner appears to have lapsed (PIM?) -- they need it back, then
+  `Deployment/scripts/deploy.sh -e demo --skip-infra`. Cloud Shell lost the repo clone (re-clone command in chat).
+
 ## Open items / ideas
 
 - Power BI report not built (option: generate a PBIP project). Embedding needs Fabric/Embedded capacity (not in TSD estimate).

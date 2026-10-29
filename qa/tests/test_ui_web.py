@@ -68,8 +68,8 @@ def test_U03_invalid_login_rejected_generic(seeded):
         print("password mode wrong password ->", r.status_code, msg)
         assert r.status_code == 403 and msg == ["Wrong password."]
         r = fresh().post("/auth/login", {"user": "dev-nobody", "password": "wrong"})
-        print("password mode unknown user ->", r.status_code, r.content[:40])
-        assert r.status_code == 400
+        print("password mode ignores the user field (single admin) ->", r.status_code)
+        assert r.status_code == 403
         cache.clear()
 
 

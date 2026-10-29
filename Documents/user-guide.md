@@ -38,21 +38,29 @@ The web app only shows results. It never changes a recording. If processing fail
 
 ## Signing in and roles
 
-**Demo environment:** open the web app, type the demo password, then pick a demo user. Each user has one role.
-**Production:** users sign in with their Microsoft work account (Entra ID), and an administrator assigns the roles.
+The portal is for the people who review calls and coach agents. **Agents do not sign in.** They receive their
+results as the PDF report from their scorecard (see [Agents and agent scorecards](#agents-and-agent-scorecards)).
 
-| Role | Demo user | Sees | Pages |
-|---|---|---|---|
-| **Admin** | Asha Rao | Everything | All, including **Settings** |
-| **Supervisor** | Kabir Khan | All calls and agents | Overview, Calls, Agents, Insights, Pipeline |
-| **QA** (quality analyst) | Leela Thomas | All calls and agents | Overview, Calls, Agents, Insights |
-| **Agent** | One per agent in the processed calls, e.g. Priya Sharma | **Only their own calls** | Overview, Calls, **My scorecard** |
+**Demo environment:** the sign-in page has one account, **Vaibhav Chaudhary (Admin)**. Enter the demo password
+and sign in. The administrator sees everything, including **Settings**. To show a different name, set the web
+app's `DEMO_ADMIN_NAME` app setting.
 
-The agent demo users appear in the list once calls for that agent have been processed. Sign out with the
-arrow icon next to your name, at the bottom left.
+**Production:** users sign in with their Microsoft work account (Entra ID), and an administrator assigns them a
+role in Entra ID (Enterprise applications → *Call Center Analysis* → Users and groups):
 
-If someone opens a page their role does not allow, they see *Access denied*. An agent who opens another agent's
-call link also gets *Access denied*.
+| Role | Sees | Pages |
+|---|---|---|
+| **Admin** | Everything | All, including **Settings** |
+| **Supervisor** | All calls and agents | Overview, Calls, Agents, Insights, Pipeline |
+| **QA** (quality analyst) | All calls and agents | Overview, Calls, Agents, Insights |
+| **Agent** | Cannot sign in | – |
+
+Someone whose only role is Agent, or who has no role and would get the default Agent role, is turned away with
+"The portal is for administrators, supervisors and QA analysts". If agents should one day use the portal
+themselves (only their own calls and **My scorecard**), set the app setting `ALLOW_AGENT_SIGNIN=1`.
+
+Sign out with the arrow icon next to your name, at the bottom left. If someone opens a page their role does not
+allow, they see *Access denied*.
 
 ## Common controls
 
@@ -191,7 +199,7 @@ compliance rate, % resolved, average customer sentiment, average handle time, an
 parameter where the agent scores lowest. Below the table, **Team % met by QA parameter** shows the team's
 strongest and weakest areas.
 
-**Agent scorecard** (click an agent; agents see their own one as **My scorecard**):
+**Agent scorecard** (click an agent):
 
 - KPI tiles: average QA and pass rate, compliance, resolved on call, customer sentiment, handle time, calls.
 - **QA score trend** over the period.
@@ -210,7 +218,7 @@ strongest and weakest areas.
     quotes, each *Not met* / *Partial* parameter with the reason, the quote and what to do, what was done well,
     coaching, follow-ups and the speech measurements.
 
-  Agents can download their own report from **My scorecard**. The review covers up to the 60 most recent calls
+  Share it with the agent, who does not sign in to the portal. The review covers up to the 60 most recent calls
   in the range. Personal data stays redacted in the PDF, as on screen.
 
 ## Insights
@@ -242,8 +250,7 @@ call ID (generated if left blank), call start, agent ID / name / email, team, cu
 Tips:
 - Recordings must be in English for now.
 - Use the same agent ID for every call by that agent, so their scorecard groups the calls together.
-- For an agent to see the call under **My scorecard** with Entra ID sign-in, the agent email must match their
-  work account.
+- Fill in the agent email too. It identifies the agent's calls if agent sign-in is ever switched on.
 
 In production, the telephony system uploads recordings automatically and nobody uses this form.
 
@@ -274,11 +281,12 @@ The **Environment** panel shows which services the system is connected to.
 
 ## Suggested demo walkthrough (15–20 minutes)
 
-Prepare beforehand: check that the four demo calls show as completed (sign in as Admin and open **Pipeline**).
+Prepare beforehand: sign in as Vaibhav Chaudhary (Admin) and check on **Pipeline** that the four demo calls
+show as completed.
 Expected results for each call are in [Data/demo_calls/README.md](../Data/demo_calls/README.md).
 
 1. **The problem (1 min).** Supervisors manually review 1–2 % of calls; this system analyses every call.
-2. **Overview as Kabir Khan, Supervisor (3 min).** KPI tiles; *Needs attention* lists DEMO-0002 (compliance
+2. **Overview (3 min).** KPI tiles; *Needs attention* lists DEMO-0002 (compliance
    breach) and DEMO-0003 (unhappy, repeat, escalated); top reasons; root causes; leaderboard.
 3. **A compliance breach: DEMO-0002 (4 min).** Play the moment the agent asks for the CVV and OTP. Show that the
    card number is removed from the transcript, the failed compliance checks with quotes, the low QA score with
@@ -290,9 +298,10 @@ Expected results for each call are in [Data/demo_calls/README.md](../Data/demo_c
    with DEMO-0001, where these parameters are N/A.
 6. **Coaching (3 min).** **Agents** → open Vikram Singh. Walk through the 20-parameter evaluation table, the
    verdicts and recommendations, and the team-average markers.
-7. **Agent's own view (1 min).** Sign out and sign in as **Vikram Singh (Agent)**: only his own call and
-   **My scorecard**; the Agents, Insights, Pipeline and Settings pages are not available.
-8. **Configurable (2 min).** Sign in as Asha Rao (Admin). In **Settings → QA rubric**, show that the parameters
+7. **The agent's report (1 min).** On Vikram Singh's scorecard, click **Download PDF report** and open it: the
+   assessment, the coaching recommendations, and the call-by-call review of what to improve. This is what the
+   agent receives; agents do not sign in to the portal.
+8. **Configurable (2 min).** In **Settings → QA rubric**, show that the parameters
    are the customer's own form, editable without code. Optionally upload a new recording on **Pipeline** and watch
    it process.
 9. **Close.** Security (personal data removed before the AI sees the text; data stays in the customer's Azure
@@ -318,7 +327,7 @@ Expected results for each call are in [Data/demo_calls/README.md](../Data/demo_c
 | The site takes about 30 seconds to load the first time | Normal after a restart or a period without use |
 | "No calls yet" or calls missing | Check the date range: try **All**. Then check **Pipeline** for calls still in progress or failed |
 | A call is stuck in progress for more than 10 minutes, or failed | Open it and read the error, then click **Retry**. In the Azure portal, the Function app (`…-func`) → *Log stream* shows the details |
-| An agent demo user is missing from the sign-in list | That agent's calls have not finished processing yet |
+| An agent cannot sign in ("The portal is for administrators…") | Expected: agents get the PDF report instead. To let agents sign in, set `ALLOW_AGENT_SIGNIN=1` on the web app |
 | "Too many wrong passwords" | Wait 15 minutes |
 | Scores differ slightly after re-analysing | Expected: the language model can vary a little between runs |
 | An "Application Error" page | Azure portal → the web app (`…-web`) → *Log stream*, and send the error to the team that deployed it |

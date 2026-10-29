@@ -72,7 +72,7 @@ An infrastructure deployment resets the web app settings, so `deploy.sh` always 
 
 `setup_entra.sh` needs Microsoft Graph. With `--code-via-arm`, sign-in therefore works in one of two ways.
 
-**Demo password (no app registration).** `demo.parameters.json` sets `authMode` to `password`. The sign-in page then asks for one shared password and offers demo users: Admin, Supervisor, QA and one user per agent in the processed calls. After 5 wrong passwords, a client address is locked for 15 minutes. Set the password once, on an infrastructure deployment; it is stored in Key Vault as `demo-password`:
+**Demo password (no app registration).** `demo.parameters.json` sets `authMode` to `password`. The sign-in page then has a single administrator account (named by the `DEMO_ADMIN_NAME` app setting, default "Vaibhav Chaudhary") protected by one shared password. Agents never sign in to the portal; with Entra ID, users whose only role is Agent are refused unless `ALLOW_AGENT_SIGNIN=1`. After 5 wrong passwords, a client address is locked for 15 minutes. Set the password once, on an infrastructure deployment; it is stored in Key Vault as `demo-password`:
 
 ```bash
 Deployment/scripts/deploy.sh -e demo --param demoPassword='<choose a long password>'

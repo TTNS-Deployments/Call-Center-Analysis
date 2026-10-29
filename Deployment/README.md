@@ -71,7 +71,7 @@ The values below are the defaults in the two parameter files. "Options" are the 
 | **Application** | | | |
 | `entraClientId` | (set by `setup_entra.sh`) | | App registration client ID |
 | `entraDefaultRole` | Agent | Agent | Role for users without an assignment; `""` = deny |
-| `authMode` | entra | entra | `entra`; `password` (demo users plus one shared password `demoPassword`, kept in Key Vault). `demo` uses `password`. |
+| `authMode` | entra | entra | `entra`; `password` (one administrator account, `DEMO_ADMIN_NAME`, protected by the shared password `demoPassword`, kept in Key Vault). `demo` uses `password`. |
 | `powerBiWorkspaceId` / `powerBiReportId` | "" | "" | Enables the embedded report |
 | `displayTimeZone` | Asia/Kolkata | Asia/Kolkata | |
 | `tags` | owner, project | | Added to every resource |

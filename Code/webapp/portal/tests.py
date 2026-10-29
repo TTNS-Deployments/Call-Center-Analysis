@@ -230,9 +230,17 @@ class DemoPasswordTests(SimpleTestCase):
         response = self.client.post("/auth/login", {"user": "dev-admin", "password": "s3cret-demo"})
         self.assertEqual(response.status_code, 429)
 
-    def test_right_password_signs_in(self):
-        response = self.client.post("/auth/login", {"user": "dev-qa", "password": "s3cret-demo"})
+    def test_login_page_offers_only_the_admin(self):
+        response = self.client.get("/auth/login")
+        self.assertContains(response, "Administrator sign-in")
+        self.assertContains(response, "Vaibhav Chaudhary")
+        self.assertNotContains(response, 'name="user"')
+
+    def test_right_password_signs_in_as_admin(self):
+        response = self.client.post("/auth/login", {"user": "dev-A1001", "password": "s3cret-demo"})
         self.assertEqual(response.status_code, 302)
+        user = self.client.session["user"]
+        self.assertEqual((user["name"], user["roles"]), ("Vaibhav Chaudhary", ["Admin"]))
         self.assertEqual(self.client.get("/").status_code, 200)
 
     @override_settings(DEMO_PASSWORD="")
@@ -259,3 +267,31 @@ class StaticFilesTests(SimpleTestCase):
                     self.assertRegex(staticfiles_storage.url(name), r"\.[0-9a-f]{12}\.")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+
+
+@override_settings(ALLOWED_HOSTS=["testserver"], AUTH_MODE="entra", ENTRA_CLIENT_ID="app", ENTRA_DEFAULT_ROLE="Agent")
+class EntraRoleTests(SimpleTestCase):
+    def _callback(self, roles, **extra):
+        from unittest import mock
+
+        session = self.client.session
+        session["auth_flow"] = {"state": "x"}
+        session.save()
+        from django.conf import settings as dj
+
+        self.client.cookies[dj.SESSION_COOKIE_NAME] = session.session_key  # signed-cookie sessions change key on save
+        app = mock.Mock()
+        app.acquire_token_by_auth_code_flow.return_value = {"id_token_claims": {"oid": "u1", "name": "A User", "roles": roles}}
+        with mock.patch("accounts.views._msal_app", return_value=app), self.settings(**extra):
+            return self.client.get("/auth/callback?code=c&state=x")
+
+    def test_agents_cannot_sign_in(self):
+        for roles in (["Agent"], []):  # an explicit Agent role, or the default role for unassigned users
+            with self.subTest(roles=roles):
+                response = self._callback(roles)
+                self.assertIn("/auth/login", response["Location"])
+                self.assertNotIn("user", self.client.session)
+
+    def test_staff_and_allowed_agents_sign_in(self):
+        self.assertEqual(self._callback(["Supervisor"])["Location"], "/")
+        self.assertEqual(self._callback(["Agent"], ALLOW_AGENT_SIGNIN=True)["Location"], "/")

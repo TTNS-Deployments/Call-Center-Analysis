@@ -145,6 +145,8 @@ if AUTH_MODE == "dev" and not IS_LOCAL:
 if AUTH_MODE not in {"dev", "password", "entra"}:
     raise RuntimeError(f"Unknown AUTH_MODE {AUTH_MODE!r} (dev, password or entra)")
 DEMO_PASSWORD = env("DEMO_PASSWORD")
+DEMO_ADMIN_NAME = env("DEMO_ADMIN_NAME", "Vaibhav Chaudhary")  # the one account password mode signs in as (Admin)
+DEMO_ADMIN_EMAIL = env("DEMO_ADMIN_EMAIL")
 DEMO_PASSWORD_MAX_FAILURES = 5  # per client address, then locked for 15 minutes
 
 ENTRA_TENANT_ID = env("ENTRA_TENANT_ID")
@@ -153,6 +155,8 @@ ENTRA_CLIENT_SECRET = env("ENTRA_CLIENT_SECRET")
 ENTRA_AUTHORITY = env("ENTRA_AUTHORITY") or f"https://login.microsoftonline.com/{ENTRA_TENANT_ID or 'common'}"
 # Role given to signed-in users that have no app role assigned. Empty = deny access.
 ENTRA_DEFAULT_ROLE = env("ENTRA_DEFAULT_ROLE", "Agent")
+# Agents are coached from their reports; they do not use the portal. 1 = let users whose only role is Agent sign in.
+ALLOW_AGENT_SIGNIN = env_bool("ALLOW_AGENT_SIGNIN", False)
 
 # ---- Content-Security-Policy (portal.security middleware) ----------------------------
 # Scripts and styles come only from this app (front-end libraries are vendored in static/vendor).

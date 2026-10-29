@@ -44,24 +44,7 @@ def dev_users() -> list[User]:
             users.append(User(id=f"dev-{a['id']}", name=a["name"], email=a["email"], roles=[AGENT], agent_id=a["id"]))
     except Exception:  # noqa: BLE001 - sample data is optional
         pass
-    if len(users) == 3:  # no sample data (Azure): one persona per agent found in the processed calls
-        users.extend(_agents_from_calls())
     return users
-
-
-def _agents_from_calls() -> list[User]:
-    try:
-        from callcenter.factory import get_call_store
-
-        agents = {}
-        for c in get_call_store().list_summaries():
-            if c.get("agent_id") and c["agent_id"] not in agents:
-                agents[c["agent_id"]] = User(id=f"dev-{c['agent_id']}", name=c.get("agent_name") or c["agent_id"],
-                                             email=c.get("agent_email", ""), roles=[AGENT], agent_id=c["agent_id"])
-        return sorted(agents.values(), key=lambda u: u.name)
-    except Exception:  # noqa: BLE001 - the store may be empty or unreachable; staff personas still work
-        log.warning("Could not list agents for the demo personas", exc_info=True)
-        return []
 
 
 def _client_ip(request) -> str:
@@ -81,10 +64,14 @@ def login(request):
     if not context["configured"]:
         return render(request, "accounts/login.html", context)
 
-    users = dev_users()
-    context["users"] = users
+    if mode == "password":  # one administrator account, protected by the demo password
+        context["admin_name"] = settings.DEMO_ADMIN_NAME
+        users = [User(id="demo-admin", name=settings.DEMO_ADMIN_NAME, email=settings.DEMO_ADMIN_EMAIL, roles=[ADMIN])]
+    else:
+        users = dev_users()
+        context["users"] = users
     if request.method == "POST":
-        chosen = next((u for u in users if u.id == request.POST.get("user")), None)
+        chosen = users[0] if mode == "password" else next((u for u in users if u.id == request.POST.get("user")), None)
         if not chosen:
             return HttpResponseBadRequest("Unknown user")
         if mode == "password":
@@ -146,6 +133,9 @@ def entra_callback(request):
         roles = [settings.ENTRA_DEFAULT_ROLE]
     if not roles:
         messages.error(request, "Your account has no role in this application. Ask an administrator for access.")
+        return redirect("accounts:login")
+    if roles == [AGENT] and not settings.ALLOW_AGENT_SIGNIN:
+        messages.error(request, "The portal is for administrators, supervisors and QA analysts. Agents do not sign in.")
         return redirect("accounts:login")
 
     user = User(
