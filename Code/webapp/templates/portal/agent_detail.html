@@ -8,7 +8,12 @@
     <h1 style="margin-top:4px">{% if agent_id == "me" %}My scorecard{% else %}{{ agent.agent_name }}{% endif %}</h1>
     <div class="sub">{% if agent.team %}{{ agent.team }} · {% endif %}{{ range.label }} · {{ agent.calls }} analysed call{{ agent.calls|pluralize }}</div>
   </div>
-  <div class="toolbar">{% include "portal/partials/range.html" %}</div>
+  <div class="toolbar">
+    {% if agent.calls %}<a class="btn" href="{% url 'portal:agent_report' agent_id %}?{{ request.GET.urlencode }}" download title="Detailed PDF: scores, coaching, the QA evaluation and every call in this period">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      Download PDF report</a>{% endif %}
+    {% include "portal/partials/range.html" %}
+  </div>
 </div>
 
 {% if not agent.calls %}

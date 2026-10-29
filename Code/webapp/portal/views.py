@@ -207,6 +207,40 @@ def agent_detail(request, agent_id):
     })
 
 
+def agent_report(request, agent_id):
+    """The agent scorecard as a detailed PDF: KPIs, assessment, coaching, the QA evaluation, compliance and every call."""
+    from . import report
+
+    rng = date_range(request)
+    items = visible_calls(request, rng)
+    if agent_id == "me":
+        if request.user.can("view_all_calls"):
+            return redirect("portal:agents")
+        agent_calls = items  # already limited to the agent's own calls
+    else:
+        if not request.user.can("view_agents") and agent_id != request.user.agent_id:
+            raise PermissionDenied
+        agent_calls = [c for c in items if c.get("agent_id") == agent_id]
+    done = [c for c in agent_calls if c.get("status") == "completed"]
+    store = get_call_store()
+    full = []
+    for c in sorted(done, key=lambda c: c.get("started_at") or "")[-report.MAX_CALL_DETAILS:]:
+        doc = store.get(c["call_id"]) or c  # full document: follow-up actions and speech measurements
+        doc.pop("transcript", None)
+        full.append(doc)
+    older = sorted(done, key=lambda c: c.get("started_at") or "")[:-report.MAX_CALL_DETAILS] if len(done) > report.MAX_CALL_DETAILS else []
+    stats = analytics.agents(done)
+    agent = stats[0] if stats else {"agent_id": agent_id, "agent_name": request.user.name if agent_id == "me" else agent_id,
+                                    "calls": 0}
+    team_avg = {c["id"]: c["avg"] for c in analytics.criteria_averages(items)} if request.user.can("view_agents") else {}
+    pdf = report.build_agent_report(agent, older + full, period=rng.label, team_avg=team_avg,
+                                    threshold=rules.load_rules().pass_threshold, generated_by=request.user.name)
+    slug = re.sub(r"[^A-Za-z0-9]+", "-", agent.get("agent_name") or agent_id).strip("-") or "agent"
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="agent-report-{slug}-{rng.key}.pdf"'
+    return response
+
+
 # --------------------------------------------------------------------------- insights
 
 @permission_required("view_insights")

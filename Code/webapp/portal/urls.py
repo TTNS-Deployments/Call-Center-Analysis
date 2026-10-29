@@ -13,6 +13,7 @@ urlpatterns = [
     path("calls/<str:call_id>/retry", views.call_retry, name="call_retry"),
     path("agents/", views.agents, name="agents"),
     path("agents/<str:agent_id>/", views.agent_detail, name="agent_detail"),
+    path("agents/<str:agent_id>/report.pdf", views.agent_report, name="agent_report"),
     path("insights/", views.insights, name="insights"),
     path("insights/powerbi-token", views.powerbi_token, name="powerbi_token"),
     path("pipeline/", views.pipeline_view, name="pipeline"),

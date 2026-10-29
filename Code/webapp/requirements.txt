@@ -14,3 +14,4 @@ azure-cosmos>=4.7
 azure-ai-textanalytics>=5.3
 azure-eventhub>=5.12
 openai>=1.40
+reportlab>=4.2

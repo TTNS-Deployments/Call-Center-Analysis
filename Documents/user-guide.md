@@ -201,6 +201,17 @@ strongest and weakest areas.
   **verdict** (*Strength* at 80 % or more, *Inconsistent* at 50–79 %, *Needs improvement* below 50 %), an example
   quote and a recommendation. This is the view to use in a one-to-one coaching session.
 - **Compliance checks** pass rate per check, and the agent's **recent calls**.
+- **Download PDF report** (top right) saves a detailed report for the selected date range. It is meant for
+  one-to-one coaching sessions or to hand to the agent:
+  - the KPIs, an overall assessment against the pass mark, and the agent's strengths and focus areas;
+  - the QA score for each call against the pass mark, and the coaching recommendations by priority;
+  - the full 20-parameter evaluation with the team average, plus compliance pass rates;
+  - a list of all calls, then a **call-by-call review**: summary, root cause, flags, compliance failures with
+    quotes, each *Not met* / *Partial* parameter with the reason, the quote and what to do, what was done well,
+    coaching, follow-ups and the speech measurements.
+
+  Agents can download their own report from **My scorecard**. The review covers up to the 60 most recent calls
+  in the range. Personal data stays redacted in the PDF, as on screen.
 
 ## Insights
 

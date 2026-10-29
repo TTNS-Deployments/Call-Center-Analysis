@@ -84,6 +84,26 @@ class PortalTests(SimpleTestCase):
             self.assertEqual(self.client.get(url).status_code, 403)
         self.assertEqual(self.client.get("/agents/me/").status_code, 200)
 
+    def test_agent_report_pdf(self):
+        self.login("dev-supervisor")
+        agent_id = self.calls[0][1]["agent_id"]
+        response = self.client.get(f"/agents/{agent_id}/report.pdf?range=all")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("attachment; filename=\"agent-report-", response["Content-Disposition"])
+        self.assertTrue(response.content.startswith(b"%PDF"))
+        self.assertContains(self.client.get(f"/agents/{agent_id}/?range=all"), "Download PDF report")
+
+    def test_agent_report_access(self):
+        agent_id = self.calls[0][1]["agent_id"]
+        others = [m["agent_id"] for _, m, _ in self.calls if m["agent_id"] != agent_id]
+        self.login(f"dev-{agent_id}")
+        own = self.client.get("/agents/me/report.pdf?range=all")
+        self.assertEqual(own.status_code, 200)
+        self.assertTrue(own.content.startswith(b"%PDF"))
+        if others:
+            self.assertEqual(self.client.get(f"/agents/{others[0]}/report.pdf").status_code, 403)
+
     def test_settings_rejects_invalid_yaml(self):
         self.login("dev-admin")
         response = self.client.post("/settings/", {"file": "qa_rubric.yaml", "content": "criteria: []"})
